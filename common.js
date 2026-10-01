@@ -8,7 +8,7 @@ if (!window.sb) {
 }
 
 // ============================================================
-// 启动动画（每个浏览器会话首次进入时显示）
+// 启动动画
 // ============================================================
 (function bootLoader() {
     if (sessionStorage.getItem('sq_boot_shown') === '1') return;
@@ -18,57 +18,15 @@ if (!window.sb) {
         var style = document.createElement('style');
         style.id = 'boot-loader-styles';
         style.textContent =
-            '.boot-loader-wrapper{' +
-                'position:fixed;inset:0;z-index:9999999;' +
-                'background:#000;' +
-                'display:flex;align-items:center;justify-content:center;' +
-                'font-family:"Poppins","Space Grotesk","PingFang SC",sans-serif;' +
-                'font-size:1.6em;font-weight:600;' +
-                'user-select:none;color:#fff;' +
-                'transition:opacity 1s ease;' +
-                'overflow:hidden;' +
-            '}' +
+            '.boot-loader-wrapper{position:fixed;inset:0;z-index:9999999;background:#000;display:flex;align-items:center;justify-content:center;font-family:"Poppins","Space Grotesk","PingFang SC",sans-serif;font-size:1.6em;font-weight:600;user-select:none;color:#fff;transition:opacity 1s ease;overflow:hidden;}' +
             '.boot-loader-wrapper.fade-out{opacity:0;pointer-events:none;}' +
-            '.boot-loader-inner{' +
-                'position:relative;' +
-                'display:flex;align-items:center;justify-content:center;' +
-                'height:120px;width:auto;margin:2rem;' +
-                'transform:scale(1.55);' +
-            '}' +
-            '.boot-loader{' +
-                'position:absolute;top:0;left:0;' +
-                'height:100%;width:100%;z-index:1;' +
-                'background-color:transparent;' +
-                '-webkit-mask:repeating-linear-gradient(90deg,transparent 0,transparent 6px,black 7px,black 8px);' +
-                'mask:repeating-linear-gradient(90deg,transparent 0,transparent 6px,black 7px,black 8px);' +
-            '}' +
-            '.boot-loader::after{' +
-                'content:"";' +
-                'position:absolute;top:0;left:0;width:100%;height:100%;' +
-                'background-image:' +
-                    'radial-gradient(circle at 50% 50%, #ff0 0%, transparent 50%),' +
-                    'radial-gradient(circle at 45% 45%, #f00 0%, transparent 45%),' +
-                    'radial-gradient(circle at 55% 55%, #0ff 0%, transparent 45%),' +
-                    'radial-gradient(circle at 45% 55%, #0f0 0%, transparent 45%),' +
-                    'radial-gradient(circle at 55% 45%, #00f 0%, transparent 45%);' +
-                '-webkit-mask:radial-gradient(circle at 50% 50%,transparent 0%,transparent 10%,black 25%);' +
-                'mask:radial-gradient(circle at 50% 50%,transparent 0%,transparent 10%,black 25%);' +
-                'animation:boot-transform 2s infinite alternate, boot-opacity 4s infinite;' +
-                'animation-timing-function:cubic-bezier(0.6,0.8,0.5,1);' +
-            '}' +
+            '.boot-loader-inner{position:relative;display:flex;align-items:center;justify-content:center;height:120px;width:auto;margin:2rem;transform:scale(1.55);}' +
+            '.boot-loader{position:absolute;top:0;left:0;height:100%;width:100%;z-index:1;background-color:transparent;-webkit-mask:repeating-linear-gradient(90deg,transparent 0,transparent 6px,black 7px,black 8px);mask:repeating-linear-gradient(90deg,transparent 0,transparent 6px,black 7px,black 8px);}' +
+            '.boot-loader::after{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 50% 50%, #ff0 0%, transparent 50%),radial-gradient(circle at 45% 45%, #f00 0%, transparent 45%),radial-gradient(circle at 55% 55%, #0ff 0%, transparent 45%),radial-gradient(circle at 45% 55%, #0f0 0%, transparent 45%),radial-gradient(circle at 55% 45%, #00f 0%, transparent 45%);-webkit-mask:radial-gradient(circle at 50% 50%,transparent 0%,transparent 10%,black 25%);mask:radial-gradient(circle at 50% 50%,transparent 0%,transparent 10%,black 25%);animation:boot-transform 2s infinite alternate, boot-opacity 4s infinite;animation-timing-function:cubic-bezier(0.6,0.8,0.5,1);}' +
             '@keyframes boot-transform{0%{transform:translate(-55%);}100%{transform:translate(55%);}}' +
             '@keyframes boot-opacity{0%,100%{opacity:0;}15%{opacity:1;}65%{opacity:0;}}' +
-            '.boot-letter{' +
-                'display:inline-block;opacity:0;' +
-                'animation:boot-letter-anim 4s infinite linear;' +
-                'z-index:2;white-space:pre;' +
-            '}' +
-            '@keyframes boot-letter-anim{' +
-                '0%{opacity:0;}' +
-                '5%{opacity:1;text-shadow:0 0 4px #fff;transform:scale(1.1) translateY(-2px);}' +
-                '20%{opacity:0.2;}' +
-                '100%{opacity:0;}' +
-            '}';
+            '.boot-letter{display:inline-block;opacity:0;animation:boot-letter-anim 4s infinite linear;z-index:2;white-space:pre;}' +
+            '@keyframes boot-letter-anim{0%{opacity:0;}5%{opacity:1;text-shadow:0 0 4px #fff;transform:scale(1.1) translateY(-2px);}20%{opacity:0.2;}100%{opacity:0;}}';
         document.head.appendChild(style);
     }
 
@@ -664,9 +622,7 @@ window.showAvatarPrompt = showAvatarPrompt;
 })();
 
 // ============================================================
-// ★★★ 全局在线状态（Presence）★★★
-// 任何页面引入 common.js 都会自动上线
-// chats.html 只需要通过 window.__globalPresenceChannel 读取即可
+// ★ 全局在线状态（Presence）
 // ============================================================
 (function initGlobalPresence(){
   function startPresence(){
@@ -674,22 +630,15 @@ window.showAvatarPrompt = showAvatarPrompt;
     if (!user || !user.id) return;
     if (!window.sb) return;
 
-    // 若已存在旧 channel，先清理
     if (window.__globalPresenceChannel) {
       try { window.sb.removeChannel(window.__globalPresenceChannel); } catch(e){}
       window.__globalPresenceChannel = null;
     }
 
     var ch = window.sb.channel('sq-chat-online', {
-      config: {
-        presence: {
-          // ★ 唯一 key = user.id（同一账号多个标签页只算一个）
-          key: user.id
-        }
-      }
+      config: { presence: { key: user.id } }
     });
 
-    // 触发一次同步
     ch.on('presence', { event: 'sync' }, function(){});
 
     ch.subscribe(function(status){
@@ -702,7 +651,6 @@ window.showAvatarPrompt = showAvatarPrompt;
         });
         console.log('[presence] 已上线:', user.nickname);
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        console.warn('[presence] 连接异常，3 秒后重连');
         setTimeout(startPresence, 3000);
       }
     });
@@ -715,9 +663,145 @@ window.showAvatarPrompt = showAvatarPrompt;
   } else {
     setTimeout(startPresence, 300);
   }
-
-  // 登录状态变化时重启
   window.addEventListener('storage', function(e){
     if (e.key === 'sq_user_session') setTimeout(startPresence, 200);
   });
+})();
+
+// ============================================================
+// ★★★ 封号实时监听 ★★★
+// 数据库 users.banned_until 变化 → 本地 session 立即更新
+// → 触发 sq-ban-changed 事件 → 各页面横幅更新
+// ============================================================
+(function initBanWatcher(){
+  function applyBanUpdate(bannedUntil, bannedReason){
+    var s = getSessionUser();
+    if (!s) return;
+    if ((s.banned_until || null) === (bannedUntil || null) &&
+        (s.banned_reason || null) === (bannedReason || null)) {
+      return; // 无变化，不重复触发
+    }
+    s.banned_until = bannedUntil;
+    s.banned_reason = bannedReason;
+    setSessionUser(s);
+
+    console.log('[ban] 本地封号状态已更新:', bannedUntil);
+
+    window.dispatchEvent(new CustomEvent('sq-ban-changed', {
+      detail: { banned_until: bannedUntil, banned_reason: bannedReason }
+    }));
+
+    // 被封禁时弹顶部提示
+    if (bannedUntil && new Date(bannedUntil) > new Date()) {
+      if (typeof showTopBanner === 'function') {
+        showTopBanner('你的账号已被封禁：' + (bannedReason || '违规'));
+      }
+    }
+  }
+
+  function startWatch(){
+    var user = (typeof getSessionUser === 'function') ? getSessionUser() : null;
+    if (!user || !user.id) return;
+    if (!window.sb) return;
+
+    if (window.__banWatchChannel) {
+      try { window.sb.removeChannel(window.__banWatchChannel); } catch(e){}
+      window.__banWatchChannel = null;
+    }
+
+    // 1) Realtime 订阅：秒级生效
+    var ch = window.sb.channel('sq-ban-watch-' + user.id)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'users',
+        filter: 'id=eq.' + user.id
+      }, function(payload){
+        var n = payload.new || {};
+        applyBanUpdate(n.banned_until || null, n.banned_reason || null);
+      })
+      .subscribe();
+
+    window.__banWatchChannel = ch;
+
+    // 2) 每 8 秒轮询兜底（Realtime 挂了也能生效）
+    if (window.__banPollTimer) clearInterval(window.__banPollTimer);
+    window.__banPollTimer = setInterval(async function(){
+      var u = getSessionUser();
+      if (!u || !u.id) return;
+      try {
+        var res = await window.sb.from('users')
+          .select('banned_until, banned_reason')
+          .eq('id', u.id)
+          .single();
+        if (res.error || !res.data) return;
+        applyBanUpdate(res.data.banned_until || null, res.data.banned_reason || null);
+      } catch(e){}
+    }, 8000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(startWatch, 500); });
+  } else {
+    setTimeout(startWatch, 500);
+  }
+  window.addEventListener('storage', function(e){
+    if (e.key === 'sq_user_session') setTimeout(startWatch, 300);
+  });
+})();
+
+// ============================================================
+// ★ 通用封号横幅工具
+// 页面只要有一个 id="bannedBanner" 的元素，就会自动控制显隐
+// 更新显示内容的 span id="bannedUntilDisplay"
+// ============================================================
+(function initGlobalBanBanner(){
+  function updateBanner(){
+    var banner = document.getElementById('bannedBanner');
+    if (!banner) return;
+    var user = getSessionUser();
+    var isBanned = !!(user && user.banned_until && new Date(user.banned_until) > new Date());
+
+    if (isBanned) {
+      banner.classList.add('active');
+      banner.style.display = 'block';
+      var display = document.getElementById('bannedUntilDisplay');
+      if (display) {
+        display.textContent = new Date(user.banned_until).toLocaleString('zh-CN', {
+          year: 'numeric', month: 'long', day: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+      }
+      // 禁用发帖按钮
+      ['newPostBtn','floatingPostBtn'].forEach(function(id){
+        var el = document.getElementById(id);
+        if (el) { el.style.opacity = '0.5'; el.style.pointerEvents = 'none'; }
+      });
+    } else {
+      banner.classList.remove('active');
+      banner.style.display = 'none';
+      ['newPostBtn','floatingPostBtn'].forEach(function(id){
+        var el = document.getElementById(id);
+        if (el) { el.style.opacity = ''; el.style.pointerEvents = ''; }
+      });
+    }
+  }
+
+  // 初次渲染
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(updateBanner, 100); });
+  } else {
+    setTimeout(updateBanner, 100);
+  }
+
+  // 封号变化时刷新
+  window.addEventListener('sq-ban-changed', function(){ setTimeout(updateBanner, 50); });
+
+  // 页面切换可见时刷新一次
+  document.addEventListener('visibilitychange', function(){
+    if (!document.hidden) updateBanner();
+  });
+
+  // 暴露给页面主动调用
+  window.updateGlobalBanBanner = updateBanner;
 })();
