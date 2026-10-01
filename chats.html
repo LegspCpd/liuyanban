@@ -4,15 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Seven戚 · 聊天群</title>
-<!-- 1. 先加载 Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
 :root{--bg:#f5faf5;--bg-card:#fff;--bg-input:#eaf3ea;--border:#c8e0c8;--text:#1e3a2e;--text-muted:#5a7a6a;--text-light:#8aaa9a;--primary:#2e7d32;--primary-light:#4caf50;--primary-bg:#e8f5e9;--shadow:0 8px 32px rgba(46,125,50,.12);--radius:16px;--radius-sm:10px;--font:"Space Grotesk","PingFang SC","Segoe UI",system-ui,sans-serif;--danger:#e57373;--success:#22c55e;--official-blue:#2b6cff;--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px)}
 html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
 #mainApp{display:flex;flex-direction:column;height:100vh;height:100dvh;background:var(--bg)}
-
-/* ============ 头部 ============ */
 .app-header{flex-shrink:0;padding:12px 16px;background:rgba(255,255,255,.94);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;min-height:56px;z-index:50;gap:8px}
 .app-header .brand{font-weight:900;font-size:1.05em;display:flex;align-items:center;gap:.35em;cursor:pointer;white-space:nowrap}
 .app-header .brand span{color:var(--primary)}
@@ -22,12 +19,10 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .user-area:hover{background:var(--primary-bg)}
 .user-area .avatar{width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex-shrink:0;background-size:cover;background-position:center}
 .user-area .user-name{font-weight:600;font-size:.8em;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dots-btn{background:none;border:none;cursor:pointer;padding:6px;border-radius:50%;display:grid;place-items:center;color:var(--text-muted);flex-shrink:0}
+.dots-btn{background:none;border:none;cursor:pointer;padding:6px;border-radius:50%;display:grid;place-items:center;color:var(--text-muted);flex-shrink:0;position:relative}
 .dots-btn:hover{background:var(--primary-bg);color:var(--primary)}
 .dots-btn svg{width:22px;height:22px;fill:currentColor}
-
-/* ============ 底部导航栏（关键：flex-shrink:0 防止被压扁） ============ */
-#footer-container{flex-shrink:0;display:flex;flex-direction:column}
+.dots-btn .online-badge{position:absolute;top:0;right:0;background:var(--success);color:#fff;font-size:.55em;font-weight:800;padding:1px 5px;border-radius:99px;line-height:13px;min-width:14px;text-align:center}
 .app-tabs{flex-shrink:0;display:flex;background:rgba(255,255,255,.96);border-top:1px solid var(--border);padding:6px 0 calc(6px + var(--safe-b));z-index:50}
 .tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;font-family:var(--font);font-size:.6em;font-weight:600;color:var(--text-muted);padding:4px 0;cursor:pointer;text-decoration:none;position:relative}
 .tab-btn .tab-icon{font-size:1.6em;line-height:1.2;display:flex;align-items:center;justify-content:center;width:1.7em;height:1.7em}
@@ -35,8 +30,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .tab-btn.active{color:var(--primary)}
 .tab-btn.active::after{content:'';position:absolute;top:-1px;left:30%;right:30%;height:3px;background:var(--primary);border-radius:0 0 4px 4px}
 .tab-btn .badge{position:absolute;top:-2px;right:15%;background:#e57373;color:#fff;font-size:.6em;font-weight:700;padding:1px 6px;border-radius:99px;min-width:16px;text-align:center}
-
-/* ============ 内容区 ============ */
 .banned-banner{flex-shrink:0;background:#ffebee;color:#c62828;padding:6px 16px;font-size:.8em;font-weight:600;text-align:center;border-bottom:1px solid #ffcdd2;display:none}
 .banned-banner.active{display:block}
 .app-content{flex:1;min-height:0;display:flex;flex-direction:column}
@@ -54,16 +47,12 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .chat-msg .msg-header .name{font-weight:600;font-size:.82em}
 .chat-msg .msg-header .official-badge{font-size:.5em;background:var(--primary);color:#fff;padding:0 6px;border-radius:99px;line-height:16px}
 .chat-msg .chat-text{font-size:.85em;line-height:1.5;word-break:break-word}
-
-/* ============ 房间按钮条 ============ */
 .pill-bar{flex-shrink:0;display:flex;gap:8px;align-items:center;padding:8px 16px 0;overflow-x:auto;background:var(--bg)}
 .pill-btn{position:relative;display:inline-flex;align-items:center;gap:6px;padding:8px 22px;border-radius:999px;border:2px solid var(--border);background:var(--bg-card);color:var(--text);font-family:inherit;font-weight:700;font-size:.8em;cursor:pointer;white-space:nowrap;transition:.2s}
 .pill-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-bg)}
 .pill-btn:active{transform:scale(.97)}
 .pill-btn svg{width:15px;height:15px;flex-shrink:0}
 .pill-new{position:absolute;top:-7px;right:-4px;background:var(--success);color:#fff;font-size:.6em;font-weight:800;padding:1px 6px;border-radius:999px;line-height:14px;box-shadow:0 2px 6px rgba(34,197,94,.5);letter-spacing:.5px}
-
-/* ============ 输入区 ============ */
 .fixed-input-area{flex-shrink:0;padding:10px 16px calc(10px + var(--safe-b));background:var(--bg);border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .fixed-input-area .input-wrapper{flex:1;display:flex;gap:8px;min-width:0}
 .fixed-input-area input{flex:1;padding:10px 14px;border-radius:99px;border:2px solid var(--border);background:var(--bg-input);font-family:inherit;font-size:.85em;outline:none;min-width:0;color:var(--text)}
@@ -79,14 +68,10 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .loading-state{text-align:center;color:var(--text-muted);padding:40px 20px;font-size:.9em}
 .loading-state .spinner{display:inline-block;width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* ============ 上下文菜单 ============ */
 .chat-ctx-menu{position:fixed;z-index:10000;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.15);padding:4px 0;min-width:130px}
 .chat-ctx-item{padding:10px 16px;font-size:.85em;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:8px}
 .chat-ctx-item:hover{background:var(--primary-bg);color:var(--primary)}
 .chat-ctx-item.danger:hover{background:#ffebee;color:var(--danger)}
-
-/* ============ Toast & Modal ============ */
 #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:.7em 1.5em;border-radius:2em;font-weight:600;font-size:.85em;opacity:0;transition:all .4s ease;z-index:9999;pointer-events:none;white-space:nowrap;box-shadow:var(--shadow);max-width:90vw}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .custom-modal{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
@@ -98,30 +83,32 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .modal-actions button{padding:6px 18px;border-radius:var(--radius-sm);border:none;font-weight:600;cursor:pointer;font-family:inherit}
 .modal-actions .btn-danger{background:var(--danger);color:#fff}
 .modal-actions .btn-secondary{background:var(--bg-input);color:var(--text-muted)}
-
-/* ============ 在线用户 overlay ============ */
+/* 在线用户 overlay */
 .online-overlay{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);will-change:transform}
 .online-overlay.open{transform:translateX(0)}
 .online-header{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:calc(10px + var(--safe-t)) 14px 10px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--border);min-height:56px;backdrop-filter:blur(8px)}
 .online-header .back{background:none;border:none;cursor:pointer;padding:4px;color:var(--text);display:flex}
 .online-header .back svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .online-header .title{font-weight:700;font-size:1em;flex:1}
+.online-header .live-dot{display:flex;align-items:center;gap:5px;font-size:.7em;color:var(--success);font-weight:700}
+.online-header .live-dot .dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 0 3px rgba(34,197,94,.18);animation:pulseDot 1.8s infinite}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.4}}
 .online-body{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch}
 .me-card{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--primary-bg);border:1px solid var(--primary);border-radius:var(--radius-sm);margin-bottom:14px}
 .ou-avatar{width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:16px;flex-shrink:0;background-size:cover;background-position:center}
 .ou-info{flex:1;min-width:0}
 .ou-name{font-weight:700;font-size:.92em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ou-status{font-size:.72em;color:var(--success);display:flex;align-items:center;gap:5px;margin-top:2px;font-weight:600}
-.ou-status .dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 0 3px rgba(34,197,94,.18);animation:pulseDot 1.8s infinite}
-@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.4}}
-.section-label{font-size:.7em;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.06em;margin:6px 0 10px}
+.ou-status .dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 0 3px rgba(34,197,94,.18)}
+.section-label{font-size:.7em;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.06em;margin:6px 0 10px;display:flex;align-items:center;gap:6px}
 .online-list{display:flex;flex-direction:column;gap:10px}
-.online-user{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.online-user{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);animation:fadeInUp .3s ease}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.online-user.me{border-color:var(--primary);background:var(--primary-bg)}
 .empty-online{text-align:center;padding:70px 20px;color:var(--text-muted)}
 .empty-online-icon{font-size:3.2em;opacity:.45;margin-bottom:14px}
 .empty-online-title{font-size:.98em;font-weight:700;color:var(--text);margin-bottom:6px}
-.empty-online-sub{font-size:.78em;color:var(--text-light)}
-
+.empty-online-sub{font-size:.78em;color:var(--text-light);line-height:1.6}
 @media (max-width:480px){.app-header{padding:10px 12px}.chat-messages{padding:12px 12px 4px}.fixed-input-area{padding:8px 12px calc(8px + var(--safe-b))}.pill-bar{padding:8px 12px 0}.chat-msg{max-width:90%}.user-area .user-name{max-width:54px;font-size:.72em}}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
@@ -130,19 +117,10 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 <body>
 
 <div id="mainApp">
-  <!-- 头部占位 -->
   <div id="header-container"></div>
-
-  <!-- 封禁横幅 -->
-  <div class="banned-banner" id="bannedBanner">
-    账号已被封禁，无法发送聊天消息。解封时间：<span id="bannedUntilDisplay"></span>
-  </div>
-
-  <!-- 主内容区 -->
+  <div class="banned-banner" id="bannedBanner">账号已被封禁，无法发送聊天消息。解封时间：<span id="bannedUntilDisplay"></span></div>
   <div class="app-content">
     <div class="chat-messages" id="chatMessages"></div>
-
-    <!-- 椭圆形房间入口 -->
     <div class="pill-bar">
       <button class="pill-btn" id="roomPillBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -152,7 +130,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         <span class="pill-new">新</span>
       </button>
     </div>
-
     <div class="fixed-input-area">
       <div class="input-wrapper">
         <input type="text" id="chatInput" placeholder="说点什么…" maxlength="200" />
@@ -164,8 +141,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       <button class="admin-clear-btn" id="clearChatBtn" type="button">清空聊天</button>
     </div>
   </div>
-
-  <!-- 底部导航栏容器（由 common.js 的 renderFooter 渲染） -->
   <div id="footer-container"></div>
 </div>
 
@@ -176,14 +151,13 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </button>
     <span class="title">在线用户</span>
+    <span class="live-dot"><span class="dot"></span>实时</span>
   </div>
   <div class="online-body">
-    <div class="section-label">当前在线</div>
     <div class="online-list" id="onlineUserList"></div>
   </div>
 </div>
 
-<!-- 确认弹窗 -->
 <div class="custom-modal" id="confirmModal">
   <div class="modal-box">
     <div class="modal-title" id="confirmTitle">确认</div>
@@ -197,541 +171,419 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 
 <div id="toast"></div>
 
-<!-- 2. common.js 必须在 body 末尾加载（依赖 DOM） -->
 <script src="/liuyanban/common.js"></script>
-
-<!-- 3. 页面脚本 -->
 <script>
 /* ============================================================
-   全局变量
+   基础
 ============================================================ */
-var SUPABASE_URL = "https://ulvhuqtpdafspbdvkogs.supabase.co";
-var SUPABASE_ANON_KEY = "sb_publishable_Ew8kKf2z05kmYIK2XNu00g_dzAirtIM";
-window.sb = window.sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var SUPABASE_URL="https://ulvhuqtpdafspbdvkogs.supabase.co";
+var SUPABASE_ANON_KEY="sb_publishable_Ew8kKf2z05kmYIK2XNu00g_dzAirtIM";
+window.sb=window.sb||window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+function showToast(m){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(function(){t.classList.remove('show')},2600)}
+function escapeHtml(s){if(!s)return '';return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function showConfirm(title,body,onOk){var m=document.getElementById('confirmModal');document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmBody').textContent=body;m.classList.add('active');var c=document.getElementById('confirmCancel'),o=document.getElementById('confirmOk');var cleanup=function(){m.classList.remove('active');c.onclick=null;o.onclick=null};c.onclick=cleanup;o.onclick=function(){if(onOk)onOk();cleanup()}}
+
+var currentUser=getSessionUser();
+if(!currentUser||!currentUser.id)window.location.href='/liuyanban/index.html';
+var isAdmin=!!(currentUser&&currentUser.phone==='17355394710');
+var isAuthorMode=false,AUTHOR_PASSWORD="7592";
+async function sha256(msg){var buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(msg));return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('')}
 
 /* ============================================================
-   工具函数
+   头部
 ============================================================ */
-function showToast(m){
-  var t = document.getElementById('toast');
-  if(!t) return;
-  t.textContent = m;
-  t.classList.add('show');
-  clearTimeout(window.toastTimer);
-  window.toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2800);
-}
-function escapeHtml(s){
-  if(!s) return '';
-  return String(s).replace(/[&<>"']/g, function(c){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-  });
-}
-function showConfirm(title, body, onOk){
-  var m = document.getElementById('confirmModal');
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmBody').textContent = body;
-  m.classList.add('active');
-  var c = document.getElementById('confirmCancel');
-  var o = document.getElementById('confirmOk');
-  var cleanup = function(){ m.classList.remove('active'); c.onclick = null; o.onclick = null; };
-  c.onclick = cleanup;
-  o.onclick = function(){ if(onOk) onOk(); cleanup(); };
-}
-
-/* ============================================================
-   会话
-============================================================ */
-var currentUser = getSessionUser();
-if(!currentUser || !currentUser.id){
-  window.location.href = '/liuyanban/index.html';
-}
-var isAdmin = !!(currentUser && currentUser.phone === '17355394710');
-var isAuthorMode = false;
-var AUTHOR_PASSWORD = "7592";
-
-async function sha256(msg){
-  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
-  return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
-}
-
-/* ============================================================
-   渲染头部（含右上角三点）
-============================================================ */
-function renderMyHeader(){
-  var u = currentUser || {};
-  var name = u.nickname || '用户';
-  var has = u.avatar_url && String(u.avatar_url).indexOf('http') === 0;
-
-  document.getElementById('header-container').innerHTML =
-    '<div class="app-header">' +
-      '<div class="brand" id="brandBtn">Seven<span>戚</span><small>· 聊天群</small></div>' +
-      '<div class="header-right">' +
-        '<div class="user-area" onclick="window.location.href=\'/liuyanban/profile.html\'">' +
-          '<div class="avatar" style="' + (has ? 'background-image:url(' + escapeHtml(u.avatar_url) + ');background-size:cover;background-position:center;' : '') + '">' +
-            (has ? '' : escapeHtml(name.charAt(0).toUpperCase())) +
-          '</div>' +
-          '<span class="user-name">' + escapeHtml(name) + '</span>' +
-        '</div>' +
-        '<button class="dots-btn" id="dotsBtn" type="button" title="在线用户">' +
-          '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>' +
-        '</button>' +
-      '</div>' +
+(function renderHeaderUI(){
+  var u=currentUser||{},name=u.nickname||'用户';
+  var has=u.avatar_url&&String(u.avatar_url).indexOf('http')===0;
+  document.getElementById('header-container').innerHTML=
+    '<div class="app-header">'+
+      '<div class="brand" id="brandBtn">Seven<span>戚</span><small>· 聊天群</small></div>'+
+      '<div class="header-right">'+
+        '<div class="user-area" onclick="window.location.href=\'/liuyanban/profile.html\'">'+
+          '<div class="avatar" style="'+(has?'background-image:url('+escapeHtml(u.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(name.charAt(0).toUpperCase()))+'</div>'+
+          '<span class="user-name">'+escapeHtml(name)+'</span>'+
+        '</div>'+
+        '<button class="dots-btn" id="dotsBtn" type="button" title="在线用户">'+
+          '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>'+
+          '<span class="online-badge" id="onlineBadge" style="display:none;">0</span>'+
+        '</button>'+
+      '</div>'+
     '</div>';
-
-  // 右上角三点 → 打开在线用户 overlay
-  document.getElementById('dotsBtn').onclick = function(){
+  document.getElementById('dotsBtn').onclick=function(){
     document.getElementById('onlineOverlay').classList.add('open');
     renderOnlineUsers();
   };
-
   // 三击 logo → 作者模式
-  var cnt = 0, timer = null;
-  document.getElementById('brandBtn').addEventListener('click', async function(){
-    cnt++;
-    clearTimeout(timer);
-    timer = setTimeout(function(){ cnt = 0; }, 800);
-    if(cnt === 3){
-      cnt = 0;
+  var cnt=0,timer=null;
+  document.getElementById('brandBtn').addEventListener('click',async function(){
+    cnt++;clearTimeout(timer);timer=setTimeout(function(){cnt=0},800);
+    if(cnt===3){
+      cnt=0;
       if(!isAuthorMode){
-        var p = prompt('请输入作者密码：');
-        if(p === null) return;
-        var h1 = await sha256(p);
-        var h2 = await sha256(AUTHOR_PASSWORD);
-        if(h1 === h2){ isAuthorMode = true; showToast('👑 作者模式已激活'); }
+        var p=prompt('请输入作者密码：');
+        if(p===null)return;
+        var h1=await sha256(p),h2=await sha256(AUTHOR_PASSWORD);
+        if(h1===h2){isAuthorMode=true;showToast('👑 作者模式已激活')}
         else showToast('❌ 密码错误');
-      } else {
-        isAuthorMode = false;
-        showToast('已退出作者模式');
-      }
+      }else{isAuthorMode=false;showToast('已退出作者模式')}
     }
   });
-}
+})();
 
 /* ============================================================
-   在线用户（Supabase Presence）
+   ★★★ 在线用户（Presence）★★★
+   修复要点：
+   1. 用独立频道名 + 随机后缀，避免多设备冲突
+   2. 排除自己用 user_id 判等，不依赖 key
+   3. sync 事件用 setTimeout 防抖，避免高频抖动
+   4. 同时监听 join / leave 事件，立刻更新
 ============================================================ */
-var onlineUsers = {};
-var onlineChannel = null;
+var onlineUsers={};
+var onlineChannel=null;
+var renderDebounce=null;
 
-document.getElementById('onlineBackBtn').onclick = function(){
+document.getElementById('onlineBackBtn').onclick=function(){
   document.getElementById('onlineOverlay').classList.remove('open');
 };
 
 function renderOnlineUsers(){
-  var c = document.getElementById('onlineUserList');
-  if(!c) return;
-  var arr = Object.keys(onlineUsers).map(function(k){ return onlineUsers[k]; });
-  arr.sort(function(a,b){ return String(a.nickname).localeCompare(String(b.nickname), 'zh'); });
+  var c=document.getElementById('onlineUserList');
+  if(!c)return;
+  // 把自己和他人分开
+  var mine=null;
+  var others=[];
+  Object.keys(onlineUsers).forEach(function(k){
+    var u=onlineUsers[k];
+    if(u.id===currentUser.id){mine=u}
+    else{others.push(u)}
+  });
+  others.sort(function(a,b){return String(a.nickname||'').localeCompare(String(b.nickname||''),'zh')});
 
-  if(!arr.length){
-    c.innerHTML =
-      '<div class="empty-online">' +
-        '<div class="empty-online-icon">🌙</div>' +
-        '<div class="empty-online-title">除你之外没有用户上线</div>' +
-        '<div class="empty-online-sub">稍等一会儿，或者邀请朋友一起来玩吧</div>' +
-      '</div>';
-    return;
+  // 更新头部徽章
+  var badge=document.getElementById('onlineBadge');
+  if(badge){
+    if(others.length>0){badge.textContent=others.length>99?'99+':others.length;badge.style.display='inline-block'}
+    else{badge.style.display='none'}
   }
 
-  var me = currentUser;
-  var meHas = me.avatar_url && String(me.avatar_url).indexOf('http') === 0;
-  var html =
-    '<div class="me-card">' +
-      '<div class="ou-avatar" style="' + (meHas ? 'background-image:url(' + escapeHtml(me.avatar_url) + ');background-size:cover;background-position:center;' : '') + '">' +
-        (meHas ? '' : escapeHtml((me.nickname || 'U').charAt(0).toUpperCase())) +
-      '</div>' +
-      '<div class="ou-info">' +
-        '<div class="ou-name">' + escapeHtml(me.nickname || '我') + '（我）</div>' +
-        '<div class="ou-status"><span class="dot"></span>在线</div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="section-label">其他在线用户 · ' + arr.length + ' 人</div>';
+  // 渲染列表
+  var html='';
+  // 我
+  var me=currentUser;
+  var meHas=me.avatar_url&&String(me.avatar_url).indexOf('http')===0;
+  html+='<div class="online-user me">'+
+    '<div class="ou-avatar" style="'+(meHas?'background-image:url('+escapeHtml(me.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(meHas?'':escapeHtml(String(me.nickname||'U').charAt(0).toUpperCase()))+'</div>'+
+    '<div class="ou-info">'+
+      '<div class="ou-name">'+escapeHtml(me.nickname||'我')+' <span style="font-size:.75em;color:var(--primary);font-weight:800;">（我）</span></div>'+
+      '<div class="ou-status"><span class="dot"></span>在线</div>'+
+    '</div>'+
+  '</div>';
 
-  html += arr.map(function(u){
-    var has = u.avatar_url && String(u.avatar_url).indexOf('http') === 0;
-    return '<div class="online-user">' +
-      '<div class="ou-avatar" style="' + (has ? 'background-image:url(' + escapeHtml(u.avatar_url) + ');background-size:cover;background-position:center;' : '') + '">' +
-        (has ? '' : escapeHtml(String(u.nickname).charAt(0).toUpperCase())) +
-      '</div>' +
-      '<div class="ou-info">' +
-        '<div class="ou-name">' + escapeHtml(u.nickname) + '</div>' +
-        '<div class="ou-status"><span class="dot"></span>在线</div>' +
-      '</div>' +
+  if(others.length===0){
+    html+='<div class="empty-online">'+
+      '<div class="empty-online-icon">🌙</div>'+
+      '<div class="empty-online-title">除你之外没有用户上线</div>'+
+      '<div class="empty-online-sub">换个浏览器或无痕窗口登录另一个账号，<br>就能互相看到啦</div>'+
     '</div>';
-  }).join('');
+  }else{
+    html+='<div class="section-label">其他在线用户 · '+others.length+' 人</div>';
+    html+=others.map(function(u){
+      var has=u.avatar_url&&String(u.avatar_url).indexOf('http')===0;
+      return '<div class="online-user">'+
+        '<div class="ou-avatar" style="'+(has?'background-image:url('+escapeHtml(u.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(u.nickname||'U').charAt(0).toUpperCase()))+'</div>'+
+        '<div class="ou-info">'+
+          '<div class="ou-name">'+escapeHtml(u.nickname||'用户')+'</div>'+
+          '<div class="ou-status"><span class="dot"></span>在线</div>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+  c.innerHTML=html;
+}
 
-  c.innerHTML = html;
+function scheduleRender(){
+  if(renderDebounce)clearTimeout(renderDebounce);
+  renderDebounce=setTimeout(function(){renderOnlineUsers()},50);
 }
 
 function initPresence(){
-  if(!currentUser || !currentUser.id) return;
-  onlineChannel = window.sb.channel('sq-online-users', {
-    config: { presence: { key: currentUser.id } }
+  if(onlineChannel){try{window.sb.removeChannel(onlineChannel)}catch(e){}onlineChannel=null}
+  // 每个用户用 user_id 作为 presence key，保证唯一
+  onlineChannel=window.sb.channel('sq-chat-online',{
+    config:{presence:{key:currentUser.id}}
   });
-  onlineChannel.on('presence', { event: 'sync' }, function(){
-    var raw = onlineChannel.presenceState();
-    var map = {};
+
+  // 全量同步
+  onlineChannel.on('presence',{event:'sync'},function(){
+    var raw=onlineChannel.presenceState();
+    var map={};
     Object.keys(raw).forEach(function(key){
-      if(key === currentUser.id) return;
-      var arr = raw[key];
-      if(!arr || !arr.length) return;
-      var p = arr[0];
-      map[key] = {
-        id: key,
-        nickname: p.nickname || '用户',
-        avatar_url: p.avatar_url || ''
+      var arr=raw[key];
+      if(!arr||!arr.length)return;
+      var p=arr[0];
+      var uid=p.user_id||key;
+      map[uid]={
+        id:uid,
+        nickname:p.nickname||'用户',
+        avatar_url:p.avatar_url||'',
+        online_at:p.online_at||''
       };
     });
-    onlineUsers = map;
-    renderOnlineUsers();
+    onlineUsers=map;
+    scheduleRender();
   });
-  onlineChannel.subscribe(function(status){
-    if(status === 'SUBSCRIBED'){
-      onlineChannel.track({
-        user_id: currentUser.id,
-        nickname: currentUser.nickname,
-        avatar_url: currentUser.avatar_url || '',
-        online_at: new Date().toISOString()
+
+  // 有新人加入
+  onlineChannel.on('presence',{event:'join'},function(payload){
+    if(payload&&payload.newPresences){
+      payload.newPresences.forEach(function(p){
+        var uid=p.user_id||'';
+        if(!uid)return;
+        onlineUsers[uid]={id:uid,nickname:p.nickname||'用户',avatar_url:p.avatar_url||'',online_at:p.online_at||''};
       });
+      scheduleRender();
+    }
+  });
+
+  // 有人离开
+  onlineChannel.on('presence',{event:'leave'},function(payload){
+    if(payload&&payload.leftPresences){
+      payload.leftPresences.forEach(function(p){
+        var uid=p.user_id||'';
+        if(uid&&onlineUsers[uid])delete onlineUsers[uid];
+      });
+      scheduleRender();
+    }
+  });
+
+  onlineChannel.subscribe(function(status){
+    if(status==='SUBSCRIBED'){
+      onlineChannel.track({
+        user_id:currentUser.id,
+        nickname:currentUser.nickname,
+        avatar_url:currentUser.avatar_url||'',
+        online_at:new Date().toISOString()
+      });
+    }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
+      // 断线后 3 秒重连
+      setTimeout(initPresence,3000);
     }
   });
 }
 
 /* ============================================================
-   全局聊天
+   聊天
 ============================================================ */
-var chats = [];
-var chatsLoading = false;
-var usersCache = {};
+var chats=[],chatsLoading=false,usersCache={};
 
-function isUserBanned(){
-  if(!currentUser || !currentUser.banned_until) return false;
-  return new Date(currentUser.banned_until) > new Date();
-}
+function isUserBanned(){if(!currentUser||!currentUser.banned_until)return false;return new Date(currentUser.banned_until)>new Date()}
 function updateBannedBanner(){
-  var b = document.getElementById('bannedBanner');
-  var d = document.getElementById('bannedUntilDisplay');
-  var i = document.getElementById('chatInput');
-  var s = document.getElementById('sendChatBtn');
+  var b=document.getElementById('bannedBanner'),d=document.getElementById('bannedUntilDisplay'),i=document.getElementById('chatInput'),s=document.getElementById('sendChatBtn');
   if(isUserBanned()){
     b.classList.add('active');
-    d.textContent = new Date(currentUser.banned_until).toLocaleString('zh-CN', {
-      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
-    i.disabled = true;
-    i.placeholder = '账号已被封禁，无法发送消息';
-    s.disabled = true;
-  } else {
+    d.textContent=new Date(currentUser.banned_until).toLocaleString('zh-CN',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    i.disabled=true;i.placeholder='账号已被封禁，无法发送消息';s.disabled=true;
+  }else{
     b.classList.remove('active');
-    i.disabled = false;
-    i.placeholder = '说点什么…';
-    s.disabled = false;
+    i.disabled=false;i.placeholder='说点什么…';s.disabled=false;
   }
 }
 
 async function fetchChats(){
-  var res = await window.sb
-    .from('chats')
-    .select('*, users(id, nickname, avatar_url)')
-    .order('created_at', { ascending: true });
-  if(res.error) throw res.error;
-  (res.data || []).forEach(function(item){
-    if(item.users){
-      usersCache[item.users.id] = {
-        nickname: item.users.nickname,
-        avatar_url: item.users.avatar_url
-      };
-    }
+  var res=await window.sb.from('chats').select('*, users(id, nickname, avatar_url)').order('created_at',{ascending:true});
+  if(res.error)throw res.error;
+  (res.data||[]).forEach(function(item){
+    if(item.users)usersCache[item.users.id]={nickname:item.users.nickname,avatar_url:item.users.avatar_url};
   });
-  return res.data || [];
+  return res.data||[];
 }
-async function addChat(userId, author, content, isOfficial){
-  var r = await window.sb.from('chats').insert([{
-    user_id: userId,
-    author: author,
-    content: content,
-    is_official: isOfficial,
-    is_deleted: false,
-    deleted_by: null
-  }]);
-  if(r.error) throw r.error;
-  return r.data;
+async function addChat(userId,author,content,isOfficial){
+  var r=await window.sb.from('chats').insert([{user_id:userId,author:author,content:content,is_official:isOfficial,is_deleted:false,deleted_by:null}]);
+  if(r.error)throw r.error;return r.data;
 }
-async function revokeChat(id, author, revoker, isSelf){
-  var nc = isSelf ? author + ' 撤回了一条消息' : author + ' 的消息被 ' + revoker + ' 撤回了';
-  var r = await window.sb.from('chats').update({
-    is_deleted: true,
-    content: nc,
-    deleted_by: revoker
-  }).eq('id', id);
-  if(r.error) throw r.error;
+async function revokeChat(id,author,revoker,isSelf){
+  var nc=isSelf?author+' 撤回了一条消息':author+' 的消息被 '+revoker+' 撤回了';
+  var r=await window.sb.from('chats').update({is_deleted:true,content:nc,deleted_by:revoker}).eq('id',id);
+  if(r.error)throw r.error;
 }
 async function clearAllChats(){
-  if(!isAdmin){ showToast('权限不足'); return; }
-  showConfirm('清空聊天', '确定要删除所有聊天消息吗？此操作不可恢复！', async function(){
-    try {
-      var r = await window.sb.from('chats').delete().not('id', 'is', null);
-      if(r.error) throw r.error;
-      showToast('🗑️ 所有聊天消息已清空');
-      await loadAllChats();
-    } catch(e) {
-      showToast('清空失败：' + e.message);
-    }
+  if(!isAdmin){showToast('权限不足');return}
+  showConfirm('清空聊天','确定要删除所有聊天消息吗？此操作不可恢复！',async function(){
+    try{var r=await window.sb.from('chats').delete().not('id','is',null);if(r.error)throw r.error;showToast('🗑️ 所有聊天消息已清空');await loadAllChats()}catch(e){showToast('清空失败：'+e.message)}
   });
 }
-
 function formatTimeDivider(date){
-  var now = new Date(), d = new Date(date);
-  var sameYear = d.getFullYear() === now.getFullYear();
-  var sameDay = sameYear && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
-  var hm = d.toTimeString().slice(0, 5);
-  if(sameDay) return hm;
-  if(sameYear) return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + hm;
-  return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + hm;
+  var now=new Date(),d=new Date(date);
+  var sy=d.getFullYear()===now.getFullYear();
+  var sd=sy&&d.getMonth()===now.getMonth()&&d.getDate()===now.getDate();
+  var hm=d.toTimeString().slice(0,5);
+  if(sd)return hm;
+  if(sy)return(d.getMonth()+1)+'月'+d.getDate()+'日 '+hm;
+  return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日 '+hm;
 }
-function shouldShowTimeDivider(prev, cur){
-  if(!prev) return true;
-  return (new Date(cur) - new Date(prev)) / 60000 > 30;
-}
+function shouldShowTimeDivider(p,c){if(!p)return true;return(new Date(c)-new Date(p))/60000>30}
 
 function renderChat(){
-  var container = document.getElementById('chatMessages');
-  if(chatsLoading){
-    container.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>正在加载聊天内容...</div></div>';
-    return;
-  }
-  if(!chats.length){
-    container.innerHTML = '<div class="empty-state"><div class="big">💬</div>还没有聊天消息，来打个招呼吧！</div>';
-    return;
-  }
-  var html = '', prev = null;
+  var container=document.getElementById('chatMessages');
+  if(chatsLoading){container.innerHTML='<div class="loading-state"><div class="spinner"></div><div>正在加载聊天内容...</div></div>';return}
+  if(!chats.length){container.innerHTML='<div class="empty-state"><div class="big">💬</div>还没有聊天消息，来打个招呼吧！</div>';return}
+  var html='',prev=null;
   chats.forEach(function(c){
-    var isSelf = currentUser && c.user_id === currentUser.id;
-    var isOfficial = c.is_official || c.author === 'Seven戚';
-    var isDeleted = c.is_deleted === true;
-    var ui = usersCache[c.user_id] || null;
-    var dn = ui ? ui.nickname : c.author;
-    var au = ui ? ui.avatar_url : null;
-
-    if(shouldShowTimeDivider(prev, c.created_at)){
-      html += '<div class="time-divider"><span>' + formatTimeDivider(c.created_at) + '</span></div>';
-    }
-    prev = c.created_at;
-
-    var badge = isOfficial ? '<span class="official-badge">官方</span>' : '';
-    var fc = '';
+    var isSelf=currentUser&&c.user_id===currentUser.id;
+    var isOfficial=c.is_official||c.author==='Seven戚';
+    var isDeleted=c.is_deleted===true;
+    var ui=usersCache[c.user_id]||null;
+    var dn=ui?ui.nickname:c.author,au=ui?ui.avatar_url:null;
+    if(shouldShowTimeDivider(prev,c.created_at))html+='<div class="time-divider"><span>'+formatTimeDivider(c.created_at)+'</span></div>';
+    prev=c.created_at;
+    var badge=isOfficial?'<span class="official-badge">官方</span>':'';
+    var fc='';
     if(isDeleted){
-      var txt = c.content || '';
-      var m = txt.match(/^(.*?) 的消息被 (.*?) 撤回了$/);
-      if(m){
-        fc = '<span class="chat-text"><span class="deleted-by">' + escapeHtml(m[1]) + '</span> 的消息被 <span class="deleted-by">' + escapeHtml(m[2]) + '</span> 撤回了</span>';
-      } else if(txt.indexOf('撤回了一条消息') >= 0){
-        var n = txt.replace(' 撤回了一条消息', '');
-        fc = '<span class="chat-text"><span class="deleted-by">' + escapeHtml(n) + '</span> 撤回了一条消息</span>';
-      } else {
-        fc = '<span class="chat-text">' + escapeHtml(txt) + '</span>';
-      }
-    } else {
-      fc = '<span class="chat-text">' + escapeHtml(c.content) + '</span>';
-    }
-
-    var av = (au && String(au).indexOf('http') === 0)
-      ? '<div class="avatar" style="background-image:url(' + escapeHtml(au) + ');background-size:cover;background-position:center;text-indent:-9999px;"> </div>'
-      : '<div class="avatar">' + escapeHtml(String(dn).charAt(0).toUpperCase()) + '</div>';
-
-    html += '<div class="chat-msg ' + (isSelf ? 'self' : '') + ' ' + (isDeleted ? 'deleted' : '') + '" data-id="' + c.id + '" data-author="' + escapeHtml(c.author) + '" data-self="' + isSelf + '">' +
-      '<div class="msg-header">' + av + '<span class="name">' + escapeHtml(dn) + '</span>' + badge + '</div>' + fc +
-    '</div>';
+      var txt=c.content||'';
+      var m=txt.match(/^(.*?) 的消息被 (.*?) 撤回了$/);
+      if(m)fc='<span class="chat-text"><span class="deleted-by">'+escapeHtml(m[1])+'</span> 的消息被 <span class="deleted-by">'+escapeHtml(m[2])+'</span> 撤回了</span>';
+      else if(txt.indexOf('撤回了一条消息')>=0){var n=txt.replace(' 撤回了一条消息','');fc='<span class="chat-text"><span class="deleted-by">'+escapeHtml(n)+'</span> 撤回了一条消息</span>'}
+      else fc='<span class="chat-text">'+escapeHtml(txt)+'</span>';
+    }else fc='<span class="chat-text">'+escapeHtml(c.content)+'</span>';
+    var av=(au&&String(au).indexOf('http')===0)?'<div class="avatar" style="background-image:url('+escapeHtml(au)+');background-size:cover;background-position:center;text-indent:-9999px;"> </div>':'<div class="avatar">'+escapeHtml(String(dn).charAt(0).toUpperCase())+'</div>';
+    html+='<div class="chat-msg '+(isSelf?'self':'')+' '+(isDeleted?'deleted':'')+'" data-id="'+c.id+'" data-author="'+escapeHtml(c.author)+'" data-self="'+isSelf+'"><div class="msg-header">'+av+'<span class="name">'+escapeHtml(dn)+'</span>'+badge+'</div>'+fc+'</div>';
   });
-  container.innerHTML = html;
-  container.scrollTop = container.scrollHeight;
-
+  container.innerHTML=html;
+  container.scrollTop=container.scrollHeight;
   container.querySelectorAll('.chat-msg:not(.deleted)').forEach(function(el){
-    el.addEventListener('contextmenu', function(e){
+    el.addEventListener('contextmenu',function(e){
       e.preventDefault();
-      showChatCtxMenu(e.clientX, e.clientY, this.dataset.id, this.dataset.author,
-        this.dataset.self === 'true',
-        this.querySelector('.chat-text') ? this.querySelector('.chat-text').textContent : '');
+      showChatCtxMenu(e.clientX,e.clientY,this.dataset.id,this.dataset.author,this.dataset.self==='true',this.querySelector('.chat-text')?this.querySelector('.chat-text').textContent:'');
     });
-    var timer = null;
-    el.addEventListener('touchstart', function(e){
-      var self = this;
-      timer = setTimeout(function(){
-        if(navigator.vibrate) navigator.vibrate(45);
-        showChatCtxMenu(e.touches[0].clientX, e.touches[0].clientY,
-          self.dataset.id, self.dataset.author, self.dataset.self === 'true',
-          self.querySelector('.chat-text') ? self.querySelector('.chat-text').textContent : '');
-        timer = null;
-      }, 600);
-    }, { passive: true });
-    el.addEventListener('touchend', function(){ if(timer){ clearTimeout(timer); timer = null; } });
-    el.addEventListener('touchmove', function(){ if(timer){ clearTimeout(timer); timer = null; } });
+    var timer=null;
+    el.addEventListener('touchstart',function(e){
+      var self=this;
+      timer=setTimeout(function(){
+        if(navigator.vibrate)navigator.vibrate(45);
+        showChatCtxMenu(e.touches[0].clientX,e.touches[0].clientY,self.dataset.id,self.dataset.author,self.dataset.self==='true',self.querySelector('.chat-text')?self.querySelector('.chat-text').textContent:'');
+        timer=null;
+      },600);
+    },{passive:true});
+    el.addEventListener('touchend',function(){if(timer){clearTimeout(timer);timer=null}});
+    el.addEventListener('touchmove',function(){if(timer){clearTimeout(timer);timer=null}});
   });
 }
 
-function showChatCtxMenu(x, y, id, author, isSelf, contentText){
-  var old = document.getElementById('chatCtxMenu');
-  if(old) old.remove();
-  var menu = document.createElement('div');
-  menu.id = 'chatCtxMenu';
-  menu.className = 'chat-ctx-menu';
-  menu.style.left = Math.min(x, window.innerWidth - 160) + 'px';
-  menu.style.top = Math.min(y, window.innerHeight - 140) + 'px';
-
-  var html = '';
-  if(isAdmin || isSelf){
-    html += '<div class="chat-ctx-item danger" data-action="revoke">' + svgIcon('undo', 16) + ' 撤回</div>';
-  }
-  if(!isSelf){
-    html += '<div class="chat-ctx-item" data-action="report">' + svgIcon('flag', 16) + ' 举报</div>';
-  }
-  menu.innerHTML = html;
+function showChatCtxMenu(x,y,id,author,isSelf,contentText){
+  var old=document.getElementById('chatCtxMenu');if(old)old.remove();
+  var menu=document.createElement('div');menu.id='chatCtxMenu';menu.className='chat-ctx-menu';
+  menu.style.left=Math.min(x,window.innerWidth-160)+'px';
+  menu.style.top=Math.min(y,window.innerHeight-140)+'px';
+  var html='';
+  if(isAdmin||isSelf)html+='<div class="chat-ctx-item danger" data-action="revoke">'+svgIcon('undo',16)+' 撤回</div>';
+  if(!isSelf)html+='<div class="chat-ctx-item" data-action="report">'+svgIcon('flag',16)+' 举报</div>';
+  menu.innerHTML=html;
   document.body.appendChild(menu);
-
   menu.querySelectorAll('.chat-ctx-item').forEach(function(item){
-    item.onclick = function(){
-      var a = this.dataset.action;
-      menu.remove();
-      if(a === 'revoke'){
-        if(!isAdmin && !isSelf){ showToast('您只能撤回自己的消息'); return; }
-        showConfirm('撤回消息', '确定撤回此消息吗？', function(){
-          revokeChat(id, author, currentUser.nickname, isSelf)
-            .then(function(){ showToast('✅ 消息已撤回'); return loadAllChats(); })
-            .catch(function(e){ showToast('撤回失败：' + e.message); });
+    item.onclick=function(){
+      var a=this.dataset.action;menu.remove();
+      if(a==='revoke'){
+        if(!isAdmin&&!isSelf){showToast('您只能撤回自己的消息');return}
+        showConfirm('撤回消息','确定撤回此消息吗？',function(){
+          revokeChat(id,author,currentUser.nickname,isSelf)
+            .then(function(){showToast('✅ 消息已撤回');return loadAllChats()})
+            .catch(function(e){showToast('撤回失败：'+e.message)});
         });
-      } else if(a === 'report'){
-        reportChat(id, author, contentText);
+      }else if(a==='report'){
+        reportChat(id,author,contentText);
       }
     };
   });
   setTimeout(function(){
-    document.addEventListener('click', function close(e){
-      if(!menu.contains(e.target)){ menu.remove(); document.removeEventListener('click', close); }
+    document.addEventListener('click',function close(e){
+      if(!menu.contains(e.target)){menu.remove();document.removeEventListener('click',close)}
     });
-  }, 10);
+  },10);
 }
 
-async function reportChat(contentId, author, snapshot){
-  try {
-    var res = await window.sb.from('users').select('id').eq('nickname', author).single();
-    if(res.error || !res.data){ showToast('无法找到该用户'); return; }
-    openReportDialog(res.data.id, 'chat', contentId, snapshot);
-  } catch(e) { showToast('举报失败：' + e.message); }
+async function reportChat(contentId,author,snapshot){
+  try{
+    var res=await window.sb.from('users').select('id').eq('nickname',author).single();
+    if(res.error||!res.data){showToast('无法找到该用户');return}
+    openReportDialog(res.data.id,'chat',contentId,snapshot);
+  }catch(e){showToast('举报失败：'+e.message)}
 }
 
 function sendChat(){
-  if(!currentUser){ showToast('请先登录'); return; }
-  if(isUserBanned()){ showToast('账号已被封禁，无法发送消息'); return; }
-  var input = document.getElementById('chatInput');
-  var content = input.value.trim();
-  if(!content){ showToast('请输入内容'); return; }
-
-  var btn = document.getElementById('sendChatBtn');
-  var orig = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '发送中...';
-
-  var isOfficial = currentUser.nickname === 'Seven戚' || isAuthorMode;
-  addChat(currentUser.id, currentUser.nickname, content, isOfficial)
-    .then(function(){
-      input.value = '';
-      loadAllChats();
-      showToast('💬 消息已发送');
-    })
-    .catch(function(e){ showToast('发送失败：' + e.message); })
-    .finally(function(){ btn.disabled = false; btn.innerHTML = orig; });
+  if(!currentUser){showToast('请先登录');return}
+  if(isUserBanned()){showToast('账号已被封禁，无法发送消息');return}
+  var input=document.getElementById('chatInput'),content=input.value.trim();
+  if(!content){showToast('请输入内容');return}
+  var btn=document.getElementById('sendChatBtn'),orig=btn.innerHTML;
+  btn.disabled=true;btn.innerHTML='发送中...';
+  var isOfficial=currentUser.nickname==='Seven戚'||isAuthorMode;
+  addChat(currentUser.id,currentUser.nickname,content,isOfficial)
+    .then(function(){input.value='';loadAllChats();showToast('💬 消息已发送')})
+    .catch(function(e){showToast('发送失败：'+e.message)})
+    .finally(function(){btn.disabled=false;btn.innerHTML=orig});
 }
-
 async function loadAllChats(){
-  chatsLoading = true;
-  renderChat();
-  try {
-    chats = await fetchChats();
-  } catch(e) {
-    console.error('加载聊天失败:', e);
-    showToast('聊天加载失败');
-  } finally {
-    chatsLoading = false;
-    renderChat();
-  }
+  chatsLoading=true;renderChat();
+  try{chats=await fetchChats()}
+  catch(e){console.error('加载聊天失败:',e);showToast('聊天加载失败')}
+  finally{chatsLoading=false;renderChat()}
 }
 
 /* ============================================================
-   ★★★ DOM 就绪后统一绑定事件 + 初始化 ★★★
+   事件绑定
 ============================================================ */
-window.addEventListener('DOMContentLoaded', function(){
+document.getElementById('roomPillBtn').addEventListener('click',function(){
+  window.location.href='/liuyanban/room.html';
+});
+document.getElementById('sendChatBtn').addEventListener('click',sendChat);
+document.getElementById('chatInput').addEventListener('keydown',function(e){
+  if(e.key==='Enter')sendChat();
+});
+document.getElementById('clearChatBtn').addEventListener('click',clearAllChats);
+document.addEventListener('gesturestart',function(e){e.preventDefault()});
 
-  /* ----- 渲染头部 ----- */
-  renderMyHeader();
+/* ============================================================
+   初始化
+============================================================ */
+window.addEventListener('DOMContentLoaded',function(){
+  // 底部导航
+  if(typeof renderFooter==='function')renderFooter('chats');
+  else console.error('❌ renderFooter 未定义，检查 common.js');
 
-  /* ----- ★ 渲染底部导航栏（关键：通过 common.js 的 renderFooter） ----- */
-  if(typeof renderFooter === 'function'){
-    renderFooter('chats');
-  } else {
-    console.error('❌ renderFooter 未定义，请检查 common.js 是否正确加载');
-  }
+  if(isAdmin)document.getElementById('clearChatBtn').style.display='inline-block';
 
-  /* ----- ★ 房间按钮跳转（关键：绑定在这个位置） ----- */
-  var roomBtn = document.getElementById('roomPillBtn');
-  if(roomBtn){
-    roomBtn.addEventListener('click', function(){
-      window.location.href = '/liuyanban/room.html';
-    });
-  } else {
-    console.error('❌ 未找到 roomPillBtn');
-  }
-
-  /* ----- 发送消息 ----- */
-  var sendBtn = document.getElementById('sendChatBtn');
-  var input = document.getElementById('chatInput');
-  if(sendBtn) sendBtn.addEventListener('click', sendChat);
-  if(input) input.addEventListener('keydown', function(e){
-    if(e.key === 'Enter') sendChat();
-  });
-
-  /* ----- 清空聊天（管理员） ----- */
-  var clearBtn = document.getElementById('clearChatBtn');
-  if(clearBtn){
-    clearBtn.addEventListener('click', clearAllChats);
-    if(isAdmin) clearBtn.style.display = 'inline-block';
-  }
-
-  /* ----- 初始化数据 ----- */
   updateBannedBanner();
   loadAllChats();
-  initPresence();
+  initPresence();  // ★ 启动在线用户
 
-  if(currentUser && currentUser.id){
+  if(currentUser&&currentUser.id){
     updateLastChatRead(currentUser.id).then(function(){
-      if(typeof updateChatBadge === 'function') updateChatBadge();
+      if(typeof updateChatBadge==='function')updateChatBadge();
     });
   }
 
-  /* ----- 全局聊天实时订阅 ----- */
-  window.sb.channel('chats-page-realtime-' + Date.now())
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, function(){ loadAllChats(); })
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chats' }, function(){ loadAllChats(); })
-    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'chats' }, function(){ loadAllChats(); })
+  // 全局聊天实时订阅
+  window.sb.channel('chats-page-realtime-'+Date.now())
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chats'},function(){loadAllChats()})
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'chats'},function(){loadAllChats()})
+    .on('postgres_changes',{event:'DELETE',schema:'public',table:'chats'},function(){loadAllChats()})
     .subscribe();
 
-  /* ----- 会话同步（跨页签） ----- */
+  // 会话同步
   function syncUser(){
-    var s = getSessionUser();
-    if(s && s.id){
-      if(!currentUser || currentUser.id !== s.id ||
-         currentUser.avatar_url !== s.avatar_url ||
-         currentUser.nickname !== s.nickname){
+    var s=getSessionUser();
+    if(s&&s.id){
+      if(!currentUser||currentUser.id!==s.id||currentUser.avatar_url!==s.avatar_url||currentUser.nickname!==s.nickname){
         location.reload();
       }
     }
   }
-  window.addEventListener('focus', syncUser);
-  document.addEventListener('visibilitychange', function(){
-    if(!document.hidden) syncUser();
+  window.addEventListener('focus',syncUser);
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden)syncUser();
   });
 });
-
-document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
 </script>
 </body>
 </html>
