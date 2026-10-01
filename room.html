@@ -18,9 +18,12 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .page-header .back{background:none;border:none;cursor:pointer;padding:4px;color:var(--text);display:flex;flex-shrink:0}
 .page-header .back svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .page-header .title{font-weight:700;font-size:1em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.header-action{background:var(--primary);color:#fff;border:none;border-radius:99px;padding:7px 15px;font-size:.75em;font-weight:700;cursor:pointer;font-family:inherit;display:none;flex-shrink:0}
-.header-action.show{display:inline-flex}
-.header-action.ghost{background:var(--bg-input);color:var(--text-muted)}
+.header-actions{display:flex;gap:6px;flex-shrink:0}
+.header-action{background:var(--bg-input);color:var(--text);border:none;border-radius:99px;padding:6px 12px;font-size:.75em;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px;position:relative}
+.header-action.primary{background:var(--primary);color:#fff}
+.header-action svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.header-action .cnt{background:var(--danger);color:#fff;font-size:.85em;font-weight:800;min-width:16px;height:16px;line-height:16px;text-align:center;border-radius:99px;padding:0 4px}
+/* 房间列表 */
 .room-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px;overflow-y:auto}
 .room-card{position:relative;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:.2s;min-height:126px;justify-content:center;text-align:center}
 .room-card:hover{border-color:var(--primary);box-shadow:var(--shadow);transform:translateY(-2px)}
@@ -37,6 +40,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .loading-state{grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px 20px;font-size:.9em}
 .spinner{display:inline-block;width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* 房间主体 */
 .room-body{flex:1;min-height:0;display:flex;flex-direction:column;transition:background .8s;background:linear-gradient(135deg,#f5faf5,#e8f5e9);overflow:hidden}
 .room-body[data-theme="gomoku"]{background:linear-gradient(135deg,#f5faf5,#e8f5e9);color:var(--text)}
 .room-body[data-theme="draw"]{background:linear-gradient(135deg,#e3f2fd,#bbdefb 35%,#90caf9 70%,#fff);background-size:200% 200%;animation:drawBgFlow 10s ease infinite;color:#0d47a1}
@@ -73,6 +77,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .mic-queue-item button{border:none;border-radius:99px;padding:3px 10px;font-size:.85em;font-weight:700;cursor:pointer;font-family:inherit}
 .mic-queue-item button:first-of-type{background:var(--primary);color:#fff}
 .mic-queue-item button:last-of-type{background:var(--danger-bg);color:var(--danger-text)}
+/* 游戏舞台 */
 .game-stage{display:none;background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;backdrop-filter:blur(10px);position:relative;margin-top:10px}
 .room-body[data-theme="spy"] .game-stage,.room-body[data-theme="werewolf"] .game-stage{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15)}
 .game-stage.active{display:flex;flex-direction:column}
@@ -125,6 +130,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .lobby-btn:disabled{opacity:.5;pointer-events:none;animation:none}
 .lobby-count{font-size:.75em;color:var(--text-muted);font-weight:700}
 .lobby-hint{font-size:.78em;color:var(--text-muted);margin-top:2px}
+/* 五子棋 */
 .gomoku-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
 .gomoku-status{font-size:.85em;font-weight:700;text-align:center;min-height:22px}
 .gomoku-board{display:grid;grid-template-columns:repeat(15,1fr);width:min(78vw,320px);aspect-ratio:1;background:#dcb35c;border-radius:8px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.2)}
@@ -134,6 +140,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 @keyframes stoneIn{from{transform:scale(.4);opacity:.4}to{transform:scale(1);opacity:1}}
 .gmk-stone.black{background:radial-gradient(circle at 32% 32%,#6a6a6a,#000)}
 .gmk-stone.white{background:radial-gradient(circle at 32% 32%,#fff,#b9b9b9)}
+/* 你画我猜 */
 .draw-wrap{display:flex;flex-direction:column;gap:10px}
 .draw-info{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.8em;font-weight:700;flex-wrap:wrap}
 .draw-timer{background:rgba(25,118,210,.15);color:#1976d2;padding:4px 12px;border-radius:99px;font-weight:800;font-size:1.05em;min-width:60px;text-align:center}
@@ -160,6 +167,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .draw-score .pts{color:#1976d2;font-weight:900}
 .draw-intermission{text-align:center;padding:30px 20px;color:#1976d2;font-weight:800}
 .draw-intermission .big{font-size:1.3em;margin-bottom:10px}
+/* 谁是卧底 */
 .spy-wrap{display:flex;flex-direction:column;gap:10px;color:#e0d5f0}
 .spy-role-card{background:linear-gradient(135deg,rgba(180,140,255,.2),rgba(120,80,200,.15));border:2px solid rgba(200,160,255,.4);border-radius:12px;padding:14px;text-align:center;backdrop-filter:blur(8px)}
 .spy-role-label{font-size:.65em;text-transform:uppercase;letter-spacing:.1em;opacity:.7;margin-bottom:4px}
@@ -179,6 +187,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .spy-line{padding:2px 0;border-bottom:1px dashed rgba(255,255,255,.08)}
 .spy-result{text-align:center;padding:30px 20px}
 .spy-result .big{font-size:1.5em;font-weight:900;margin-bottom:10px}
+/* 狼人杀 */
 .ww-wrap{display:flex;flex-direction:column;gap:10px;color:#e0d5d5}
 .ww-role-card{background:linear-gradient(135deg,rgba(200,50,50,.25),rgba(80,10,10,.2));border:2px solid rgba(255,140,140,.4);border-radius:12px;padding:14px;text-align:center;backdrop-filter:blur(8px)}
 .ww-role-label{font-size:.65em;text-transform:uppercase;letter-spacing:.1em;opacity:.75;margin-bottom:4px}
@@ -191,6 +200,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .ww-player .name{flex:1;font-size:.82em;font-weight:700}
 .ww-player .btn{background:rgba(255,140,140,.25);color:#ffb5b5;border:none;padding:4px 12px;border-radius:99px;font-size:.72em;font-weight:700;cursor:pointer;font-family:inherit}
 .ww-player .btn:hover{background:#ff5252;color:#fff}
+/* 房间消息 */
 .room-messages{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;position:relative;z-index:1;min-height:0}
 .rm-msg{display:flex;gap:9px;flex-shrink:0;max-width:92%}
 .rm-msg.self{align-self:flex-end;flex-direction:row-reverse}
@@ -200,12 +210,14 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .rm-msg.self .rm-bubble{background:var(--primary-bg);border-color:var(--primary)}
 .rm-name{font-size:.66em;color:var(--text-muted);font-weight:700;margin-bottom:2px}
 .rm-text{font-size:.84em;line-height:1.5;word-break:break-word}
+/* 输入区 */
 .room-input-area{flex-shrink:0;display:flex;gap:8px;align-items:center;padding:10px 14px calc(10px + var(--safe-b));background:rgba(255,255,255,.9);border-top:1px solid var(--border);backdrop-filter:blur(8px);z-index:2}
 .room-input-area input{flex:1;padding:10px 14px;border-radius:99px;border:2px solid var(--border);background:var(--bg-input);font-family:inherit;font-size:.85em;outline:none;min-width:0;color:var(--text)}
 .room-input-area input:focus{border-color:var(--primary)}
 .room-input-area .game-btn{background:var(--bg-card);border:2px solid var(--border);color:var(--text);padding:8px 14px;border-radius:99px;font-size:.78em;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;display:flex;align-items:center;gap:4px}
 .room-input-area .game-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
-.room-input-area .game-btn:hover{border-color:var(--primary);color:var(--primary)}
+.room-input-area .game-btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
+.room-input-area .game-btn:disabled{opacity:.5;pointer-events:none}
 .room-input-area .send-btn{background:var(--primary);color:#fff;border:none;padding:9px 16px;border-radius:99px;font-weight:700;font-size:.8em;cursor:pointer;font-family:inherit}
 @media (min-width: 900px) {
   .room-body{flex-direction:row}
@@ -217,6 +229,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
   .chat-panel{flex:0 0 360px;max-width:360px;border-left:1px solid var(--border);background:rgba(255,255,255,.55);backdrop-filter:blur(8px)}
   .room-messages{flex:1}
 }
+/* 游戏抽屉 */
 .drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .3s;z-index:399}
 .drawer-backdrop.open{opacity:1;pointer-events:auto}
 .game-drawer{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:8px 16px calc(20px + var(--safe-b));transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:400;max-height:70vh;overflow-y:auto;box-shadow:0 -8px 32px rgba(0,0,0,.15)}
@@ -231,6 +244,25 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .game-card-icon svg{width:32px;height:32px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .game-card-name{font-weight:800;font-size:.9em}
 .game-card-desc{font-size:.66em;color:var(--text-muted)}
+/* 成员抽屉（右侧） */
+.member-drawer{position:fixed;top:0;right:0;bottom:0;width:300px;max-width:85vw;background:#fff;box-shadow:-8px 0 32px rgba(0,0,0,.15);transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:401;display:flex;flex-direction:column;padding-top:var(--safe-t)}
+.member-drawer.open{transform:translateX(0)}
+.member-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border)}
+.member-head h3{font-size:1em;font-weight:800;display:flex;align-items:center;gap:8px}
+.member-head .cnt{background:var(--primary);color:#fff;font-size:.75em;font-weight:800;padding:1px 8px;border-radius:99px}
+.member-head button{background:none;border:none;cursor:pointer;color:var(--text-light);padding:4px;display:flex}
+.member-head button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
+.member-body{flex:1;overflow-y:auto;padding:12px 14px}
+.member-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:6px}
+.member-row:hover{background:var(--bg-input)}
+.member-row .avatar{width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px;flex-shrink:0;background-size:cover;background-position:center}
+.member-row .info{flex:1;min-width:0}
+.member-row .name{font-weight:700;font-size:.9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.member-row .role{font-size:.68em;color:var(--text-muted);font-weight:600;margin-top:2px}
+.member-row .role.host{color:var(--primary);font-weight:800}
+.member-row .role.game{color:var(--official-blue);font-weight:700}
+.member-row .online-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2);flex-shrink:0}
+/* 房间设置弹窗 */
 .re-overlay{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px}
 .re-panel{background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.25)}
 .re-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 12px;border-bottom:1px solid var(--border)}
@@ -280,7 +312,9 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
       <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </button>
     <span class="title">房间</span>
-    <button class="header-action" id="createRoomBtn">＋ 创建</button>
+    <div class="header-actions">
+      <button class="header-action primary" id="createRoomBtn" style="display:none;">＋ 创建</button>
+    </div>
   </div>
   <div class="room-grid" id="roomGrid"></div>
 </div>
@@ -291,7 +325,15 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
       <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </button>
     <span class="title" id="roomTitle">房间</span>
-    <button class="header-action ghost" id="roomSettingsBtn">设置</button>
+    <div class="header-actions">
+      <button class="header-action" id="memberBtn" title="房间成员">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="cnt" id="memberBtnCount">0</span>
+      </button>
+      <button class="header-action" id="roomSettingsBtn" title="房间设置" style="display:none;">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
   </div>
   <div class="room-body" id="roomBody">
     <div class="stage-wrap" id="stageWrap">
@@ -330,11 +372,28 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
   </div>
 </div>
 
+<!-- 游戏抽屉 -->
 <div class="drawer-backdrop" id="drawerBackdrop"></div>
 <div class="game-drawer" id="gameDrawer">
   <div class="drawer-handle"></div>
   <div class="drawer-title">🎮 选择游戏</div>
   <div class="game-grid" id="gameGrid"></div>
+</div>
+
+<!-- 成员抽屉 -->
+<div class="drawer-backdrop" id="memberBackdrop"></div>
+<div class="member-drawer" id="memberDrawer">
+  <div class="member-head">
+    <h3>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      房间成员
+      <span class="cnt" id="memberCount">0</span>
+    </h3>
+    <button id="closeMemberDrawer">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="member-body" id="memberList"></div>
 </div>
 
 <div class="custom-modal" id="confirmModal">
@@ -378,11 +437,11 @@ function showConfirm(title,body,onOk,prefKey,prefLabel){
 var currentUser=getSessionUser();
 if(!currentUser||!currentUser.id)window.location.href='/liuyanban/index.html';
 var isAdmin=!!(currentUser&&currentUser.phone==='17355394710');
-if(isAdmin)document.getElementById('createRoomBtn').classList.add('show');
+if(isAdmin)document.getElementById('createRoomBtn').style.display='inline-flex';
 function isUserBanned(){if(!currentUser||!currentUser.banned_until)return false;return new Date(currentUser.banned_until)>new Date()}
 
 var rooms=[];
-var state={room:null,messages:[],roomChannel:null,msgChannel:null,lastMsgId:null,spectating:false};
+var state={room:null,messages:[],roomChannel:null,msgChannel:null,memberChannel:null,lastMsgId:null,spectating:false};
 var drawTimerInterval=null;
 var gameTickInterval=null;
 
@@ -437,8 +496,13 @@ async function enterRoom(roomId,openSettings){
     state.room=res.data;state.messages=[];state.lastMsgId=null;state.spectating=false;
     document.getElementById('roomTitle').textContent=state.room.name;
     history.replaceState({},'','?id='+roomId);
-    showDetail();updateSettingsBtn();renderMic();renderGame();
-    await loadMessages();subscribe();startGameTick();
+    showDetail();
+    updateHeaderBtns();
+    renderMic();renderGame();
+    await loadMessages();
+    subscribe();
+    initRoomMembers();
+    startGameTick();
     if(openSettings&&isAdmin)setTimeout(openRoomEditor,300);
   }catch(e){showToast('进入房间失败：'+e.message)}
 }
@@ -450,13 +514,91 @@ function leaveRoomLocal(){
   }catch(e){}}
   if(state.roomChannel){window.sb.removeChannel(state.roomChannel);state.roomChannel=null}
   if(state.msgChannel){window.sb.removeChannel(state.msgChannel);state.msgChannel=null}
+  if(state.memberChannel){window.sb.removeChannel(state.memberChannel);state.memberChannel=null}
   if(drawTimerInterval){clearInterval(drawTimerInterval);drawTimerInterval=null}
   if(gameTickInterval){clearInterval(gameTickInterval);gameTickInterval=null}
   state.room=null;state.messages=[];state.spectating=false;
 }
-function updateSettingsBtn(){var b=document.getElementById('roomSettingsBtn');if(b)b.classList.toggle('show',isAdmin)}
+function updateHeaderBtns(){
+  var setBtn=document.getElementById('roomSettingsBtn');
+  if(setBtn)setBtn.style.display=isAdmin?'inline-flex':'none';
+}
 async function freshRoom(){var r=await window.sb.from('rooms').select('*').eq('id',state.room.id).single();if(r.error)throw r.error;return r.data}
 async function patchRoom(patch){var res=await window.sb.from('rooms').update(patch).eq('id',state.room.id).select().single();if(res.error)throw res.error;state.room=res.data;document.getElementById('roomTitle').textContent=state.room.name;renderMic();renderGame();return state.room}
+
+/* ============================================================
+   房间成员（Presence）
+============================================================ */
+function initRoomMembers(){
+  if(state.memberChannel){window.sb.removeChannel(state.memberChannel);state.memberChannel=null}
+  if(!state.room)return;
+  state.memberChannel=window.sb.channel('sq-room-members-'+state.room.id,{
+    config:{presence:{key:currentUser.id}}
+  });
+  state.memberChannel.on('presence',{event:'sync'},function(){
+    var raw=state.memberChannel.presenceState();
+    var arr=[];
+    Object.keys(raw).forEach(function(k){
+      var list=raw[k];if(!list||!list.length)return;
+      var p=list[0];
+      arr.push({id:k,nickname:p.nickname||'用户',avatar_url:p.avatar_url||'',joined_at:p.joined_at||''});
+    });
+    // 按加入时间排序
+    arr.sort(function(a,b){return (a.joined_at||'').localeCompare(b.joined_at||'')});
+    renderMemberList(arr);
+    var cnt=document.getElementById('memberBtnCount');
+    if(cnt)cnt.textContent=arr.length;
+    var cnt2=document.getElementById('memberCount');
+    if(cnt2)cnt2.textContent=arr.length;
+  });
+  state.memberChannel.subscribe(function(status){
+    if(status==='SUBSCRIBED'){
+      state.memberChannel.track({
+        user_id:currentUser.id,
+        nickname:currentUser.nickname,
+        avatar_url:currentUser.avatar_url||'',
+        joined_at:new Date().toISOString()
+      });
+    }
+  });
+}
+
+function renderMemberList(arr){
+  var el=document.getElementById('memberList');
+  if(!el)return;
+  if(!arr.length){el.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:30px 20px;font-size:.85em;">暂无成员</div>';return}
+  var game=state.room&&state.room.current_game;
+  var gamePlayers=(game&&game.players||[]).map(function(p){return p.user_id});
+  var hostId=game&&game.host_id;
+  var micList=(state.room.mic_speaking||[]).map(function(m){return m.user_id});
+
+  el.innerHTML=arr.map(function(u){
+    var has=u.avatar_url&&String(u.avatar_url).indexOf('http')===0;
+    var roles=[];
+    if(u.id===hostId)roles.push('<span class="role host">👑 房主</span>');
+    if(gamePlayers.indexOf(u.id)>=0)roles.push('<span class="role game">🎮 游戏中</span>');
+    if(micList.indexOf(u.id)>=0)roles.push('<span class="role">🎙 麦上</span>');
+    if(u.id===currentUser.id)roles.push('<span class="role">（我）</span>');
+    return '<div class="member-row">'+
+      '<div class="avatar" style="'+(has?'background-image:url('+escapeHtml(u.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(u.nickname).charAt(0).toUpperCase()))+'</div>'+
+      '<div class="info"><div class="name">'+escapeHtml(u.nickname)+'</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;">'+roles.join('')+'</div></div>'+
+      '<span class="online-dot"></span>'+
+    '</div>';
+  }).join('');
+}
+
+document.getElementById('memberBtn').onclick=function(){
+  document.getElementById('memberBackdrop').classList.add('open');
+  document.getElementById('memberDrawer').classList.add('open');
+};
+document.getElementById('closeMemberDrawer').onclick=function(){
+  document.getElementById('memberBackdrop').classList.remove('open');
+  document.getElementById('memberDrawer').classList.remove('open');
+};
+document.getElementById('memberBackdrop').onclick=function(){
+  document.getElementById('memberBackdrop').classList.remove('open');
+  document.getElementById('memberDrawer').classList.remove('open');
+};
 
 /* ============================================================
    麦位
@@ -513,6 +655,12 @@ function emptyBoard(){var b=[];for(var i=0;i<15;i++){var r=[];for(var j=0;j<15;j
 
 function openGameDrawer(){
   if(state.room&&state.room.game_disabled){showToast('管理员已禁止本房间游戏');return}
+  // 已有游戏时判断权限：非房主不能切换
+  var game=state.room&&state.room.current_game;
+  if(game&&game.host_id&&game.host_id!==currentUser.id){
+    var hostStillIn=(game.players||[]).some(function(p){return p.user_id===game.host_id});
+    if(hostStillIn){showToast('只有房主能切换游戏');return}
+  }
   document.getElementById('drawerBackdrop').classList.add('open');
   document.getElementById('gameDrawer').classList.add('open');
   renderGameGrid();
@@ -533,8 +681,14 @@ async function updateGame(patch){
 }
 
 async function selectGame(gameId){
+  var game=state.room&&state.room.current_game;
+  // 权限校验（双保险）
+  if(game&&game.host_id&&game.host_id!==currentUser.id){
+    var hostStillIn=(game.players||[]).some(function(p){return p.user_id===game.host_id});
+    if(hostStillIn){showToast('只有房主能切换游戏');closeGameDrawer();return}
+  }
   closeGameDrawer();
-  if(state.room.current_game){showConfirm('切换游戏','当前有游戏进行中，确定要切换吗？',async function(){await startGame(gameId)})}
+  if(game){showConfirm('切换游戏','当前有游戏进行中，确定要切换吗？',async function(){await startGame(gameId)})}
   else await startGame(gameId);
 }
 
@@ -542,19 +696,19 @@ async function startGame(gameId){
   var g=GAMES.find(function(x){return x.id===gameId});if(!g)return;
   var newGame={
     type:gameId,
-    status:'lobby',  // lobby / playing / finished
+    status:'lobby',
     started_at:new Date().toISOString(),
     host_id:currentUser.id,
     players:[{user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||'',seat:0}],
     state:initGameState(gameId)
   };
-  try{await updateGame(newGame);showToast('🎮 已创建「'+g.name+'」，点击加入开始游戏')}catch(e){showToast('启动失败：'+e.message)}
+  try{await updateGame(newGame);showToast('🎮 已创建「'+g.name+'」，等待玩家加入')}catch(e){showToast('启动失败：'+e.message)}
 }
 function initGameState(type){
   if(type==='gomoku')return{board:emptyBoard(),turn:'black',winner:null};
   if(type==='draw')return{order:[],drawer_index:0,word:'',strokes:[],correct:[],messages:[],scores:{},round_started_at:0,round_end:false};
   if(type==='spy')return{words:{},spy_ids:[],phase:'describe',descriptions:[],votes:{},eliminated:[],round:1};
-  if(type==='werewolf')return{roles:{},phase:'night',alive:[],night_action:null,day:1,votes:{},mode:0};
+  if(type==='werewolf')return{roles:{},phase:'choose',alive:[],night_action:null,day:1,votes:{},mode:0};
   return{};
 }
 
@@ -582,7 +736,7 @@ async function joinGame(){
   if(players.length>=g.max){showToast('人数已满（'+g.max+'人）');return}
   players=players.concat([{user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||'',seat:players.length}]);
   var ng=Object.assign({},game,{players:players});
-  try{await updateGame(ng);state.spectating=false;showToast('✅ 已加入')}catch(e){showToast('加入失败：'+e.message)}
+  try{await updateGame(ng);state.spectating=false;showToast('✅ 已加入，等待房主开始')}catch(e){showToast('加入失败：'+e.message)}
 }
 window.joinGame=joinGame;
 
@@ -590,34 +744,23 @@ function startSpectating(){state.spectating=true;showToast('👀 已进入观战
 function stopSpectating(){state.spectating=false;renderGame()}
 window.startSpectating=startSpectating;window.stopSpectating=stopSpectating;
 
-/* ============================================================
-   房主开始游戏
-============================================================ */
 async function beginGame(){
   if(!state.room||!state.room.current_game)return;
   var game=state.room.current_game;
   if(game.host_id!==currentUser.id){showToast('只有房主能开始游戏');return}
-  var g=GAMES.find(function(x){return x.id===game.type});
-  if(!g)return;
+  var g=GAMES.find(function(x){return x.id===game.type});if(!g)return;
   var players=game.players||[];
   if(players.length<g.min){showToast('至少需要 '+g.min+' 人');return}
-
-  // 各游戏初始化
   var st=Object.assign({},game.state);
   if(game.type==='gomoku'){
     st=Object.assign({},st,{board:emptyBoard(),turn:'black',winner:null});
   }
   else if(game.type==='draw'){
-    // 打乱顺序
-    var ids=players.map(function(p){return p.user_id});
-    // 按 seat 排序
-    ids=players.slice().sort(function(a,b){return a.seat-b.seat}).map(function(p){return p.user_id});
+    var ids=players.slice().sort(function(a,b){return a.seat-b.seat}).map(function(p){return p.user_id});
     st=Object.assign({},st,{order:ids,drawer_index:0,word:pickWord(),strokes:[],correct:[],messages:[],scores:{},round_started_at:Date.now(),round_end:false});
   }
   else if(game.type==='spy'){
-    // 初始化词语
-    var n=players.length;
-    var spyCount=n>=6?2:1;
+    var n=players.length;var spyCount=n>=6?2:1;
     var pair=WORDS_SPY[Math.floor(Math.random()*WORDS_SPY.length)];
     var shuffled=players.slice().sort(function(){return Math.random()-.5});
     var spyIds=[],words={};
@@ -625,19 +768,15 @@ async function beginGame(){
     st=Object.assign({},st,{words:words,spy_ids:spyIds,phase:'describe',descriptions:[],votes:{},eliminated:[],round:1});
   }
   else if(game.type==='werewolf'){
-    // 等待房主选局数
     st=Object.assign({},st,{roles:{},phase:'choose',alive:players.map(function(p){return p.user_id}),day:1,votes:{},night_action:null,mode:0});
   }
   var ng=Object.assign({},game,{status:'playing',state:st});
-  try{
-    await updateGame(ng);
-    showToast('🎮 游戏开始！');
-  }catch(e){showToast('开始失败：'+e.message)}
+  try{await updateGame(ng);showToast('🎮 游戏开始！')}catch(e){showToast('开始失败：'+e.message)}
 }
 window.beginGame=beginGame;
 
 /* ============================================================
-   你画我猜的 tick（每1秒）
+   你画我猜 tick
 ============================================================ */
 function startGameTick(){
   if(gameTickInterval)clearInterval(gameTickInterval);
@@ -647,28 +786,22 @@ function gameTick(){
   if(!state.room||!state.room.current_game)return;
   var game=state.room.current_game;
   if(game.status!=='playing')return;
-
   if(game.type==='draw'){
     var st=game.state;
-    if(!st.round_started_at)return;
-    if(st.round_end)return;  // 已经结束了，等 advance
+    if(!st.round_started_at||st.round_end)return;
     var elapsed=Date.now()-st.round_started_at;
     var remaining=Math.max(0,DRAW_ROUND_MS-elapsed);
     var drawerId=(st.order||[])[st.drawer_index];
     var players=game.players||[];
     var guessers=players.filter(function(p){return p.user_id!==drawerId});
     var allCorrect=guessers.length>0&&guessers.every(function(p){return (st.correct||[]).indexOf(p.user_id)>=0});
-
-    // 更新本地倒计时显示（不写服务器）
     var timerEl=document.getElementById('drawTimer');
     if(timerEl){
       var mm=Math.floor(remaining/60000),ss=Math.floor((remaining%60000)/1000);
       timerEl.textContent='⏱ '+mm+':'+(ss<10?'0':'')+ss;
       if(remaining<=30000)timerEl.classList.add('urgent');else timerEl.classList.remove('urgent');
     }
-
     if(remaining<=0||allCorrect){
-      // 抢占触发：设 round_end 标记，1.5秒后切下一轮
       (async function(){
         try{
           var cur=state.room.current_game;
@@ -681,39 +814,25 @@ function gameTick(){
     }
   }
 }
-
 async function advanceDrawRound(){
   if(!state.room||!state.room.current_game)return;
   var game=state.room.current_game;
   if(game.type!=='draw')return;
   var st=game.state;
   if(!st.round_end)return;
-
   var drawerId=(st.order||[])[st.drawer_index];
   var players=game.players||[];
   var guessers=players.filter(function(p){return p.user_id!==drawerId});
   var allCorrect=guessers.length>0&&guessers.every(function(p){return (st.correct||[]).indexOf(p.user_id)>=0});
-
   var scores=Object.assign({},st.scores||{});
   if(allCorrect&&drawerId)scores[drawerId]=(scores[drawerId]||0)+2;
-
   var nextIdx=(st.drawer_index||0)+1;
   var finished=nextIdx>=(st.order||[]).length;
-
   var ns;
   if(finished){
     ns=Object.assign({},st,{scores:scores,round_end:true,phase:'finished'});
   }else{
-    ns=Object.assign({},st,{
-      scores:scores,
-      drawer_index:nextIdx,
-      word:pickWord(),
-      strokes:[],
-      correct:[],
-      messages:[],
-      round_started_at:Date.now(),
-      round_end:false
-    });
+    ns=Object.assign({},st,{scores:scores,drawer_index:nextIdx,word:pickWord(),strokes:[],correct:[],messages:[],round_started_at:Date.now(),round_end:false});
   }
   try{await updateGame(Object.assign({},game,{state:ns}))}catch(e){}
 }
@@ -742,7 +861,6 @@ function renderGame(){
   stage.classList.add('active');
   renderGpmPlayers(players,game);
 
-  // 观战条
   if(state.spectating&&!inGame){
     if(sbar)sbar.style.display='flex';
     var joinBtn=document.getElementById('joinFromSpectateBtn');
@@ -773,14 +891,13 @@ function renderGpmPlayers(players,game){
 
 function renderGameContent(game,inGame){
   var el=document.getElementById('gameContent');
-  var r=state.room;
   var g=GAMES.find(function(x){return x.id===game.type});
   var players=game.players||[];
 
-  // 大厅状态
+  // 已加入但游戏还在大厅 → 显示等待界面
   if(game.status==='lobby'){
     if(!inGame&&!state.spectating){
-      // 未加入：显示大厅 + 加入 / 观战
+      // 未加入：显示加入按钮
       var html='<div class="game-lobby"><div class="lobby-icon">'+g.icon+'</div><div class="lobby-title">'+g.name+'</div><div class="lobby-desc">'+g.desc+' · 需要 '+g.min+'-'+g.max+' 人，当前 '+players.length+' 人</div>';
       if(players.length){
         html+='<div class="lobby-players">'+players.map(function(p){
@@ -800,7 +917,7 @@ function renderGameContent(game,inGame){
       html+='</div>';
       el.innerHTML=html;return;
     }
-    // 已加入：显示房主开始按钮
+    // 已加入但房主未开始 → 等待界面
     var canStart=players.length>=g.min;
     var isHost=game.host_id===currentUser.id;
     var h2='<div class="game-lobby"><div class="lobby-icon">'+g.icon+'</div><div class="lobby-title">'+g.name+'</div>';
@@ -810,15 +927,16 @@ function renderGameContent(game,inGame){
       return '<div class="lobby-player'+(isH?' host':'')+'"><div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(p.nickname).charAt(0).toUpperCase()))+'</div>'+escapeHtml(p.nickname)+(isH?' 👑':'')+'</div>';
     }).join('')+'</div>';
     h2+='<div class="lobby-count">'+players.length+' / '+g.max+' 人（至少 '+g.min+' 人）</div>';
-    h2+='<div class="lobby-actions">';
     if(isHost){
+      h2+='<div class="lobby-actions">';
       if(canStart)h2+='<button class="lobby-btn start" onclick="beginGame()">开始游戏</button>';
       else h2+='<button class="lobby-btn start" disabled>人数不足（'+players.length+'/'+g.min+'）</button>';
+      h2+='</div>';
+      h2+='<div class="lobby-hint" style="color:var(--primary);font-weight:700;">你是房主，人齐后点开始</div>';
     }else{
-      h2+='<div class="lobby-hint">等待房主开始游戏…（'+players.length+'/'+g.min+'）</div>';
+      h2+='<div class="lobby-hint">⏳ 等待房主开始游戏…（'+players.length+'/'+g.min+'）</div>';
     }
-    if(state.spectating===false&&!isHost)h2+='<button class="lobby-btn spectate" onclick="stopJoiningAndSpectate()">切换为观战</button>';
-    h2+='</div></div>';
+    h2+='</div>';
     el.innerHTML=h2;return;
   }
 
@@ -832,7 +950,7 @@ function renderGameContent(game,inGame){
     el.innerHTML=h3;return;
   }
 
-  // 游戏进行中：具体游戏渲染
+  // 游戏进行中
   if(game.status==='playing'||game.status==='finished'){
     if(game.type==='gomoku')renderGomoku(game,el);
     else if(game.type==='draw')renderDraw(game,el);
@@ -841,17 +959,6 @@ function renderGameContent(game,inGame){
     else el.innerHTML='<div style="text-align:center;padding:20px;opacity:.5;">加载中…</div>';
   }
 }
-
-function stopJoiningAndSpectate(){
-  // 用户在大厅里想切换为观战 → 先从 players 移除自己
-  if(!state.room||!state.room.current_game)return;
-  var game=state.room.current_game;
-  var players=(game.players||[]).filter(function(p){return p.user_id!==currentUser.id});
-  var ns=Object.assign({},game,{players:players});
-  if(game.host_id===currentUser.id&&players.length)ns.host_id=players[0].user_id;
-  updateGame(ns).then(function(){state.spectating=true;showToast('👀 已切换为观战')});
-}
-window.stopJoiningAndSpectate=stopJoiningAndSpectate;
 
 /* ============================================================
    全屏
@@ -921,8 +1028,6 @@ function renderDraw(game,el){
   var st=game.state||{},players=game.players||[];
   var order=st.order||[];
   if(!order.length){el.innerHTML='<div class="draw-intermission">准备中…</div>';return}
-
-  // 已结束
   if(st.phase==='finished'){
     var scores=st.scores||{};
     var rank=players.slice().sort(function(a,b){return (scores[b.user_id]||0)-(scores[a.user_id]||0)});
@@ -932,13 +1037,7 @@ function renderDraw(game,el){
     }).join('')+'</div></div>';
     el.innerHTML=html;return;
   }
-
-  // 轮次切换中
-  if(st.round_end){
-    el.innerHTML='<div class="draw-intermission"><div class="big">✅ 本轮结束</div><div>正在切换到下一位画手…</div></div>';
-    return;
-  }
-
+  if(st.round_end){el.innerHTML='<div class="draw-intermission"><div class="big">✅ 本轮结束</div><div>正在切换到下一位画手…</div></div>';return}
   var drawerId=order[st.drawer_index];
   var isDrawer=drawerId===currentUser.id;
   var scores=st.scores||{};
@@ -951,13 +1050,10 @@ function renderDraw(game,el){
   html+='<span class="draw-timer'+(remaining<=30000?' urgent':'')+'" id="drawTimer">⏱ 3:00</span>';
   html+='<span class="draw-word'+(isDrawer?'':' hidden-word')+'">'+(isDrawer?escapeHtml(st.word||''):'? ? ?')+'</span>';
   html+='</div>';
-
-  // 计分板
   html+='<div class="draw-scoreboard">'+players.map(function(p){
     var pts=scores[p.user_id]||0;
     return '<div class="draw-score'+(p.user_id===drawerId?' drawing':'')+'"><span style="font-weight:800;">'+escapeHtml(p.nickname)+'</span><span class="pts">'+pts+'分</span>'+(p.user_id===drawerId?' 🎨':'')+'</div>';
   }).join('')+'</div>';
-
   html+='<div class="draw-canvas-wrap"><canvas class="draw-canvas" id="drawCanvas"></canvas></div>';
   if(isDrawer){
     html+='<div class="draw-tools" id="drawTools">';
@@ -973,13 +1069,8 @@ function renderDraw(game,el){
   html+='</div>';
   el.innerHTML=html;
   initDrawCanvas(game,isDrawer);
-
-  // 立即更新时间显示
   var timerEl=document.getElementById('drawTimer');
-  if(timerEl){
-    var mm=Math.floor(remaining/60000),ss=Math.floor((remaining%60000)/1000);
-    timerEl.textContent='⏱ '+mm+':'+(ss<10?'0':'')+ss;
-  }
+  if(timerEl){var mm=Math.floor(remaining/60000),ss=Math.floor((remaining%60000)/1000);timerEl.textContent='⏱ '+mm+':'+(ss<10?'0':'')+ss}
 }
 
 var drawState={color:'#000000',size:5,drawing:false,currentStroke:null,canvas:null,ctx:null,isDrawer:false};
@@ -1012,8 +1103,7 @@ async function submitDrawGuess(){
   if(!state.room||!state.room.current_game)return;
   var game=state.room.current_game;if(game.type!=='draw')return;
   if(game.status!=='playing')return;
-  var st=game.state;
-  if(st.round_end)return;
+  var st=game.state;if(st.round_end)return;
   if((st.order||[])[st.drawer_index]===currentUser.id){showToast('你是画手');return}
   if((st.correct||[]).indexOf(currentUser.id)>=0){showToast('你已经猜对了');return}
   var input=document.getElementById('drawGuessInput');var guess=(input.value||'').trim();if(!guess)return;input.value='';
@@ -1044,11 +1134,9 @@ function renderSpy(game,el){
   var eliminated=st.eliminated||[];var descriptions=st.descriptions||[];
   var alive=players.filter(function(p){return eliminated.indexOf(p.user_id)<0});
   var spyAlive=(st.spy_ids||[]).filter(function(id){return eliminated.indexOf(id)<0});
-
   if(spyAlive.length===0){el.innerHTML='<div class="spy-wrap"><div class="spy-result"><div class="big" style="color:#a78bfa;">🎉 平民获胜！</div><div>所有卧底已被淘汰</div></div></div>';return}
   var aliveCount=alive.length;var spiesLeft=spyAlive.length;var citizensLeft=aliveCount-spiesLeft;
   if(spiesLeft>=citizensLeft){el.innerHTML='<div class="spy-wrap"><div class="spy-result"><div class="big" style="color:#ff5252;">🎭 卧底获胜！</div><div>卧底人数已不少于平民</div></div></div>';return}
-
   var html='<div class="spy-wrap">';
   html+='<div class="spy-role-card"><div class="spy-role-label">你的词语</div><div class="spy-role-word">'+escapeHtml(myWord)+'</div><div class="spy-desc">描述你的词，不能直接说出来！</div></div>';
   html+='<div style="font-size:.78em;font-weight:700;">第 '+st.round+' 轮 · '+(st.phase==='describe'?'描述阶段':'投票阶段')+'</div>';
@@ -1060,7 +1148,6 @@ function renderSpy(game,el){
     html+='<div class="spy-player'+(isElim?' eliminated':'')+'"><div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(p.nickname).charAt(0).toUpperCase()))+'</div><div class="name">'+escapeHtml(p.nickname)+'</div>'+(desc?'<div style="font-size:.72em;opacity:.8;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHtml(desc.text)+'</div>':'')+(!desc&&!isElim&&p.user_id!==currentUser.id?'<span style="font-size:.7em;opacity:.5;">等待…</span>':'')+'</div>';
   });
   html+='</div>';
-
   if(st.phase==='describe'){
     var myDesc=descriptions.find(function(d){return d.user_id===currentUser.id});
     if(!myDesc&&eliminated.indexOf(currentUser.id)<0){
@@ -1071,10 +1158,8 @@ function renderSpy(game,el){
       else html+='<div style="font-size:.72em;opacity:.6;text-align:center;margin-top:8px;">等待其他玩家描述…</div>';
     }
   }
-
   if(st.phase==='vote'){
-    var votes=st.votes||{};
-    var myVoted=votes[currentUser.id];
+    var votes=st.votes||{};var myVoted=votes[currentUser.id];
     if(!myVoted){
       html+='<div style="font-size:.78em;font-weight:700;margin-top:8px;">投票淘汰</div><div class="spy-players">';
       players.forEach(function(p){
@@ -1083,15 +1168,9 @@ function renderSpy(game,el){
         html+='<div class="spy-player"><div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(p.nickname).charAt(0).toUpperCase()))+'</div><div class="name">'+escapeHtml(p.nickname)+'</div><button class="vote-btn" onclick="castSpyVote(\''+p.user_id+'\')">投票</button></div>';
       });
       html+='</div>';
-    }else{
-      html+='<div style="text-align:center;padding:14px;opacity:.8;">已投票，等待其他玩家…</div>';
-    }
+    }else{html+='<div style="text-align:center;padding:14px;opacity:.8;">已投票，等待其他玩家…</div>'}
   }
-
-  if(st.lastVote){
-    var lv=st.lastVote;var votedPlayer=players.find(function(p){return p.user_id===lv.out_id});
-    html+='<div class="spy-timeline"><div class="spy-line">🗳 '+escapeHtml(votedPlayer?votedPlayer.nickname:'?')+' 被淘汰（'+(lv.is_spy?'🎭 卧底':'👥 平民')+'）</div></div>';
-  }
+  if(st.lastVote){var lv=st.lastVote;var votedPlayer=players.find(function(p){return p.user_id===lv.out_id});html+='<div class="spy-timeline"><div class="spy-line">🗳 '+escapeHtml(votedPlayer?votedPlayer.nickname:'?')+' 被淘汰（'+(lv.is_spy?'🎭 卧底':'👥 平民')+'）</div></div>'}
   html+='</div>';el.innerHTML=html;
 }
 async function submitSpyDesc(){if(!state.room||!state.room.current_game)return;var game=state.room.current_game;var input=document.getElementById('spyDescInput');var text=(input.value||'').trim();if(!text)return;var descs=(game.state.descriptions||[]).slice();descs.push({user_id:currentUser.id,nickname:currentUser.nickname,text:text});await updateGame(Object.assign({},game,{state:Object.assign({},game.state,{descriptions:descs})}))}
@@ -1122,8 +1201,6 @@ window.castSpyVote=castSpyVote;
 function renderWerewolf(game,el){
   var st=game.state||{},players=game.players||[];
   var hostId=game.host_id;
-
-  // 房主选局数
   if(st.phase==='choose'){
     if(currentUser.id!==hostId){el.innerHTML='<div class="ww-wrap"><div class="ww-phase">等待房主选择游戏局数…</div></div>';return}
     var html='<div class="ww-wrap"><div class="ww-phase">你是房主，请选择游戏局数</div><div class="lobby-actions" style="margin-top:14px;">';
@@ -1132,7 +1209,6 @@ function renderWerewolf(game,el){
     else html+='<button class="lobby-btn join" disabled>10人局（人数不足）</button>';
     html+='</div></div>';el.innerHTML=html;return;
   }
-
   var myRole=st.roles[currentUser.id]||'?';var alive=st.alive||[];
   var html='<div class="ww-wrap">';
   html+='<div class="ww-role-card"><div class="ww-role-label">你的身份</div><div class="ww-role-word">'+escapeHtml(myRole)+'</div><div class="ww-desc">第 '+st.day+' 天 · '+(st.phase==='night'?'🌙 夜晚':'☀️ 白天')+'</div></div>';
@@ -1169,11 +1245,8 @@ async function advanceWerewolfPhase(){
   if(!state.room||!state.room.current_game)return;var game=state.room.current_game;
   var st=game.state;
   if(st.phase==='night'){
-    // 结算夜晚
-    var alive=(st.alive||[]).slice();
-    var killed=st.night_action;
+    var alive=(st.alive||[]).slice();var killed=st.night_action;
     if(killed)alive=alive.filter(function(id){return id!==killed});
-    // 检查胜负
     var wolves=alive.filter(function(id){return st.roles[id]==='狼人'});
     var others=alive.filter(function(id){return st.roles[id]!=='狼人'});
     if(!wolves.length){await updateGame(Object.assign({},game,{status:'finished',state:Object.assign({},st,{alive:alive,winner:'好人'})}));showToast('🎉 好人获胜');return}
@@ -1181,7 +1254,6 @@ async function advanceWerewolfPhase(){
     var ns=Object.assign({},st,{alive:alive,phase:'day',votes:{},night_action:null});
     await updateGame(Object.assign({},game,{state:ns}));
   }else{
-    // 白天投票结算
     var votes=st.votes||{};var tally={};Object.keys(votes).forEach(function(t){tally[votes[t]]=(tally[votes[t]]||0)+1});
     var maxId=null,maxV=0;Object.keys(tally).forEach(function(id){if(tally[id]>maxV){maxV=tally[id];maxId=id}});
     var alive2=(st.alive||[]).slice();
@@ -1220,13 +1292,22 @@ function subscribe(){
   if(state.msgChannel){window.sb.removeChannel(state.msgChannel);state.msgChannel=null}
   var roomId=state.room.id;
   state.roomChannel=window.sb.channel('sq-room-'+roomId+'-'+Date.now())
-    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'rooms',filter:'id=eq.'+roomId},function(p){state.room=p.new;document.getElementById('roomTitle').textContent=state.room.name;renderMic();renderGame()})
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'rooms',filter:'id=eq.'+roomId},function(p){state.room=p.new;document.getElementById('roomTitle').textContent=state.room.name;renderMic();renderGame();renderMemberList&&renderMemberListRefresh()})
     .on('postgres_changes',{event:'DELETE',schema:'public',table:'rooms',filter:'id=eq.'+roomId},function(){showToast('房间已被删除');leaveRoomLocal();history.replaceState({},'',location.pathname);showList();loadRooms()})
     .subscribe();
   state.msgChannel=window.sb.channel('sq-room-msg-'+roomId+'-'+Date.now())
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'room_messages',filter:'room_id=eq.'+roomId},function(p){if(state.messages.some(function(x){return x.id===p.new.id}))return;state.messages.push(p.new);state.lastMsgId=p.new.id;renderMessages();pushDanmaku(p.new.author||'',p.new.content||'')})
     .on('postgres_changes',{event:'DELETE',schema:'public',table:'room_messages',filter:'room_id=eq.'+roomId},function(){loadMessages()})
     .subscribe();
+}
+// 刷新成员列表中的角色信息
+function renderMemberListRefresh(){
+  if(!state.memberChannel)return;
+  var raw=state.memberChannel.presenceState();
+  var arr=[];
+  Object.keys(raw).forEach(function(k){var list=raw[k];if(!list||!list.length)return;var p=list[0];arr.push({id:k,nickname:p.nickname||'用户',avatar_url:p.avatar_url||'',joined_at:p.joined_at||''})});
+  arr.sort(function(a,b){return (a.joined_at||'').localeCompare(b.joined_at||'')});
+  renderMemberList(arr);
 }
 
 /* ============================================================
