@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>房间 · Seven戚</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
+:root{--bg:#f5faf5;--bg-card:#fff;--bg-input:#eaf3ea;--border:#c8e0c8;--text:#1e3a2e;--text-muted:#5a7a6a;--text-light:#8aaa9a;--primary:#2e7d32;--primary-light:#4caf50;--primary-bg:#e8f5e9;--shadow:0 8px 32px rgba(46,125,50,.12);--radius-sm:10px;--font:"Space Grotesk","PingFang SC","Segoe UI",system-ui,sans-serif;--danger:#e57373;--danger-bg:#ffebee;--danger-text:#c62828;--warning:#ffa726;--official-blue:#2b6cff;--safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
+body{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+.view-list,.view-detail{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.view-list{transform:translateX(0)}
+.view-list.hidden{transform:translateX(-30%);opacity:.5;pointer-events:none}
+.view-detail{transform:translateX(100%)}
+.view-detail.open{transform:translateX(0)}
+
+.page-header{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:calc(10px + var(--safe-t)) 14px 10px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--border);min-height:56px;backdrop-filter:blur(8px)}
+.page-header .back{background:none;border:none;cursor:pointer;padding:4px;color:var(--text);display:flex;flex-shrink:0}
+.page-header .back svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.page-header .title{font-weight:700;font-size:1em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.header-action{background:var(--primary);color:#fff;border:none;border-radius:99px;padding:7px 15px;font-size:.75em;font-weight:700;cursor:pointer;font-family:inherit;display:none;flex-shrink:0}
+.header-action.show{display:inline-flex}
+.header-action.ghost{background:var(--bg-input);color:var(--text-muted)}
+
+/* 房间列表 */
+.room-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.room-card{position:relative;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:.2s;min-height:126px;justify-content:center;text-align:center}
+.room-card:hover{border-color:var(--primary);box-shadow:var(--shadow);transform:translateY(-2px)}
+.room-card-icon{font-size:1.9em;line-height:1}
+.room-card-name{font-weight:700;font-size:.9em;line-height:1.3;word-break:break-word;max-width:100%}
+.room-card-meta{font-size:.66em;color:var(--text-muted)}
+.room-card-badge{position:absolute;top:8px;left:8px;background:var(--official-blue);color:#fff;font-size:.55em;font-weight:700;padding:1px 7px;border-radius:99px;line-height:15px}
+.room-edit-btn{position:absolute;top:6px;right:6px;background:var(--bg-input);border:none;border-radius:50%;width:26px;height:26px;display:grid;place-items:center;cursor:pointer;color:var(--text-muted);font-size:13px}
+.room-edit-btn:hover{background:var(--primary);color:#fff}
+.empty-state{grid-column:1/-1;text-align:center;color:var(--text-muted);padding:60px 20px;font-size:.85em}
+.empty-state .big{font-size:2.8em;margin-bottom:8px;opacity:.5}
+.loading-state{grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px 20px;font-size:.9em}
+.spinner{display:inline-block;width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 房间内部 */
+.room-body{flex:1;min-height:0;display:flex;flex-direction:column}
+.mic-area{flex-shrink:0;padding:12px 14px 0}
+.mic-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px}
+.mic-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mic-title{font-size:.8em;font-weight:700}
+.mic-mode{font-size:.65em;color:var(--primary);background:var(--primary-bg);padding:2px 10px;border-radius:99px;font-weight:700}
+.mic-off{font-size:.75em;color:var(--text-muted);text-align:center;padding:10px 0}
+.mic-seats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mic-seat{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:10px;background:var(--bg-input);border:1.5px dashed var(--border)}
+.mic-seat.on{background:var(--primary-bg);border-style:solid;border-color:var(--primary)}
+.mic-avatar{width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.mic-avatar.empty{background:#dfe9df;color:var(--text-light);font-size:18px}
+.mic-name{font-size:.62em;color:var(--text-muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.mic-seat.on .mic-name{color:var(--text)}
+.mic-x{position:absolute;top:1px;right:1px;background:none;border:none;color:var(--danger);cursor:pointer;font-size:11px;padding:0 3px;line-height:1}
+.mic-actions{display:flex;gap:8px;margin-top:10px}
+.mic-btn{flex:1;padding:8px;border-radius:99px;border:none;font-family:inherit;font-weight:700;font-size:.78em;cursor:pointer}
+.mic-btn.join{background:var(--primary);color:#fff}
+.mic-btn.leave{background:var(--danger-bg);color:var(--danger-text)}
+.mic-btn.waiting{background:var(--warning);color:#fff}
+.mic-queue{margin-top:10px;border-top:1px dashed var(--border);padding-top:8px}
+.mic-queue-title{font-size:.68em;color:var(--text-muted);font-weight:700;margin-bottom:6px}
+.mic-queue-item{display:flex;align-items:center;gap:6px;font-size:.75em;padding:5px 8px;background:var(--bg-input);border-radius:8px;margin-bottom:5px}
+.mic-queue-item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.mic-queue-item button{border:none;border-radius:99px;padding:3px 10px;font-size:.85em;font-weight:700;cursor:pointer;font-family:inherit}
+.mic-queue-item button:first-of-type{background:var(--primary);color:#fff}
+.mic-queue-item button:last-of-type{background:var(--danger-bg);color:var(--danger-text)}
+
+.room-messages{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch}
+.rm-msg{display:flex;gap:9px;flex-shrink:0;max-width:92%}
+.rm-msg.self{align-self:flex-end;flex-direction:row-reverse}
+.rm-avatar{width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;flex-shrink:0;background-size:cover;background-position:center}
+.rm-bubble{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:7px 11px;min-width:0}
+.rm-msg.self .rm-bubble{background:var(--primary-bg);border-color:var(--primary)}
+.rm-name{font-size:.66em;color:var(--text-muted);font-weight:700;margin-bottom:2px}
+.rm-text{font-size:.84em;line-height:1.5;word-break:break-word}
+.room-input-area{flex-shrink:0;display:flex;gap:8px;align-items:center;padding:10px 14px calc(10px + var(--safe-b));background:var(--bg);border-top:1px solid var(--border)}
+.room-input-area input{flex:1;padding:10px 14px;border-radius:99px;border:2px solid var(--border);background:var(--bg-input);font-family:inherit;font-size:.85em;outline:none;min-width:0;color:var(--text)}
+.room-input-area input:focus{border-color:var(--primary)}
+.room-input-area .game-btn{background:var(--bg-card);border:2px solid var(--border);color:var(--text);padding:8px 12px;border-radius:99px;font-size:.78em;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.room-input-area .game-btn:hover{border-color:var(--primary);color:var(--primary)}
+.room-input-area .send-btn{background:var(--primary);color:#fff;border:none;padding:9px 16px;border-radius:99px;font-weight:700;font-size:.8em;cursor:pointer;font-family:inherit}
+
+/* 房间设置弹窗 */
+.re-overlay{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px}
+.re-panel{background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.25)}
+.re-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 12px;border-bottom:1px solid var(--border)}
+.re-head h3{font-size:1.02em;margin:0;font-weight:800}
+.re-head button{background:none;border:none;font-size:1.2em;cursor:pointer;color:var(--text-light);line-height:1}
+.re-body{padding:16px 18px;overflow-y:auto;flex:1}
+.re-field{margin-bottom:16px}
+.re-field>label{display:block;font-size:.72em;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.re-field input[type=text]{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-family:inherit;font-size:.9em;outline:none;box-sizing:border-box;color:var(--text);background:var(--bg-input)}
+.re-field input[type=text]:focus{border-color:var(--primary)}
+.re-radio-row{display:flex;gap:8px;flex-wrap:wrap}
+.re-radio{flex:1;min-width:120px;display:flex;align-items:center;gap:7px;padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-size:.8em;font-weight:600;cursor:pointer}
+.re-radio input{accent-color:var(--primary)}
+.re-user{border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--bg-card)}
+.re-user-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.re-name{flex:1;font-weight:700;font-size:.85em;min-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.re-chk{display:flex;align-items:center;gap:5px;font-size:.75em;font-weight:600;color:var(--text-muted);cursor:pointer}
+.re-chk input{accent-color:var(--primary)}
+.re-perms{display:none;flex-wrap:wrap;gap:10px;margin-top:9px;padding-top:9px;border-top:1px dashed var(--border)}
+.re-perms.on{display:flex}
+.re-foot{display:flex;gap:8px;padding:12px 18px 16px;border-top:1px solid var(--border)}
+.re-foot button{flex:1;padding:11px;border-radius:10px;border:none;font-family:inherit;font-weight:700;font-size:.88em;cursor:pointer}
+.re-foot .cancel{background:var(--bg-input);color:var(--text-muted)}
+.re-foot .ok{background:var(--primary);color:#fff}
+
+/* 五子棋 overlay */
+.gomoku-overlay{position:fixed;inset:0;z-index:400;background:var(--bg);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);will-change:transform}
+.gomoku-overlay.open{transform:translateY(0)}
+.gomoku-body{flex:1;overflow-y:auto;padding:16px 16px calc(20px + var(--safe-b));display:flex;flex-direction:column;align-items:center;gap:14px;-webkit-overflow-scrolling:touch}
+.gomoku-players{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+.gmk-player{display:flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:99px;padding:6px 14px;font-size:.78em;font-weight:700}
+.gmk-dot{width:12px;height:12px;border-radius:50%;display:block;border:1px solid rgba(0,0,0,.25)}
+.gmk-dot.black{background:radial-gradient(circle at 32% 32%,#777,#000)}
+.gmk-dot.white{background:radial-gradient(circle at 32% 32%,#fff,#bbb)}
+.gmk-start{background:var(--primary);color:#fff;border:none;border-radius:99px;padding:9px 22px;font-weight:700;font-size:.82em;cursor:pointer;font-family:inherit}
+.gmk-start:hover{background:var(--primary-light)}
+.gomoku-status{font-size:.9em;font-weight:700;text-align:center;min-height:24px;color:var(--text)}
+.gomoku-board{display:grid;grid-template-columns:repeat(15,1fr);width:min(92vw,420px);aspect-ratio:1;background:#dcb35c;border-radius:10px;padding:5px;box-shadow:0 8px 26px rgba(0,0,0,.22);touch-action:manipulation}
+.gmk-cell{position:relative;display:flex;align-items:center;justify-content:center;border:.5px solid rgba(90,60,20,.45);cursor:pointer}
+.gmk-cell:active{background:rgba(255,255,255,.25)}
+.gmk-stone{width:84%;height:84%;border-radius:50%;display:block;box-shadow:0 1px 3px rgba(0,0,0,.35);animation:stoneIn .16s ease}
+@keyframes stoneIn{from{transform:scale(.4);opacity:.4}to{transform:scale(1);opacity:1}}
+.gmk-stone.black{background:radial-gradient(circle at 32% 32%,#6a6a6a,#000)}
+.gmk-stone.white{background:radial-gradient(circle at 32% 32%,#fff,#b9b9b9)}
+
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:.7em 1.5em;border-radius:2em;font-weight:600;font-size:.85em;opacity:0;transition:all .4s ease;z-index:9999;pointer-events:none;white-space:nowrap;box-shadow:var(--shadow);max-width:90vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.custom-modal{position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
+.custom-modal.active{display:flex}
+.custom-modal .modal-box{background:var(--bg-card);border-radius:16px;max-width:420px;width:100%;padding:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.modal-title{font-size:1.2em;font-weight:700;margin-bottom:8px}
+.modal-body{font-size:.95em;color:var(--text-muted);margin-bottom:16px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+.modal-actions button{padding:6px 18px;border-radius:10px;border:none;font-weight:600;cursor:pointer;font-family:inherit}
+.modal-actions .btn-danger{background:#e57373;color:#fff}
+.modal-actions .btn-secondary{background:var(--bg-input);color:var(--text-muted)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+</style>
+</head>
+<body>
+
+<!-- ====================== 视图1：房间列表 ====================== -->
+<div class="view-list" id="listView">
+  <div class="page-header">
+    <button class="back" onclick="window.location.href='/liuyanban/chats.html'">
+      <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <span class="title">房间</span>
+    <button class="header-action" id="createRoomBtn">＋ 创建</button>
+  </div>
+  <div class="room-grid" id="roomGrid"></div>
+</div>
+
+<!-- ====================== 视图2：房间内部 ====================== -->
+<div class="view-detail" id="detailView">
+  <div class="page-header">
+    <button class="back" id="detailBackBtn">
+      <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <span class="title" id="roomTitle">房间</span>
+    <button class="header-action ghost" id="roomSettingsBtn">设置</button>
+  </div>
+  <div class="room-body">
+    <div class="mic-area" id="micArea"></div>
+    <div class="room-messages" id="roomMessages"></div>
+  </div>
+  <div class="room-input-area">
+    <button class="game-btn" id="gameBtn">♟ 五子棋</button>
+    <input type="text" id="roomInput" placeholder="说点什么…" maxlength="200" />
+    <button class="send-btn" id="roomSendBtn">发送</button>
+  </div>
+</div>
+
+<!-- ====================== 五子棋 overlay ====================== -->
+<div class="gomoku-overlay" id="gomokuOverlay">
+  <div class="page-header">
+    <button class="back" id="closeGomokuBtn">
+      <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <span class="title">五子棋 · 实时联机</span>
+    <button class="header-action ghost" id="resetGomokuBtn">重开</button>
+  </div>
+  <div class="gomoku-body">
+    <div class="gomoku-players" id="gomokuPlayers"></div>
+    <div class="gomoku-status" id="gomokuStatus"></div>
+    <div class="gomoku-board" id="gomokuBoard"></div>
+  </div>
+</div>
+
+<!-- 确认弹窗 -->
+<div class="custom-modal" id="confirmModal">
+  <div class="modal-box">
+    <div class="modal-title" id="confirmTitle">确认</div>
+    <div class="modal-body" id="confirmBody">确定要执行此操作吗？</div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="confirmCancel">取消</button>
+      <button class="btn-danger" id="confirmOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="/liuyanban/common.js"></script>
+<script src="/liuyanban/gomoku.js"></script>
+<script>
+var SUPABASE_URL="https://ulvhuqtpdafspbdvkogs.supabase.co";
+var SUPABASE_ANON_KEY="sb_publishable_Ew8kKf2z05kmYIK2XNu00g_dzAirtIM";
+window.sb=window.sb||window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+function showToast(m){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(function(){t.classList.remove('show')},2800)}
+function escapeHtml(s){if(!s)return '';return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function showConfirm(title,body,onOk){var m=document.getElementById('confirmModal');document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmBody').textContent=body;m.classList.add('active');var c=document.getElementById('confirmCancel'),o=document.getElementById('confirmOk');var cleanup=function(){m.classList.remove('active');c.onclick=null;o.onclick=null};c.onclick=cleanup;o.onclick=function(){if(onOk)onOk();cleanup()}}
+
+var currentUser=getSessionUser();
+if(!currentUser||!currentUser.id)window.location.href='/liuyanban/index.html';
+var isAdmin=!!(currentUser&&currentUser.phone==='17355394710');
+if(isAdmin)document.getElementById('createRoomBtn').classList.add('show');
+
+function isUserBanned(){if(!currentUser||!currentUser.banned_until)return false;return new Date(currentUser.banned_until)>new Date()}
+
+/* ====================== 全局状态 ====================== */
+var rooms=[];
+var state={room:null,messages:[],roomChannel:null,msgChannel:null};
+
+/* ====================== 视图切换 ====================== */
+function showList(){document.getElementById('listView').classList.remove('hidden');document.getElementById('detailView').classList.remove('open')}
+function showDetail(){document.getElementById('listView').classList.add('hidden');document.getElementById('detailView').classList.add('open')}
+
+document.getElementById('detailBackBtn').onclick=function(){
+  // 离开房间：从麦位下麦 + 断开订阅
+  leaveRoomLocal();
+  history.replaceState({},'',location.pathname);
+  showList();
+  loadRooms();
+};
+
+/* ====================== 房间列表 ====================== */
+async function loadRooms(){
+  var grid=document.getElementById('roomGrid');
+  grid.innerHTML='<div class="loading-state"><div class="spinner"></div>加载中…</div>';
+  try{
+    var res=await window.sb.from('rooms').select('*').order('created_at',{ascending:true});
+    if(res.error)throw res.error;
+    rooms=res.data||[];
+    renderGrid();
+  }catch(e){
+    grid.innerHTML='<div class="empty-state"><div class="big">🏠</div>房间功能尚未初始化'+(isAdmin?'<br><small style="color:var(--text-light);">请先在 Supabase 创建 rooms 数据表</small>':'')+'</div>';
+  }
+}
+function renderGrid(){
+  var grid=document.getElementById('roomGrid');
+  if(!rooms.length){grid.innerHTML='<div class="empty-state"><div class="big">🏠</div>还没有房间'+(isAdmin?'<br><small>点击右上角创建第一个房间</small>':'')+'</div>';return}
+  grid.innerHTML=rooms.map(function(r){
+    var coIds=r.co_admin_ids||[];
+    var isCo=coIds.indexOf(currentUser.id)>=0;
+    var badge=(isAdmin||isCo)?'<span class="room-card-badge">管理</span>':'';
+    var editBtn=isAdmin?'<button class="room-edit-btn" data-edit="'+r.id+'" title="设置">⚙</button>':'';
+    return '<div class="room-card" data-id="'+r.id+'">'+badge+editBtn+
+      '<div class="room-card-icon">🏠</div>'+
+      '<div class="room-card-name">'+escapeHtml(r.name)+'</div>'+
+      '<div class="room-card-meta">'+(r.mic_mode==='host'?'主持人连麦':'自由连麦')+'</div>'+
+    '</div>';
+  }).join('');
+  grid.querySelectorAll('.room-card').forEach(function(el){
+    el.addEventListener('click',function(e){
+      if(e.target.closest('.room-edit-btn'))return;
+      enterRoom(this.dataset.id);
+    });
+  });
+  grid.querySelectorAll('.room-edit-btn').forEach(function(b){
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      enterRoom(this.dataset.edit,true);
+    });
+  });
+}
+
+document.getElementById('createRoomBtn').onclick=async function(){
+  if(!isAdmin)return;
+  var name=prompt('请输入房间名称：');
+  if(name===null)return;
+  name=name.trim();
+  if(!name){showToast('名称不能为空');return}
+  try{
+    var res=await window.sb.from('rooms').insert([{
+      name:name,creator_id:currentUser.id,
+      co_admin_ids:[],co_admin_permissions:{},muted_user_ids:[],
+      mic_enabled:true,mic_mode:'free',mic_speaking:[],mic_requests:[]
+    }]).select().single();
+    if(res.error)throw res.error;
+    showToast('✅ 房间已创建');
+    await loadRooms();
+  }catch(e){showToast('创建失败：'+e.message)}
+};
+
+/* ====================== 进入 / 离开房间 ====================== */
+async function enterRoom(roomId,openSettings){
+  try{
+    var res=await window.sb.from('rooms').select('*').eq('id',roomId).single();
+    if(res.error)throw res.error;
+    state.room=res.data;
+    state.messages=[];
+    document.getElementById('roomTitle').textContent=state.room.name;
+    history.replaceState({},'','?id='+roomId);
+    showDetail();
+    updateSettingsBtn();
+    renderMic();
+    await loadMessages();
+    subscribe();
+    if(openSettings&&isAdmin)setTimeout(openRoomEditor,300);
+  }catch(e){showToast('进入房间失败：'+e.message)}
+}
+
+function leaveRoomLocal(){
+  if(state.room&&currentUser){
+    // 下麦
+    try{
+      var sp=(state.room.mic_speaking||[]).filter(function(m){return m.user_id!==currentUser.id});
+      var rq=(state.room.mic_requests||[]).filter(function(m){return m.user_id!==currentUser.id});
+      window.sb.from('rooms').update({mic_speaking:sp,mic_requests:rq}).eq('id',state.room.id);
+    }catch(e){}
+  }
+  if(state.roomChannel){window.sb.removeChannel(state.roomChannel);state.roomChannel=null}
+  if(state.msgChannel){window.sb.removeChannel(state.msgChannel);state.msgChannel=null}
+  state.room=null;state.messages=[];
+}
+
+function updateSettingsBtn(){var b=document.getElementById('roomSettingsBtn');if(b)b.classList.toggle('show',isAdmin)}
+
+async function freshRoom(){var r=await window.sb.from('rooms').select('*').eq('id',state.room.id).single();if(r.error)throw r.error;return r.data}
+async function patchRoom(patch){var res=await window.sb.from('rooms').update(patch).eq('id',state.room.id).select().single();if(res.error)throw res.error;state.room=res.data;document.getElementById('roomTitle').textContent=state.room.name;renderMic();return state.room}
+
+/* ====================== 麦位 ====================== */
+function renderMic(){
+  var el=document.getElementById('micArea');
+  var r=state.room;if(!r){el.innerHTML='';return}
+  var speaking=r.mic_speaking||[],requests=r.mic_requests||[];
+  var iAmOn=speaking.some(function(m){return m.user_id===currentUser.id});
+  var iAmWaiting=requests.some(function(m){return m.user_id===currentUser.id});
+  var coIds=r.co_admin_ids||[],permsMap=r.co_admin_permissions||{};
+  var myPerms=permsMap[currentUser.id]||{};
+  var canManage=isAdmin||(coIds.indexOf(currentUser.id)>=0&&myPerms.mic!==false);
+
+  var h='<div class="mic-panel">';
+  h+='<div class="mic-head"><span class="mic-title">🎙 麦位 '+speaking.length+'/4</span><span class="mic-mode">'+(r.mic_mode==='host'?'主持人连麦':'自由连麦')+'</span></div>';
+
+  if(r.mic_enabled===false){
+    h+='<div class="mic-off">本房间连麦已被管理员关闭</div>';
+  }else{
+    h+='<div class="mic-seats">';
+    for(var i=0;i<4;i++){
+      var m=speaking[i];
+      h+='<div class="mic-seat'+(m?' on':'')+'">';
+      if(m){
+        h+='<div class="mic-avatar">'+escapeHtml(String(m.nickname||'U').charAt(0).toUpperCase())+'</div>';
+        h+='<div class="mic-name">'+escapeHtml(m.nickname||'')+'</div>';
+        if(canManage||m.user_id===currentUser.id)h+='<button class="mic-x" onclick="removeFromMic(\''+m.user_id+'\')" title="下麦">✕</button>';
+      }else{
+        h+='<div class="mic-avatar empty">+</div><div class="mic-name">空位</div>';
+      }
+      h+='</div>';
+    }
+    h+='</div>';
+    h+='<div class="mic-actions">';
+    if(iAmOn)h+='<button class="mic-btn leave" onclick="removeFromMic(\''+currentUser.id+'\')">下麦</button>';
+    else if(iAmWaiting)h+='<button class="mic-btn waiting" onclick="cancelMic()">排队中 · 点击取消</button>';
+    else h+='<button class="mic-btn join" onclick="requestMic()">'+(r.mic_mode==='host'?'申请连麦':'排队上麦')+'</button>';
+    h+='</div>';
+    if(requests.length){
+      h+='<div class="mic-queue"><div class="mic-queue-title">排队中（'+requests.length+'）</div>';
+      requests.forEach(function(q){
+        h+='<div class="mic-queue-item"><span>'+escapeHtml(q.nickname||'')+'</span>';
+        if(canManage){
+          h+='<button onclick="approveMic(\''+q.user_id+'\')">同意</button>';
+          h+='<button onclick="rejectMic(\''+q.user_id+'\')">拒绝</button>';
+        }
+        h+='</div>';
+      });
+      h+='</div>';
+    }
+  }
+  h+='</div>';
+  el.innerHTML=h;
+}
+
+async function requestMic(){
+  if(isUserBanned()){showToast('账号已被封禁');return}
+  try{
+    var r=await freshRoom();
+    var speaking=r.mic_speaking||[],requests=r.mic_requests||[];
+    if(requests.some(function(x){return x.user_id===currentUser.id}))return;
+    if(speaking.some(function(x){return x.user_id===currentUser.id}))return;
+    var me={user_id:currentUser.id,nickname:currentUser.nickname};
+    if(r.mic_mode!=='host'&&speaking.length<4){speaking.push(me);await patchRoom({mic_speaking:speaking});showToast('🎙 已上麦')}
+    else{requests.push(me);await patchRoom({mic_requests:requests});showToast(r.mic_mode==='host'?'已申请，等待管理员同意':'已加入排队')}
+  }catch(e){showToast('操作失败：'+e.message)}
+}
+async function cancelMic(){try{var r=await freshRoom();var requests=(r.mic_requests||[]).filter(function(x){return x.user_id!==currentUser.id});await patchRoom({mic_requests:requests});showToast('已取消排队')}catch(e){showToast(e.message)}}
+async function removeFromMic(userId){
+  try{
+    var r=await freshRoom();
+    var speaking=(r.mic_speaking||[]).filter(function(m){return m.user_id!==userId});
+    var requests=r.mic_requests||[];
+    if(r.mic_mode!=='host'&&requests.length&&speaking.length<4)speaking.push(requests.shift());
+    await patchRoom({mic_speaking:speaking,mic_requests:requests});
+    if(userId===currentUser.id)showToast('已下麦');
+  }catch(e){showToast(e.message)}
+}
+async function approveMic(userId){
+  try{
+    var r=await freshRoom();
+    var requests=r.mic_requests||[];
+    var idx=-1;for(var i=0;i<requests.length;i++){if(requests[i].user_id===userId){idx=i;break}}
+    if(idx<0)return;
+    var m=requests.splice(idx,1)[0];
+    var speaking=r.mic_speaking||[];
+    if(speaking.length>=4){showToast('麦位已满');return}
+    speaking.push(m);
+    await patchRoom({mic_speaking:speaking,mic_requests:requests});
+    showToast('已同意连麦');
+  }catch(e){showToast(e.message)}
+}
+async function rejectMic(userId){try{var r=await freshRoom();var requests=(r.mic_requests||[]).filter(function(x){return x.user_id!==userId});await patchRoom({mic_requests:requests});showToast('已拒绝')}catch(e){showToast(e.message)}}
+window.requestMic=requestMic;window.cancelMic=cancelMic;
+window.removeFromMic=removeFromMic;window.approveMic=approveMic;window.rejectMic=rejectMic;
+
+/* ====================== 房间消息 ====================== */
+async function loadMessages(){
+  try{
+    var res=await window.sb.from('room_messages').select('*').eq('room_id',state.room.id).order('created_at',{ascending:true}).limit(200);
+    if(res.error)throw res.error;
+    state.messages=res.data||[];
+  }catch(e){state.messages=[]}
+  renderMessages();
+}
+function renderMessages(){
+  var c=document.getElementById('roomMessages');
+  if(!state.messages.length){c.innerHTML='<div class="empty-state" style="padding:20px;font-size:.85em;color:var(--text-muted)">还没有人说话，来打个招呼吧</div>';return}
+  c.innerHTML=state.messages.map(function(m){
+    var self=m.user_id===currentUser.id;
+    var has=m.avatar_url&&String(m.avatar_url).indexOf('http')===0;
+    return '<div class="rm-msg'+(self?' self':'')+'">'+
+      '<div class="rm-avatar" style="'+(has?'background-image:url('+escapeHtml(m.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(m.author||'U').charAt(0).toUpperCase()))+'</div>'+
+      '<div class="rm-bubble"><div class="rm-name">'+escapeHtml(m.author||'')+'</div><div class="rm-text">'+escapeHtml(m.content||'')+'</div></div>'+
+    '</div>';
+  }).join('');
+  c.scrollTop=c.scrollHeight;
+}
+async function sendMsg(){
+  if(!state.room)return;
+  if(isUserBanned()){showToast('账号已被封禁，无法发送消息');return}
+  var r=state.room,muted=r.muted_user_ids||[];
+  if(!isAdmin&&muted.indexOf(currentUser.id)>=0){showToast('你已被禁言，无法在本房间发言');return}
+  var input=document.getElementById('roomInput'),text=input.value.trim();
+  if(!text){showToast('请输入内容');return}
+  input.value='';
+  try{
+    var res=await window.sb.from('room_messages').insert([{room_id:state.room.id,user_id:currentUser.id,author:currentUser.nickname,avatar_url:currentUser.avatar_url||'',content:text}]);
+    if(res.error)throw res.error;
+  }catch(e){showToast('发送失败：'+e.message);input.value=text}
+}
+
+/* ====================== 实时订阅 ====================== */
+function subscribe(){
+  if(state.roomChannel){window.sb.removeChannel(state.roomChannel);state.roomChannel=null}
+  if(state.msgChannel){window.sb.removeChannel(state.msgChannel);state.msgChannel=null}
+  var roomId=state.room.id;
+  state.roomChannel=window.sb.channel('sq-room-'+roomId+'-'+Date.now())
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'rooms',filter:'id=eq.'+roomId},function(p){
+      state.room=p.new;
+      document.getElementById('roomTitle').textContent=state.room.name;
+      renderMic();
+    })
+    .on('postgres_changes',{event:'DELETE',schema:'public',table:'rooms',filter:'id=eq.'+roomId},function(){
+      showToast('房间已被删除');leaveRoomLocal();history.replaceState({},'',location.pathname);showList();loadRooms();
+    })
+    .subscribe();
+  state.msgChannel=window.sb.channel('sq-room-msg-'+roomId+'-'+Date.now())
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'room_messages',filter:'room_id=eq.'+roomId},function(p){
+      if(state.messages.some(function(x){return x.id===p.new.id}))return;
+      state.messages.push(p.new);renderMessages();
+    })
+    .on('postgres_changes',{event:'DELETE',schema:'public',table:'room_messages',filter:'room_id=eq.'+roomId},function(){loadMessages()})
+    .subscribe();
+}
+
+/* ====================== 房间设置（管理员） ====================== */
+async function fetchAllUsers(){var r=await window.sb.from('users').select('id, nickname, avatar_url, phone');return r.data||[]}
+
+async function openRoomEditor(){
+  if(!isAdmin||!state.room)return;
+  var room=await freshRoom();
+  var users=await fetchAllUsers();
+  var coIds=room.co_admin_ids||[],permsMap=room.co_admin_permissions||{},mutedIds=room.muted_user_ids||[];
+
+  var old=document.getElementById('roomEditorOverlay');if(old)old.remove();
+  var overlay=document.createElement('div');overlay.className='re-overlay';overlay.id='roomEditorOverlay';
+
+  var userRows=users.filter(function(u){return u.id!==currentUser.id}).map(function(u){
+    var isCo=coIds.indexOf(u.id)>=0,isMuted=mutedIds.indexOf(u.id)>=0;
+    var p=permsMap[u.id]||{};
+    function chk(k,label){var checked=p[k]!==false;return '<label class="re-chk"><input type="checkbox" data-perm="'+k+'" data-uid="'+u.id+'" '+(checked?'checked':'')+'> '+label+'</label>'}
+    return '<div class="re-user">'+
+      '<div class="re-user-top">'+
+        '<span class="re-name">'+escapeHtml(u.nickname)+'</span>'+
+        '<label class="re-chk"><input type="checkbox" data-co="'+u.id+'" '+(isCo?'checked':'')+'> 协管</label>'+
+        '<label class="re-chk"><input type="checkbox" data-mute="'+u.id+'" '+(isMuted?'checked':'')+'> 禁言</label>'+
+      '</div>'+
+      '<div class="re-perms'+(isCo?' on':'')+'" data-perms-for="'+u.id+'">'+
+        chk('revoke','撤回消息')+chk('mute','禁言用户')+chk('mic','管理连麦')+chk('game','发起游戏')+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  overlay.innerHTML=
+    '<div class="re-panel">'+
+      '<div class="re-head"><h3>⚙ 房间设置</h3><button id="reClose">✕</button></div>'+
+      '<div class="re-body">'+
+        '<div class="re-field"><label>房间名称</label><input type="text" id="reName" maxlength="20" value="'+escapeHtml(room.name)+'" /></div>'+
+        '<div class="re-field"><label>连麦模式</label><div class="re-radio-row">'+
+          '<label class="re-radio"><input type="radio" name="reMicMode" value="free" '+(room.mic_mode!=='host'?'checked':'')+'> 自由连麦（排队上麦）</label>'+
+          '<label class="re-radio"><input type="radio" name="reMicMode" value="host" '+(room.mic_mode==='host'?'checked':'')+'> 主持人连麦（需管理员同意）</label>'+
+        '</div></div>'+
+        '<div class="re-field"><label>连麦开关</label>'+
+          '<label class="re-chk" style="font-size:.85em;"><input type="checkbox" id="reMicEnabled" '+(room.mic_enabled!==false?'checked':'')+'> 允许本房间用户连麦</label>'+
+        '</div>'+
+        '<div class="re-field"><label>协助管理员 &amp; 权限</label>'+(userRows||'<div style="font-size:.8em;color:var(--text-muted);padding:8px 0;">暂无其他用户</div>')+'</div>'+
+      '</div>'+
+      '<div class="re-foot"><button class="cancel" id="reCancel">取消</button><button class="ok" id="reSave">保存设置</button></div>'+
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  overlay.querySelectorAll('input[data-co]').forEach(function(cb){
+    cb.onchange=function(){
+      var uid=this.dataset.co;
+      var box=overlay.querySelector('[data-perms-for="'+uid+'"]');
+      if(box)box.classList.toggle('on',this.checked);
+    };
+  });
+  overlay.querySelector('#reClose').onclick=function(){overlay.remove()};
+  overlay.querySelector('#reCancel').onclick=function(){overlay.remove()};
+  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove()});
+
+  overlay.querySelector('#reSave').onclick=async function(){
+    var name=overlay.querySelector('#reName').value.trim();
+    if(!name){showToast('请输入房间名称');return}
+    var modeEl=overlay.querySelector('input[name="reMicMode"]:checked');
+    var micMode=modeEl?modeEl.value:'free';
+    var micEnabled=overlay.querySelector('#reMicEnabled').checked;
+    var newCoIds=[],newPerms={},newMuted=[];
+    overlay.querySelectorAll('input[data-co]').forEach(function(cb){if(cb.checked)newCoIds.push(cb.dataset.co)});
+    overlay.querySelectorAll('input[data-mute]').forEach(function(cb){if(cb.checked)newMuted.push(cb.dataset.mute)});
+    newCoIds.forEach(function(uid){
+      newPerms[uid]={};
+      overlay.querySelectorAll('input[data-perm][data-uid="'+uid+'"]').forEach(function(cb){newPerms[uid][cb.dataset.perm]=cb.checked});
+    });
+    var speaking=(room.mic_speaking||[]).filter(function(m){return newMuted.indexOf(m.user_id)<0});
+    var requests=(room.mic_requests||[]).filter(function(m){return newMuted.indexOf(m.user_id)<0});
+    try{
+      var upd=await window.sb.from('rooms').update({
+        name:name,mic_mode:micMode,mic_enabled:micEnabled,
+        co_admin_ids:newCoIds,co_admin_permissions:newPerms,muted_user_ids:newMuted,
+        mic_speaking:speaking,mic_requests:requests
+      }).eq('id',state.room.id).select().single();
+      if(upd.error)throw upd.error;
+      state.room=upd.data;
+      document.getElementById('roomTitle').textContent=upd.data.name;
+      renderMic();
+      overlay.remove();
+      showToast('✅ 设置已保存');
+    }catch(e){showToast('保存失败：'+e.message)}
+  };
+}
+window.openRoomEditor=openRoomEditor;
+
+/* ====================== 五子棋打开 ====================== */
+document.getElementById('gameBtn').onclick=function(){
+  if(!state.room)return;
+  if(!window.Gomoku){showToast('游戏模块未加载');return}
+  document.getElementById('gomokuOverlay').classList.add('open');
+  window.Gomoku.open({
+    roomId: state.room.id,
+    sb: window.sb,
+    user: currentUser,
+    onClose: function(){document.getElementById('gomokuOverlay').classList.remove('open')}
+  });
+};
+document.getElementById('closeGomokuBtn').onclick=function(){
+  if(window.Gomoku)window.Gomoku.close();
+  document.getElementById('gomokuOverlay').classList.remove('open');
+};
+document.getElementById('resetGomokuBtn').onclick=function(){
+  showConfirm('重开对局','确定要重新开始一局五子棋吗？',function(){
+    if(window.Gomoku)window.Gomoku.reset();
+  });
+};
+
+/* ====================== 事件 ====================== */
+document.getElementById('roomSendBtn').onclick=sendMsg;
+document.getElementById('roomInput').addEventListener('keydown',function(e){if(e.key==='Enter')sendMsg()});
+document.getElementById('roomSettingsBtn').onclick=openRoomEditor;
+
+window.addEventListener('beforeunload',function(){
+  if(state.room&&currentUser){
+    try{
+      var sp=(state.room.mic_speaking||[]).filter(function(m){return m.user_id!==currentUser.id});
+      var rq=(state.room.mic_requests||[]).filter(function(m){return m.user_id!==currentUser.id});
+      window.sb.from('rooms').update({mic_speaking:sp,mic_requests:rq}).eq('id',state.room.id);
+    }catch(e){}
+  }
+});
+
+document.addEventListener('gesturestart',function(e){e.preventDefault()});
+
+/* ====================== 初始化 ====================== */
+(function init(){
+  var params=new URLSearchParams(location.search);
+  var roomId=params.get('id');
+  var openSettings=params.get('settings')==='1';
+  if(roomId){enterRoom(roomId,openSettings)}
+  else{showList();loadRooms()}
+})();
+</script>
+</body>
+</html>
