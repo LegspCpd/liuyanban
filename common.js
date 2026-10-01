@@ -9,14 +9,11 @@ if (!window.sb) {
 
 // ============================================================
 // 启动动画（每个浏览器会话首次进入时显示）
-// 注意：页面初始隐藏已在各 HTML 的 <head> 中处理
 // ============================================================
 (function bootLoader() {
-    // 每个浏览器会话只显示一次
     if (sessionStorage.getItem('sq_boot_shown') === '1') return;
     sessionStorage.setItem('sq_boot_shown', '1');
 
-    // ===== 注入样式 =====
     if (!document.getElementById('boot-loader-styles')) {
         var style = document.createElement('style');
         style.id = 'boot-loader-styles';
@@ -75,21 +72,13 @@ if (!window.sb) {
         document.head.appendChild(style);
     }
 
-    // ===== 注入 DOM + 时间轴 =====
     function insert() {
-        if (!document.body) {
-            document.addEventListener('DOMContentLoaded', insert);
-            return;
-        }
-
+        if (!document.body) { document.addEventListener('DOMContentLoaded', insert); return; }
         var wrap = document.createElement('div');
         wrap.className = 'boot-loader-wrapper';
         wrap.id = 'bootLoader';
-
         var inner = document.createElement('div');
         inner.className = 'boot-loader-inner';
-
-        // 文字：Seven戚  出品
         var text = 'Seven戚  出品';
         var chars = text.split('');
         chars.forEach(function (c, i) {
@@ -99,28 +88,17 @@ if (!window.sb) {
             span.textContent = c;
             inner.appendChild(span);
         });
-
         var loaderDiv = document.createElement('div');
         loaderDiv.className = 'boot-loader';
         inner.appendChild(loaderDiv);
-
         wrap.appendChild(inner);
         document.body.appendChild(wrap);
 
-        // 时间轴
-        // 0s       启动页出现
-        // 3.5s     字已几乎不可见
-        // 3.5~3.8s 黑屏停顿 0.3s
-        // 3.8s     启动页淡出（1s）+ 页面淡入（1s）
-        // 4.8s     启动页移除
         setTimeout(function() {
             setTimeout(function() {
                 wrap.classList.add('fade-out');
-                // 页面淡入：移除 sq-boot-hide
                 document.documentElement.classList.remove('sq-boot-hide');
-                setTimeout(function() {
-                    wrap.remove();
-                }, 1000);
+                setTimeout(function() { wrap.remove(); }, 1000);
             }, 300);
         }, 3500);
     }
@@ -667,7 +645,6 @@ function showAvatarPrompt() {
 }
 window.showAvatarPrompt = showAvatarPrompt;
 
-// 自动检查
 (function autoAvatarCheck() {
     function tryCheck() {
         var user = typeof getSessionUser === 'function' ? getSessionUser() : null;
@@ -684,4 +661,63 @@ window.showAvatarPrompt = showAvatarPrompt;
     } else {
         setTimeout(tryCheck, 900);
     }
+})();
+
+// ============================================================
+// ★★★ 全局在线状态（Presence）★★★
+// 任何页面引入 common.js 都会自动上线
+// chats.html 只需要通过 window.__globalPresenceChannel 读取即可
+// ============================================================
+(function initGlobalPresence(){
+  function startPresence(){
+    var user = (typeof getSessionUser === 'function') ? getSessionUser() : null;
+    if (!user || !user.id) return;
+    if (!window.sb) return;
+
+    // 若已存在旧 channel，先清理
+    if (window.__globalPresenceChannel) {
+      try { window.sb.removeChannel(window.__globalPresenceChannel); } catch(e){}
+      window.__globalPresenceChannel = null;
+    }
+
+    var ch = window.sb.channel('sq-chat-online', {
+      config: {
+        presence: {
+          // ★ 唯一 key = user.id（同一账号多个标签页只算一个）
+          key: user.id
+        }
+      }
+    });
+
+    // 触发一次同步
+    ch.on('presence', { event: 'sync' }, function(){});
+
+    ch.subscribe(function(status){
+      if (status === 'SUBSCRIBED') {
+        ch.track({
+          user_id: user.id,
+          nickname: user.nickname || '用户',
+          avatar_url: user.avatar_url || '',
+          online_at: new Date().toISOString()
+        });
+        console.log('[presence] 已上线:', user.nickname);
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.warn('[presence] 连接异常，3 秒后重连');
+        setTimeout(startPresence, 3000);
+      }
+    });
+
+    window.__globalPresenceChannel = ch;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(startPresence, 300); });
+  } else {
+    setTimeout(startPresence, 300);
+  }
+
+  // 登录状态变化时重启
+  window.addEventListener('storage', function(e){
+    if (e.key === 'sq_user_session') setTimeout(startPresence, 200);
+  });
 })();
