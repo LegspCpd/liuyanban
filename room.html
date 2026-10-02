@@ -529,12 +529,37 @@ function initRoomMembers(){
     renderMemberList(arr);
     var cnt=document.getElementById('memberBtnCount');if(cnt)cnt.textContent=arr.length;
     var cnt2=document.getElementById('memberCount');if(cnt2)cnt2.textContent=arr.length;
+    var onlineIds=arr.map(function(u){return u.id});
+    cleanupOfflineGamePlayers(onlineIds);
   });
   state.memberChannel.subscribe(function(status){
     if(status==='SUBSCRIBED'){
       state.memberChannel.track({user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||'',joined_at:new Date().toISOString()});
     }
   });
+}
+/* 兜底：清理游戏里已掉线（不在 Presence 中）的玩家 */
+async function cleanupOfflineGamePlayers(onlineIds){
+  try{
+    if(!state.room)return;
+    var room=await freshRoom();
+    state.room=room;
+    var game=room.current_game;
+    if(!game||!game.players||!game.players.length)return;
+    var hostOffline=game.host_id&&onlineIds.indexOf(game.host_id)<0;
+    var kept=game.players.filter(function(p){return onlineIds.indexOf(p.user_id)>=0});
+    if(hostOffline||!kept.length){
+      await window.sb.from('rooms').update({current_game:null}).eq('id',room.id);
+      state.room.current_game=null;renderMic();renderGame();
+      return;
+    }
+    if(kept.length===game.players.length)return;
+    var ng=Object.assign({},game,{players:kept});
+    if(game.type==='gomoku')ng.state=Object.assign({},game.state,{board:emptyBoard(),turn:'black',winner:null});
+    if(game.type==='draw')ng.state=Object.assign({},game.state,{order:(game.state.order||[]).filter(function(id){return onlineIds.indexOf(id)>=0}),strokes:[],correct:[]});
+    await window.sb.from('rooms').update({current_game:ng}).eq('id',room.id);
+    state.room.current_game=ng;renderMic();renderGame();
+  }catch(e){}
 }
 function renderMemberList(arr){
   var el=document.getElementById('memberList');if(!el)return;
