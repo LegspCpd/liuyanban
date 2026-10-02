@@ -509,7 +509,7 @@ async function doSubmitReport(reportedUserId, contentType, contentId, contentSna
         if (!cu || !cu.id) { showToast('请先登录'); return; }
         await submitReport(cu.id, reportedUserId, contentType, contentId, contentSnapshot, reason, description);
         closeReportDialog();
-        showToast('✅ 举报已提交，管理员会尽快处理');
+        showToast('举报已提交，管理员会尽快处理');
     } catch (err) {
         showToast('举报失败：' + err.message);
     }

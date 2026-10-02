@@ -85,13 +85,13 @@
     if (g.status === 'waiting') { el.textContent = '等待玩家加入…'; return; }
     if (g.status === 'playing') {
       var my = g.black_id === state.user.id ? 'black' : (g.white_id === state.user.id ? 'white' : null);
-      if (my) el.textContent = (g.turn === my) ? '🔵 轮到你落子' : '⏳ 等待对方落子…';
+      if (my) el.textContent = (g.turn === my) ? '轮到你落子' : '等待对方落子…';
       else el.textContent = (g.turn === 'black' ? '黑方' : '白方') + ' 思考中…';
       return;
     }
     if (g.status === 'finished') {
       var w = g.winner === 'black' ? (g.black_name || '黑方') : (g.white_name || '白方');
-      el.innerHTML = '🏆 <b>' + esc(w) + '</b> 获胜！';
+      el.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#f0b429" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:2px;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg><b>' + esc(w) + '</b> 获胜！';
     }
   }
 

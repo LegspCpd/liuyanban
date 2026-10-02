@@ -363,7 +363,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 <div class="drawer-backdrop" id="drawerBackdrop"></div>
 <div class="game-drawer" id="gameDrawer">
   <div class="drawer-handle"></div>
-  <div class="drawer-title">🎮 选择游戏</div>
+  <div class="drawer-title"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>选择游戏</div>
   <div class="game-grid" id="gameGrid"></div>
 </div>
 
@@ -449,16 +449,16 @@ async function loadRooms(){
   var grid=document.getElementById('roomGrid');
   grid.innerHTML='<div class="loading-state"><div class="spinner"></div>加载中…</div>';
   try{var res=await window.sb.from('rooms').select('*').order('created_at',{ascending:true});if(res.error)throw res.error;rooms=res.data||[];renderGrid()}
-  catch(e){grid.innerHTML='<div class="empty-state"><div class="big">🏠</div>房间功能尚未初始化'+(isAdmin?'<br><small>请先在 Supabase 创建 rooms 数据表</small>':'')+'</div>'}
+  catch(e){grid.innerHTML='<div class="empty-state"><div class="big"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></div>房间功能尚未初始化'+(isAdmin?'<br><small>请先在 Supabase 创建 rooms 数据表</small>':'')+'</div>'}
 }
 function renderGrid(){
   var grid=document.getElementById('roomGrid');
-  if(!rooms.length){grid.innerHTML='<div class="empty-state"><div class="big">🏠</div>还没有房间'+(isAdmin?'<br><small>点击右上角创建第一个房间</small>':'')+'</div>';return}
+  if(!rooms.length){grid.innerHTML='<div class="empty-state"><div class="big"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></div>还没有房间'+(isAdmin?'<br><small>点击右上角创建第一个房间</small>':'')+'</div>';return}
   grid.innerHTML=rooms.map(function(r){
     var coIds=r.co_admin_ids||[],isCo=coIds.indexOf(currentUser.id)>=0;
     var badge=(isAdmin||isCo)?'<span class="room-card-badge">管理</span>':'';
     var editBtn=isAdmin?'<button class="room-edit-btn" data-edit="'+r.id+'"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>':'';
-    var gameTag=r.current_game&&r.current_game.type?'<div class="room-card-meta" style="color:var(--primary);font-weight:700;">🎮 游戏中</div>':'<div class="room-card-meta">'+(r.mic_mode==='host'?'主持人连麦':'自由连麦')+'</div>';
+    var gameTag=r.current_game&&r.current_game.type?'<div class="room-card-meta" style="color:var(--primary);font-weight:700;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>游戏中</div>':'<div class="room-card-meta">'+(r.mic_mode==='host'?'主持人连麦':'自由连麦')+'</div>';
     return '<div class="room-card" data-id="'+r.id+'">'+badge+editBtn+'<div class="room-card-icon"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg></div><div class="room-card-name">'+escapeHtml(r.name)+'</div>'+gameTag+'</div>';
   }).join('');
   grid.querySelectorAll('.room-card').forEach(function(el){el.addEventListener('click',function(e){if(e.target.closest('.room-edit-btn'))return;enterRoom(this.dataset.id)})});
@@ -468,7 +468,7 @@ document.getElementById('createRoomBtn').onclick=async function(){
   if(!isAdmin)return;
   var name=prompt('请输入房间名称：');if(name===null)return;name=name.trim();
   if(!name){showToast('名称不能为空');return}
-  try{var res=await window.sb.from('rooms').insert([{name:name,creator_id:currentUser.id,co_admin_ids:[],co_admin_permissions:{},muted_user_ids:[],mic_enabled:true,mic_mode:'free',mic_speaking:[],mic_requests:[],game_disabled:false}]).select().single();if(res.error)throw res.error;showToast('✅ 房间已创建');await loadRooms()}catch(e){showToast('创建失败：'+e.message)}
+  try{var res=await window.sb.from('rooms').insert([{name:name,creator_id:currentUser.id,co_admin_ids:[],co_admin_permissions:{},muted_user_ids:[],mic_enabled:true,mic_mode:'free',mic_speaking:[],mic_requests:[],game_disabled:false}]).select().single();if(res.error)throw res.error;showToast('房间已创建');await loadRooms()}catch(e){showToast('创建失败：'+e.message)}
 };
 
 /* ============================================================
@@ -546,9 +546,9 @@ function renderMemberList(arr){
   el.innerHTML=arr.map(function(u){
     var has=u.avatar_url&&String(u.avatar_url).indexOf('http')===0;
     var roles=[];
-    if(u.id===hostId)roles.push('<span class="role host">👑 房主</span>');
-    if(gamePlayers.indexOf(u.id)>=0)roles.push('<span class="role game">🎮 游戏中</span>');
-    if(micList.indexOf(u.id)>=0)roles.push('<span class="role">🎙 麦上</span>');
+    if(u.id===hostId)roles.push('<span class="role host"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px;"><path d="M2 18h20l-2-9-4 4-4-7-4 7-4-4z"/></svg>房主</span>');
+    if(gamePlayers.indexOf(u.id)>=0)roles.push('<span class="role game"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px;"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>游戏中</span>');
+    if(micList.indexOf(u.id)>=0)roles.push('<span class="role"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px;"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/></svg>麦上</span>');
     if(u.id===currentUser.id)roles.push('<span class="role">（我）</span>');
     return '<div class="member-row"><div class="avatar" style="'+(has?'background-image:url('+escapeHtml(u.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(u.nickname).charAt(0).toUpperCase()))+'</div><div class="info"><div class="name">'+escapeHtml(u.nickname)+'</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;">'+roles.join('')+'</div></div><span class="online-dot"></span></div>';
   }).join('');
@@ -570,7 +570,7 @@ function renderMic(){
   var myPerms=permsMap[currentUser.id]||{};
   var canManage=isAdmin||(coIds.indexOf(currentUser.id)>=0&&myPerms.mic!==false);
   var h='<div class="mic-panel">';
-  h+='<div class="mic-head"><span class="mic-title">🎙 麦位 '+speaking.length+'/4</span><span class="mic-mode">'+(r.mic_mode==='host'?'主持人连麦':'自由连麦')+'</span></div>';
+  h+='<div class="mic-head"><span class="mic-title"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/></svg>麦位 '+speaking.length+'/4</span><span class="mic-mode">'+(r.mic_mode==='host'?'主持人连麦':'自由连麦')+'</span></div>';
   if(r.mic_enabled===false){h+='<div class="mic-off">本房间连麦已被管理员关闭</div>'}
   else{
     h+='<div class="mic-seats">';
@@ -587,7 +587,7 @@ function renderMic(){
   }
   h+='</div>';el.innerHTML=h;
 }
-async function requestMic(){if(isUserBanned()){showToast('账号已被封禁');return}try{var r=await freshRoom();var speaking=r.mic_speaking||[],requests=r.mic_requests||[];if(requests.some(function(x){return x.user_id===currentUser.id}))return;if(speaking.some(function(x){return x.user_id===currentUser.id}))return;var me={user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||''};if(r.mic_mode!=='host'&&speaking.length<4){speaking.push(me);await patchRoom({mic_speaking:speaking});showToast('🎙 已上麦')}else{requests.push(me);await patchRoom({mic_requests:requests});showToast(r.mic_mode==='host'?'已申请，等待管理员同意':'已加入排队')}}catch(e){showToast('操作失败：'+e.message)}}
+async function requestMic(){if(isUserBanned()){showToast('账号已被封禁');return}try{var r=await freshRoom();var speaking=r.mic_speaking||[],requests=r.mic_requests||[];if(requests.some(function(x){return x.user_id===currentUser.id}))return;if(speaking.some(function(x){return x.user_id===currentUser.id}))return;var me={user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||''};if(r.mic_mode!=='host'&&speaking.length<4){speaking.push(me);await patchRoom({mic_speaking:speaking});showToast('已上麦')}else{requests.push(me);await patchRoom({mic_requests:requests});showToast(r.mic_mode==='host'?'已申请，等待管理员同意':'已加入排队')}}catch(e){showToast('操作失败：'+e.message)}}
 async function cancelMic(){try{var r=await freshRoom();var requests=(r.mic_requests||[]).filter(function(x){return x.user_id!==currentUser.id});await patchRoom({mic_requests:requests});showToast('已取消排队')}catch(e){showToast(e.message)}}
 async function removeFromMic(userId){try{var r=await freshRoom();var speaking=(r.mic_speaking||[]).filter(function(m){return m.user_id!==userId});var requests=r.mic_requests||[];if(r.mic_mode!=='host'&&requests.length&&speaking.length<4)speaking.push(requests.shift());await patchRoom({mic_speaking:speaking,mic_requests:requests});if(userId===currentUser.id)showToast('已下麦')}catch(e){showToast(e.message)}}
 async function approveMic(userId){try{var r=await freshRoom();var requests=r.mic_requests||[];var idx=-1;for(var i=0;i<requests.length;i++){if(requests[i].user_id===userId){idx=i;break}}if(idx<0)return;var m=requests.splice(idx,1)[0];var speaking=r.mic_speaking||[];if(speaking.length>=4){showToast('麦位已满');return}speaking.push(m);await patchRoom({mic_speaking:speaking,mic_requests:requests});showToast('已同意连麦')}catch(e){showToast(e.message)}}
@@ -657,7 +657,7 @@ async function startGame(gameId){
     players:[{user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||'',seat:0}],
     state:initGameState(gameId)
   };
-  try{await updateGame(newGame);showToast('🎮 已创建「'+g.name+'」，等待玩家加入')}catch(e){showToast('启动失败：'+e.message)}
+  try{await updateGame(newGame);showToast('已创建「'+g.name+'」，等待玩家加入')}catch(e){showToast('启动失败：'+e.message)}
 }
 function initGameState(type){
   if(type==='gomoku')return{board:emptyBoard(),turn:'black',winner:null};
@@ -696,11 +696,11 @@ async function joinGame(){
   if(players.length>=g.max){showToast('人数已满（'+g.max+'人）');return}
   players=players.concat([{user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||'',seat:players.length}]);
   var ng=Object.assign({},game,{players:players});
-  try{await updateGame(ng);state.spectating=false;showToast('✅ 已加入，等待房主开始')}catch(e){showToast('加入失败：'+e.message)}
+  try{await updateGame(ng);state.spectating=false;showToast('已加入，等待房主开始')}catch(e){showToast('加入失败：'+e.message)}
 }
 window.joinGame=joinGame;
 
-function startSpectating(){state.spectating=true;showToast('👀 已进入观战');renderGame()}
+function startSpectating(){state.spectating=true;showToast('已进入观战');renderGame()}
 function stopSpectating(){state.spectating=false;renderGame()}
 window.startSpectating=startSpectating;window.stopSpectating=stopSpectating;
 
@@ -731,7 +731,7 @@ async function beginGame(){
     st=Object.assign({},st,{roles:{},phase:'choose',alive:players.map(function(p){return p.user_id}),day:1,votes:{},night_action:null,mode:0});
   }
   var ng=Object.assign({},game,{status:'playing',state:st});
-  try{await updateGame(ng);showToast('🎮 游戏开始！')}catch(e){showToast('开始失败：'+e.message)}
+  try{await updateGame(ng);showToast('游戏开始！')}catch(e){showToast('开始失败：'+e.message)}
 }
 window.beginGame=beginGame;
 
@@ -767,7 +767,7 @@ function gameTick(){
     var timerEl=document.getElementById('drawTimer');
     if(timerEl){
       var mm=Math.floor(remaining/60000),ss=Math.floor((remaining%60000)/1000);
-      timerEl.textContent='⏱ '+mm+':'+(ss<10?'0':'')+ss;
+      timerEl.textContent=mm+':'+(ss<10?'0':'')+ss;
       if(remaining<=30000)timerEl.classList.add('urgent');else timerEl.classList.remove('urgent');
     }
     if(remaining<=0||allCorrect){
@@ -854,7 +854,7 @@ function renderGpmPlayers(players,game){
   el.innerHTML=players.map(function(p){
     var has=p.avatar_url&&String(p.avatar_url).indexOf('http')===0;
     var isHost=p.user_id===game.host_id;
-    return '<div class="gpm-player'+(currentTurnId===p.user_id?' gpm-turn':'')+'"><div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(p.nickname||'U').charAt(0).toUpperCase()))+'</div><div class="gpm-name">'+escapeHtml(p.nickname||'')+(isHost?' 👑':'')+'</div></div>';
+    return '<div class="gpm-player'+(currentTurnId===p.user_id?' gpm-turn':'')+'"><div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(p.nickname||'U').charAt(0).toUpperCase()))+'</div><div class="gpm-name">'+escapeHtml(p.nickname||'')+(isHost?' <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#f0b429" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M2 18h20l-2-9-4 4-4-7-4 7-4-4z"/></svg>':'')+'</div></div>';
   }).join('');
 }
 
@@ -870,14 +870,14 @@ function renderGameContent(game,inGame){
         html+='<div class="lobby-players">'+players.map(function(p){
           var has=p.avatar_url&&String(p.avatar_url).indexOf('http')===0;
           var isHost=p.user_id===game.host_id;
-          return '<div class="lobby-player'+(isHost?' host':'')+'"><div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(p.nickname).charAt(0).toUpperCase()))+'</div>'+escapeHtml(p.nickname)+(isHost?' 👑':'')+'</div>';
+          return '<div class="lobby-player'+(isHost?' host':'')+'"><div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(p.nickname).charAt(0).toUpperCase()))+'</div>'+escapeHtml(p.nickname)+(isHost?' <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#f0b429" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M2 18h20l-2-9-4 4-4-7-4 7-4-4z"/></svg>':'')+'</div>';
         }).join('')+'</div>';
       }
       html+='<div class="lobby-count">'+players.length+' / '+g.max+' 人</div>';
       html+='<div class="lobby-actions">';
       if(players.length<g.max)html+='<button class="lobby-btn join" onclick="joinGame()">加入游戏</button>';
       else html+='<button class="lobby-btn join" disabled>人数已满</button>';
-      html+='<button class="lobby-btn spectate" onclick="startSpectating()">👀 只观战</button>';
+      html+='<button class="lobby-btn spectate" onclick="startSpectating()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>只观战</button>';
       html+='</div>';
       if(game.host_id===currentUser.id)html+='<div class="lobby-hint" style="color:var(--primary);font-weight:700;">你是房主</div>';
       else html+='<div class="lobby-hint">房主是 '+escapeHtml((players.find(function(p){return p.user_id===game.host_id})||{}).nickname||'')+'</div>';
@@ -890,7 +890,7 @@ function renderGameContent(game,inGame){
     h2+='<div class="lobby-players">'+players.map(function(p){
       var has=p.avatar_url&&String(p.avatar_url).indexOf('http')===0;
       var isH=p.user_id===game.host_id;
-      return '<div class="lobby-player'+(isH?' host':'')+'"><div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(p.nickname).charAt(0).toUpperCase()))+'</div>'+escapeHtml(p.nickname)+(isH?' 👑':'')+'</div>';
+      return '<div class="lobby-player'+(isH?' host':'')+'"><div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(p.nickname).charAt(0).toUpperCase()))+'</div>'+escapeHtml(p.nickname)+(isH?' <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#f0b429" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M2 18h20l-2-9-4 4-4-7-4 7-4-4z"/></svg>':'')+'</div>';
     }).join('')+'</div>';
     h2+='<div class="lobby-count">'+players.length+' / '+g.max+' 人（至少 '+g.min+' 人）</div>';
     if(isHost){
@@ -900,7 +900,7 @@ function renderGameContent(game,inGame){
       h2+='</div>';
       h2+='<div class="lobby-hint" style="color:var(--primary);font-weight:700;">你是房主，人齐后点开始</div>';
     }else{
-      h2+='<div class="lobby-hint">⏳ 等待房主开始游戏…（'+players.length+'/'+g.min+'）</div>';
+      h2+='<div class="lobby-hint">等待房主开始游戏…（'+players.length+'/'+g.min+'）</div>';
     }
     h2+='</div>';
     el.innerHTML=h2;return;
@@ -953,13 +953,13 @@ function renderGomoku(game,el){
   var statusText='';
   var extraBtn='';
   if(game.status==='finished'){
-    statusText='🏆 '+(st.winner==='black'?escapeHtml(players[0]?players[0].nickname:'黑方'):escapeHtml(players[1]?players[1].nickname:'白方'))+' 获胜！';
-    if(game.host_id===currentUser.id)extraBtn='<button class="lobby-btn start" style="margin-top:10px;" onclick="restartGame()">🔄 再来一轮</button>';
+    statusText='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#f0b429" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:2px;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>'+(st.winner==='black'?escapeHtml(players[0]?players[0].nickname:'黑方'):escapeHtml(players[1]?players[1].nickname:'白方'))+' 获胜！';
+    if(game.host_id===currentUser.id)extraBtn='<button class="lobby-btn start" style="margin-top:10px;" onclick="restartGame()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>再来一轮</button>';
     else extraBtn='<div style="font-size:.75em;opacity:.7;margin-top:8px;">等待房主重开…</div>';
   }
   else{
     var myColor=players[0]&&players[0].user_id===currentUser.id?'black':(players[1]&&players[1].user_id===currentUser.id?'white':null);
-    if(myColor)statusText=st.turn===myColor?'🔵 轮到你落子':'⏳ 等待对方…';
+    if(myColor)statusText=st.turn===myColor?'轮到你落子':'等待对方…';
     else statusText=(st.turn==='black'?'黑方':'白方')+' 思考中…';
   }
   var html='<div class="gomoku-wrap"><div class="gomoku-status">'+statusText+'</div>'+extraBtn+'<div class="gomoku-board" id="gmkBoard">';
@@ -1006,16 +1006,16 @@ function renderDraw(game,el){
   if(st.phase==='finished'){
     var scores=st.scores||{};
     var rank=players.slice().sort(function(a,b){return (scores[b.user_id]||0)-(scores[a.user_id]||0)});
-    var html='<div class="draw-intermission"><div class="big">🎉 游戏结束</div>';
+    var html='<div class="draw-intermission"><div class="big">游戏结束</div>';
     html+='<div class="draw-scoreboard" style="margin-top:14px;">'+rank.map(function(p,i){
-      return '<div class="draw-score">'+(i===0?'🏆':'')+' '+escapeHtml(p.nickname)+' <span class="pts">'+(scores[p.user_id]||0)+'分</span></div>';
+      return '<div class="draw-score">'+(i===0?'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#f0b429" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>':'')+' '+escapeHtml(p.nickname)+' <span class="pts">'+(scores[p.user_id]||0)+'分</span></div>';
     }).join('')+'</div>';
-    if(game.host_id===currentUser.id)html+='<button class="lobby-btn start" style="margin-top:16px;" onclick="restartGame()">🔄 再来一轮</button>';
+    if(game.host_id===currentUser.id)html+='<button class="lobby-btn start" style="margin-top:16px;" onclick="restartGame()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>再来一轮</button>';
     else html+='<div style="font-size:.75em;opacity:.7;margin-top:14px;">等待房主重开…</div>';
     html+='</div>';
     el.innerHTML=html;return;
   }
-  if(st.round_end){el.innerHTML='<div class="draw-intermission"><div class="big">✅ 本轮结束</div><div>正在切换到下一位画手…</div></div>';return}
+  if(st.round_end){el.innerHTML='<div class="draw-intermission"><div class="big">本轮结束</div><div>正在切换到下一位画手…</div></div>';return}
   var drawerId=order[st.drawer_index];
   var isDrawer=drawerId===currentUser.id;
   var scores=st.scores||{};
@@ -1023,13 +1023,13 @@ function renderDraw(game,el){
   var remaining=Math.max(0,DRAW_ROUND_MS-elapsed);
   var html='<div class="draw-wrap">';
   html+='<div class="draw-info">';
-  html+='<span>✏️ '+(isDrawer?'轮到你画':escapeHtml((players.find(function(p){return p.user_id===drawerId})||{}).nickname||'')+' 画')+'</span>';
-  html+='<span class="draw-timer'+(remaining<=30000?' urgent':'')+'" id="drawTimer">⏱ 3:00</span>';
+  html+='<span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>'+(isDrawer?'轮到你画':escapeHtml((players.find(function(p){return p.user_id===drawerId})||{}).nickname||'')+' 画')+'</span>';
+  html+='<span class="draw-timer'+(remaining<=30000?' urgent':'')+'" id="drawTimer">3:00</span>';
   html+='<span class="draw-word'+(isDrawer?'':' hidden-word')+'">'+(isDrawer?escapeHtml(st.word||''):'? ? ?')+'</span>';
   html+='</div>';
   html+='<div class="draw-scoreboard">'+players.map(function(p){
     var pts=scores[p.user_id]||0;
-    return '<div class="draw-score'+(p.user_id===drawerId?' drawing':'')+'"><span style="font-weight:800;">'+escapeHtml(p.nickname)+'</span><span class="pts">'+pts+'分</span>'+(p.user_id===drawerId?' 🎨':'')+'</div>';
+    return '<div class="draw-score'+(p.user_id===drawerId?' drawing':'')+'"><span style="font-weight:800;">'+escapeHtml(p.nickname)+'</span><span class="pts">'+pts+'分</span>'+(p.user_id===drawerId?' <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>':'')+'</div>';
   }).join('')+'</div>';
   html+='<div class="draw-canvas-wrap"><canvas class="draw-canvas" id="drawCanvas"></canvas></div>';
   if(isDrawer){
@@ -1047,7 +1047,7 @@ function renderDraw(game,el){
   el.innerHTML=html;
   initDrawCanvas(game,isDrawer);
   var timerEl=document.getElementById('drawTimer');
-  if(timerEl){var mm=Math.floor(remaining/60000),ss=Math.floor((remaining%60000)/1000);timerEl.textContent='⏱ '+mm+':'+(ss<10?'0':'')+ss}
+  if(timerEl){var mm=Math.floor(remaining/60000),ss=Math.floor((remaining%60000)/1000);timerEl.textContent=mm+':'+(ss<10?'0':'')+ss}
 }
 var drawState={color:'#000000',size:5,drawing:false,currentStroke:null,canvas:null,ctx:null,isDrawer:false};
 function setDrawColor(el){drawState.color=el.dataset.color;document.querySelectorAll('.draw-color').forEach(function(x){x.classList.remove('active')});el.classList.add('active')}
@@ -1093,7 +1093,7 @@ async function submitDrawGuess(){
     ns.correct=corr;
     scores[currentUser.id]=(scores[currentUser.id]||0)+1;
     ns.scores=scores;
-    ns.messages.push({text:'✅ '+currentUser.nickname+' 猜对了！',correct:true});
+    ns.messages.push({text:currentUser.nickname+' 猜对了！',correct:true});
   }
   try{await updateGame(Object.assign({},game,{state:ns}))}catch(e){showToast('提交失败：'+e.message)}
 }
@@ -1109,15 +1109,15 @@ function renderSpy(game,el){
   var alive=players.filter(function(p){return eliminated.indexOf(p.user_id)<0});
   var spyAlive=(st.spy_ids||[]).filter(function(id){return eliminated.indexOf(id)<0});
   if(spyAlive.length===0){
-    var h='<div class="spy-wrap"><div class="spy-result"><div class="big" style="color:#a78bfa;">🎉 平民获胜！</div><div>所有卧底已被淘汰</div>';
-    if(game.host_id===currentUser.id)h+='<button class="lobby-btn start" style="margin-top:16px;background:#8b5cf6;" onclick="restartGame()">🔄 再来一轮</button>';
+    var h='<div class="spy-wrap"><div class="spy-result"><div class="big" style="color:#a78bfa;">平民获胜！</div><div>所有卧底已被淘汰</div>';
+    if(game.host_id===currentUser.id)h+='<button class="lobby-btn start" style="margin-top:16px;background:#8b5cf6;" onclick="restartGame()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>再来一轮</button>';
     else h+='<div style="font-size:.75em;opacity:.7;margin-top:14px;">等待房主重开…</div>';
     h+='</div></div>';el.innerHTML=h;return;
   }
   var aliveCount=alive.length;var spiesLeft=spyAlive.length;var citizensLeft=aliveCount-spiesLeft;
   if(spiesLeft>=citizensLeft){
-    var h2='<div class="spy-wrap"><div class="spy-result"><div class="big" style="color:#ff5252;">🎭 卧底获胜！</div><div>卧底人数已不少于平民</div>';
-    if(game.host_id===currentUser.id)h2+='<button class="lobby-btn start" style="margin-top:16px;background:#8b5cf6;" onclick="restartGame()">🔄 再来一轮</button>';
+    var h2='<div class="spy-wrap"><div class="spy-result"><div class="big" style="color:#ff5252;">卧底获胜！</div><div>卧底人数已不少于平民</div>';
+    if(game.host_id===currentUser.id)h2+='<button class="lobby-btn start" style="margin-top:16px;background:#8b5cf6;" onclick="restartGame()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>再来一轮</button>';
     else h2+='<div style="font-size:.75em;opacity:.7;margin-top:14px;">等待房主重开…</div>';
     h2+='</div></div>';el.innerHTML=h2;return;
   }
@@ -1154,7 +1154,7 @@ function renderSpy(game,el){
       html+='</div>';
     }else{html+='<div style="text-align:center;padding:14px;opacity:.8;">已投票，等待其他玩家…</div>'}
   }
-  if(st.lastVote){var lv=st.lastVote;var votedPlayer=players.find(function(p){return p.user_id===lv.out_id});html+='<div class="spy-timeline"><div class="spy-line">🗳 '+escapeHtml(votedPlayer?votedPlayer.nickname:'?')+' 被淘汰（'+(lv.is_spy?'🎭 卧底':'👥 平民')+'）</div></div>'}
+  if(st.lastVote){var lv=st.lastVote;var votedPlayer=players.find(function(p){return p.user_id===lv.out_id});html+='<div class="spy-timeline"><div class="spy-line">'+escapeHtml(votedPlayer?votedPlayer.nickname:'?')+' 被淘汰（'+(lv.is_spy?'卧底':'平民')+'）</div></div>'}
   html+='</div>';el.innerHTML=html;
 }
 async function submitSpyDesc(){if(!state.room||!state.room.current_game)return;var game=state.room.current_game;var input=document.getElementById('spyDescInput');var text=(input.value||'').trim();if(!text)return;var descs=(game.state.descriptions||[]).slice();descs.push({user_id:currentUser.id,nickname:currentUser.nickname,text:text});await updateGame(Object.assign({},game,{state:Object.assign({},game.state,{descriptions:descs})}))}
@@ -1187,8 +1187,8 @@ function renderWerewolf(game,el){
   var hostId=game.host_id;
   if(game.status==='finished'){
     var winner=st.winner||'';
-    var h='<div class="ww-wrap"><div class="ww-role-card"><div class="ww-role-word">🎉 '+escapeHtml(winner)+' 获胜</div></div>';
-    if(game.host_id===currentUser.id)h+='<button class="lobby-btn start" style="margin-top:16px;background:#ff5252;color:#fff;" onclick="restartGame()">🔄 再来一轮</button>';
+    var h='<div class="ww-wrap"><div class="ww-role-card"><div class="ww-role-word">'+escapeHtml(winner)+' 获胜</div></div>';
+    if(game.host_id===currentUser.id)h+='<button class="lobby-btn start" style="margin-top:16px;background:#ff5252;color:#fff;" onclick="restartGame()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>再来一轮</button>';
     else h+='<div style="font-size:.75em;opacity:.7;margin-top:14px;">等待房主重开…</div>';
     h+='</div>';
     el.innerHTML=h;return;
@@ -1203,7 +1203,7 @@ function renderWerewolf(game,el){
   }
   var myRole=st.roles[currentUser.id]||'?';var alive=st.alive||[];
   var html='<div class="ww-wrap">';
-  html+='<div class="ww-role-card"><div class="ww-role-label">你的身份</div><div class="ww-role-word">'+escapeHtml(myRole)+'</div><div class="ww-desc">第 '+st.day+' 天 · '+(st.phase==='night'?'🌙 夜晚':'☀️ 白天')+'</div></div>';
+  html+='<div class="ww-role-card"><div class="ww-role-label">你的身份</div><div class="ww-role-word">'+escapeHtml(myRole)+'</div><div class="ww-desc">第 '+st.day+' 天 · '+(st.phase==='night'?'夜晚':'白天')+'</div></div>';
   html+='<div class="ww-players">';
   players.forEach(function(p){
     var dead=alive.indexOf(p.user_id)<0;var has=p.avatar_url&&String(p.avatar_url).indexOf('http')===0;
@@ -1226,7 +1226,7 @@ async function startWerewolf(mode){
   if(mode===6){shuffled.forEach(function(p,i){if(i<2)roles[p.user_id]='狼人';else if(i===2)roles[p.user_id]='预言家';else if(i===3)roles[p.user_id]='女巫';else roles[p.user_id]='平民'})}
   else{shuffled.forEach(function(p,i){if(i<3)roles[p.user_id]='狼人';else if(i===3)roles[p.user_id]='预言家';else if(i===4)roles[p.user_id]='女巫';else if(i===5)roles[p.user_id]='猎人';else roles[p.user_id]='平民'})}
   var ns=Object.assign({},game.state,{roles:roles,phase:'night',alive:players.map(function(p){return p.user_id}),night_action:null,votes:{},day:1,mode:mode});
-  await updateGame(Object.assign({},game,{state:ns}));showToast('🌙 游戏开始');
+  await updateGame(Object.assign({},game,{state:ns}));showToast('游戏开始');
 }
 window.startWerewolf=startWerewolf;
 async function nightKill(targetId){if(!state.room||!state.room.current_game)return;var game=state.room.current_game;if(game.state.roles[currentUser.id]!=='狼人'){showToast('你无法操作');return}await updateGame(Object.assign({},game,{state:Object.assign({},game.state,{night_action:targetId})}))}
@@ -1241,8 +1241,8 @@ async function advanceWerewolfPhase(){
     if(killed)alive=alive.filter(function(id){return id!==killed});
     var wolves=alive.filter(function(id){return st.roles[id]==='狼人'});
     var others=alive.filter(function(id){return st.roles[id]!=='狼人'});
-    if(!wolves.length){await updateGame(Object.assign({},game,{status:'finished',state:Object.assign({},st,{alive:alive,winner:'好人'})}));showToast('🎉 好人获胜');return}
-    if(wolves.length>=others.length){await updateGame(Object.assign({},game,{status:'finished',state:Object.assign({},st,{alive:alive,winner:'狼人'})}));showToast('🎭 狼人获胜');return}
+    if(!wolves.length){await updateGame(Object.assign({},game,{status:'finished',state:Object.assign({},st,{alive:alive,winner:'好人'})}));showToast('好人获胜');return}
+    if(wolves.length>=others.length){await updateGame(Object.assign({},game,{status:'finished',state:Object.assign({},st,{alive:alive,winner:'狼人'})}));showToast('狼人获胜');return}
     var ns=Object.assign({},st,{alive:alive,phase:'day',votes:{},night_action:null});
     await updateGame(Object.assign({},game,{state:ns}));
   }else{
@@ -1319,7 +1319,7 @@ async function openRoomEditor(){
     function chk(k,label){var checked=p[k]!==false;return '<label class="re-chk"><input type="checkbox" data-perm="'+k+'" data-uid="'+u.id+'" '+(checked?'checked':'')+'> '+label+'</label>'}
     return '<div class="re-user"><div class="re-user-top"><span class="re-name">'+escapeHtml(u.nickname)+'</span><label class="re-chk"><input type="checkbox" data-co="'+u.id+'" '+(isCo?'checked':'')+'> 协管</label><label class="re-chk"><input type="checkbox" data-mute="'+u.id+'" '+(isMuted?'checked':'')+'> 禁言</label></div><div class="re-perms'+(isCo?' on':'')+'" data-perms-for="'+u.id+'">'+chk('revoke','撤回消息')+chk('mute','禁言用户')+chk('mic','管理连麦')+chk('game','发起游戏')+'</div></div>';
   }).join('');
-  overlay.innerHTML='<div class="re-panel"><div class="re-head"><h3>⚙ 房间设置</h3><button id="reClose"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="re-body"><div class="re-field"><label>房间名称</label><input type="text" id="reName" maxlength="20" value="'+escapeHtml(room.name)+'" /></div><div class="re-field"><label>连麦模式</label><div class="re-radio-row"><label class="re-radio"><input type="radio" name="reMicMode" value="free" '+(room.mic_mode!=='host'?'checked':'')+'> 自由连麦</label><label class="re-radio"><input type="radio" name="reMicMode" value="host" '+(room.mic_mode==='host'?'checked':'')+'> 主持人连麦</label></div></div><div class="re-field"><label>连麦开关</label><label class="re-chk" style="font-size:.85em;"><input type="checkbox" id="reMicEnabled" '+(room.mic_enabled!==false?'checked':'')+'> 允许连麦</label></div><div class="re-field"><label>游戏设置</label><label class="re-chk" style="font-size:.85em;color:var(--danger);"><input type="checkbox" id="reGameDisabled" '+(room.game_disabled?'checked':'')+'> 禁止本房间所有游戏</label></div><div class="re-field"><label>协助管理员 &amp; 权限</label>'+(userRows||'<div style="font-size:.8em;color:var(--text-muted);padding:8px 0;">暂无其他用户</div>')+'</div></div><div class="re-foot"><button class="cancel" id="reCancel">取消</button><button class="ok" id="reSave">保存</button></div></div>';
+  overlay.innerHTML='<div class="re-panel"><div class="re-head"><h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>房间设置</h3><button id="reClose"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="re-body"><div class="re-field"><label>房间名称</label><input type="text" id="reName" maxlength="20" value="'+escapeHtml(room.name)+'" /></div><div class="re-field"><label>连麦模式</label><div class="re-radio-row"><label class="re-radio"><input type="radio" name="reMicMode" value="free" '+(room.mic_mode!=='host'?'checked':'')+'> 自由连麦</label><label class="re-radio"><input type="radio" name="reMicMode" value="host" '+(room.mic_mode==='host'?'checked':'')+'> 主持人连麦</label></div></div><div class="re-field"><label>连麦开关</label><label class="re-chk" style="font-size:.85em;"><input type="checkbox" id="reMicEnabled" '+(room.mic_enabled!==false?'checked':'')+'> 允许连麦</label></div><div class="re-field"><label>游戏设置</label><label class="re-chk" style="font-size:.85em;color:var(--danger);"><input type="checkbox" id="reGameDisabled" '+(room.game_disabled?'checked':'')+'> 禁止本房间所有游戏</label></div><div class="re-field"><label>协助管理员 &amp; 权限</label>'+(userRows||'<div style="font-size:.8em;color:var(--text-muted);padding:8px 0;">暂无其他用户</div>')+'</div></div><div class="re-foot"><button class="cancel" id="reCancel">取消</button><button class="ok" id="reSave">保存</button></div></div>';
   document.body.appendChild(overlay);
   overlay.querySelectorAll('input[data-co]').forEach(function(cb){cb.onchange=function(){var uid=this.dataset.co;var box=overlay.querySelector('[data-perms-for="'+uid+'"]');if(box)box.classList.toggle('on',this.checked)}});
   overlay.querySelector('#reClose').onclick=function(){overlay.remove()};
@@ -1335,7 +1335,7 @@ async function openRoomEditor(){
     newCoIds.forEach(function(uid){newPerms[uid]={};overlay.querySelectorAll('input[data-perm][data-uid="'+uid+'"]').forEach(function(cb){newPerms[uid][cb.dataset.perm]=cb.checked})});
     var speaking=(room.mic_speaking||[]).filter(function(m){return newMuted.indexOf(m.user_id)<0});
     var requests=(room.mic_requests||[]).filter(function(m){return newMuted.indexOf(m.user_id)<0});
-    try{var upd=await window.sb.from('rooms').update({name:name,mic_mode:micMode,mic_enabled:micEnabled,game_disabled:gameDisabled,co_admin_ids:newCoIds,co_admin_permissions:newPerms,muted_user_ids:newMuted,mic_speaking:speaking,mic_requests:requests}).eq('id',state.room.id).select().single();if(upd.error)throw upd.error;state.room=upd.data;document.getElementById('roomTitle').textContent=upd.data.name;renderMic();renderGame();overlay.remove();showToast('✅ 设置已保存')}catch(e){showToast('保存失败：'+e.message)}
+    try{var upd=await window.sb.from('rooms').update({name:name,mic_mode:micMode,mic_enabled:micEnabled,game_disabled:gameDisabled,co_admin_ids:newCoIds,co_admin_permissions:newPerms,muted_user_ids:newMuted,mic_speaking:speaking,mic_requests:requests}).eq('id',state.room.id).select().single();if(upd.error)throw upd.error;state.room=upd.data;document.getElementById('roomTitle').textContent=upd.data.name;renderMic();renderGame();overlay.remove();showToast('设置已保存')}catch(e){showToast('保存失败：'+e.message)}
   };
 }
 window.openRoomEditor=openRoomEditor;
