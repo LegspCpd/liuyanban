@@ -193,6 +193,38 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .ww-player .name{flex:1;font-size:.82em;font-weight:700}
 .ww-player .btn{background:rgba(255,140,140,.25);color:#ffb5b5;border:none;padding:4px 12px;border-radius:99px;font-size:.72em;font-weight:700;cursor:pointer;font-family:inherit}
 .ww-player .btn:hover{background:#ff5252;color:#fff}
+/* ===== 斗地主 ===== */
+.room-body[data-theme="doudizhu"]{background:linear-gradient(135deg,#0b3d1e,#14532d 50%,#052e16);color:#e8f5e9}
+.ddz-wrap{display:flex;flex-direction:column;gap:8px;color:#e8f5e9;width:100%}
+.ddz-info{display:flex;justify-content:space-between;font-size:.75em;font-weight:700;background:rgba(255,255,255,.08);border-radius:8px;padding:6px 10px}
+.ddz-table{position:relative;min-height:130px;display:flex;flex-direction:column;gap:8px;background:rgba(0,0,0,.18);border-radius:12px;padding:10px}
+.ddz-seat{display:flex;align-items:center;gap:8px;font-size:.75em;font-weight:700}
+.ddz-seat .avatar{width:26px;height:26px;border-radius:50%;background:var(--primary);display:grid;place-items:center;font-size:11px;background-size:cover;background-position:center}
+.ddz-seat.landlord .name{color:#ffd54f}
+.ddz-seat.turn{outline:2px solid #ffd54f;border-radius:8px;padding:2px 6px}
+.ddz-count{background:rgba(255,255,255,.15);border-radius:99px;padding:1px 8px;font-size:.9em}
+.ddz-play-area{display:flex;justify-content:center;align-items:center;gap:4px;min-height:64px;flex-wrap:wrap;background:rgba(0,0,0,.15);border-radius:10px;padding:6px}
+.ddz-play-label{font-size:.7em;opacity:.7}
+.ddz-hand{display:flex;justify-content:center;flex-wrap:wrap;gap:2px;padding:6px 0;min-height:66px}
+.ddz-card{width:38px;height:54px;border-radius:6px;background:#fff;color:#222;border:1px solid #bbb;box-shadow:0 2px 4px rgba(0,0,0,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;cursor:pointer;user-select:none;position:relative;transition:transform .12s;flex-shrink:0}
+.ddz-card .rk{font-size:16px;line-height:1}
+.ddz-card .su{font-size:13px;line-height:1}
+.ddz-card.red{color:#d32f2f}
+.ddz-card.black{color:#212121}
+.ddz-card.sel{transform:translateY(-14px);box-shadow:0 6px 10px rgba(0,0,0,.4);border-color:#ffd54f}
+.ddz-card.mini{width:26px;height:38px}
+.ddz-card.mini .rk{font-size:12px}
+.ddz-card.mini .su{font-size:10px}
+.ddz-card.back{background:linear-gradient(135deg,#1565c0,#0d47a1);color:transparent;border-color:#0b3d91}
+.ddz-card.back .rk,.ddz-card.back .su{display:none}
+.ddz-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.ddz-btn{padding:9px 18px;border:none;border-radius:10px;font-weight:800;font-family:inherit;font-size:.82em;cursor:pointer;background:#ffd54f;color:#3e2723}
+.ddz-btn.pass{background:rgba(255,255,255,.2);color:#e8f5e9}
+.ddz-btn:disabled{opacity:.4;cursor:default}
+.ddz-status{text-align:center;font-size:.85em;font-weight:800;color:#ffd54f;padding:4px}
+.ddz-result{text-align:center;padding:24px 16px}
+.ddz-result .big{font-size:1.4em;font-weight:900;margin-bottom:10px}
+
 .room-messages{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;position:relative;z-index:1;min-height:0}
 .rm-msg{display:flex;gap:9px;flex-shrink:0;max-width:92%}
 .rm-msg.self{align-self:flex-end;flex-direction:row-reverse}
@@ -251,6 +283,13 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .member-row .role.host{color:var(--primary);font-weight:800}
 .member-row .role.game{color:var(--official-blue);font-weight:700}
 .member-row .online-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2);flex-shrink:0}
+.member-mute-btn{background:var(--bg-input);border:none;border-radius:8px;padding:4px 10px;font-size:.68em;font-weight:700;font-family:inherit;cursor:pointer;color:var(--text-muted);flex-shrink:0}
+.member-mute-btn.on{background:rgba(229,57,53,.12);color:var(--danger)}
+.re-danger{margin:4px 18px 10px;padding:12px 14px;border:1px solid rgba(229,57,53,.3);border-radius:10px;background:rgba(229,57,53,.05)}
+.re-danger-title{font-size:.72em;font-weight:800;color:var(--danger);margin-bottom:8px}
+.re-danger-btn{display:block;width:100%;margin-bottom:6px;padding:9px;border:none;border-radius:8px;background:rgba(229,57,53,.12);color:var(--danger);font-weight:700;font-family:inherit;font-size:.82em;cursor:pointer}
+.re-danger-btn:last-child{margin-bottom:0}
+.re-danger-btn:hover{background:var(--danger);color:#fff}
 .re-overlay{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px}
 .re-panel{background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.25)}
 .re-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 12px;border-bottom:1px solid var(--border)}
@@ -568,6 +607,10 @@ function renderMemberList(arr){
   var gamePlayers=(game&&game.players||[]).map(function(p){return p.user_id});
   var hostId=game&&game.host_id;
   var micList=(state.room.mic_speaking||[]).map(function(m){return m.user_id});
+  var mutedIds=(state.room.muted_user_ids||[]);
+  var _coIds=(state.room.co_admin_ids||[]);
+  var _myPerms=(state.room.co_admin_permissions||{})[currentUser.id]||{};
+  var canMute=isAdmin||(_coIds.indexOf(currentUser.id)>=0&&_myPerms.mute!==false);
   el.innerHTML=arr.map(function(u){
     var has=u.avatar_url&&String(u.avatar_url).indexOf('http')===0;
     var roles=[];
@@ -575,9 +618,41 @@ function renderMemberList(arr){
     if(gamePlayers.indexOf(u.id)>=0)roles.push('<span class="role game"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px;"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>游戏中</span>');
     if(micList.indexOf(u.id)>=0)roles.push('<span class="role"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px;"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/></svg>麦上</span>');
     if(u.id===currentUser.id)roles.push('<span class="role">（我）</span>');
-    return '<div class="member-row"><div class="avatar" style="'+(has?'background-image:url('+escapeHtml(u.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(u.nickname).charAt(0).toUpperCase()))+'</div><div class="info"><div class="name">'+escapeHtml(u.nickname)+'</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;">'+roles.join('')+'</div></div><span class="online-dot"></span></div>';
+    var isMuted=mutedIds.indexOf(u.id)>=0;
+    if(isMuted)roles.push('<span class="role" style="color:var(--danger);">已禁言</span>');
+    var actBtn='';
+    if(canMute&&u.id!==currentUser.id&&u.id!==(state.room.creator_id||'')){
+      actBtn='<button class="member-mute-btn'+(isMuted?' on':'')+'" onclick="toggleMuteUser(\''+u.id+'\')">'+(isMuted?'解除禁言':'禁言')+'</button>';
+    }
+    return '<div class="member-row"><div class="avatar" style="'+(has?'background-image:url('+escapeHtml(u.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(u.nickname).charAt(0).toUpperCase()))+'</div><div class="info"><div class="name">'+escapeHtml(u.nickname)+'</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;">'+roles.join('')+'</div></div>'+actBtn+'<span class="online-dot"></span></div>';
   }).join('');
 }
+async function toggleMuteUser(uid){
+  try{
+    if(!isAdmin){
+      var _co=(state.room.co_admin_ids||[]);var _p=(state.room.co_admin_permissions||{})[currentUser.id]||{};
+      if(_co.indexOf(currentUser.id)<0||_p.mute===false){showToast('没有权限');return}
+    }
+    var room=await freshRoom();
+    var muted=(room.muted_user_ids||[]).slice();
+    var idx=muted.indexOf(uid);
+    if(idx>=0)muted.splice(idx,1);else muted.push(uid);
+    var patch={muted_user_ids:muted};
+    if(idx<0){
+      patch.mic_speaking=(room.mic_speaking||[]).filter(function(m){return m.user_id!==uid});
+      patch.mic_requests=(room.mic_requests||[]).filter(function(m){return m.user_id!==uid});
+    }
+    await patchRoom(patch);
+    showToast(idx>=0?'已解除禁言':'已禁言');
+    if(state.memberChannel){
+      var raw=state.memberChannel.presenceState();var arr2=[];
+      Object.keys(raw).forEach(function(k){var l=raw[k];if(!l||!l.length)return;var pr=l[0];arr2.push({id:k,nickname:pr.nickname||'用户',avatar_url:pr.avatar_url||'',joined_at:pr.joined_at||''})});
+      arr2.sort(function(a,b){return (a.joined_at||'').localeCompare(b.joined_at||'')});
+      renderMemberList(arr2);
+    }
+  }catch(e){showToast('操作失败：'+e.message)}
+}
+window.toggleMuteUser=toggleMuteUser;
 document.getElementById('memberBtn').onclick=function(){document.getElementById('memberBackdrop').classList.add('open');document.getElementById('memberDrawer').classList.add('open')};
 document.getElementById('closeMemberDrawer').onclick=function(){document.getElementById('memberBackdrop').classList.remove('open');document.getElementById('memberDrawer').classList.remove('open')};
 document.getElementById('memberBackdrop').onclick=function(){document.getElementById('memberBackdrop').classList.remove('open');document.getElementById('memberDrawer').classList.remove('open')};
@@ -626,7 +701,8 @@ var GAMES=[
   {id:'gomoku',name:'五子棋',desc:'2人对弈',min:2,max:2,icon:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><circle cx="9" cy="9" r="1.4" fill="currentColor"/><circle cx="15" cy="15" r="1.4" fill="currentColor"/></svg>'},
   {id:'draw',name:'你画我猜',desc:'2-8人 · 3分钟一轮',min:2,max:8,icon:'<svg viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>'},
   {id:'spy',name:'谁是卧底',desc:'4-8人 · 推理社交',min:4,max:8,icon:'<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'},
-  {id:'werewolf',name:'狼人杀',desc:'6/10人 · 角色扮演',min:6,max:10,icon:'<svg viewBox="0 0 24 24"><path d="M20.5 6.5c-1.5 1-2.5 2.5-2.5 4.5v8c0 1.5-1 2.5-2.5 2.5h-7C7 21.5 6 20.5 6 19v-8c0-2-1-3.5-2.5-4.5"/><circle cx="12" cy="9" r="4"/><circle cx="9.5" cy="8" r=".8" fill="currentColor"/><circle cx="14.5" cy="8" r=".8" fill="currentColor"/></svg>'}
+  {id:'werewolf',name:'狼人杀',desc:'6/10人 · 角色扮演',min:6,max:10,icon:'<svg viewBox="0 0 24 24"><path d="M20.5 6.5c-1.5 1-2.5 2.5-2.5 4.5v8c0 1.5-1 2.5-2.5 2.5h-7C7 21.5 6 20.5 6 19v-8c0-2-1-3.5-2.5-4.5"/><circle cx="12" cy="9" r="4"/><circle cx="9.5" cy="8" r=".8" fill="currentColor"/><circle cx="14.5" cy="8" r=".8" fill="currentColor"/></svg>'},
+  {id:'doudizhu',name:'斗地主',desc:'3人 · 经典扑克',min:3,max:3,icon:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="12" height="16" rx="2"/><path d="M8 7h5M8 11h5"/><path d="M18 6v13a2 2 0 0 1-2 2H8"/></svg>'}
 ];
 var WORDS_DRAW=['苹果','雪人','雨伞','大象','房子','太阳','火箭','冰淇淋','篮球','蝴蝶','蛋糕','钢琴','火车','气球','熊猫','西瓜','月亮','星星','吉他','眼镜','咖啡','汉堡','风筝','螃蟹','企鹅'];
 var WORDS_SPY=[['饺子','馄饨'],['火车','高铁'],['医生','护士'],['可乐','雪碧'],['蝴蝶','蜜蜂'],['面条','米粉'],['雨伞','阳伞'],['苹果','梨子'],['老虎','狮子'],['手机','平板'],['铅笔','钢笔'],['沙发','椅子']];
@@ -689,6 +765,7 @@ function initGameState(type){
   if(type==='draw')return{order:[],drawer_index:0,word:'',strokes:[],correct:[],messages:[],scores:{},round_started_at:0,round_end:false};
   if(type==='spy')return{words:{},spy_ids:[],phase:'describe',descriptions:[],votes:{},eliminated:[],round:1};
   if(type==='werewolf')return{roles:{},phase:'choose',alive:[],night_action:null,day:1,votes:{},mode:0};
+  if(type==='doudizhu')return{phase:'bid',order:[],hands:{},bottom:[],bids:{},bidTurn:0,bidCount:0,maxBid:0,maxBidder:null,landlord:null,currentTurn:null,lastPlay:null,passCount:0,winner:null,winnerSide:null,multiplier:1,bombCount:0};
   return{};
 }
 
@@ -707,6 +784,7 @@ async function leaveGame(){
     var ns=Object.assign({},game,{players:players});
     if(game.type==='gomoku')ns.state=Object.assign({},game.state,{board:emptyBoard(),turn:'black',winner:null});
     if(game.type==='draw'){ns.state=Object.assign({},game.state,{order:(game.state.order||[]).filter(function(id){return id!==currentUser.id}),strokes:[],correct:[]})}
+    if(game.type==='doudizhu')ns.state=Object.assign({},game.state,{phase:'finished',aborted:true,winner:null});
     await updateGame(ns);
   }
   state.spectating=false;
@@ -754,6 +832,13 @@ async function beginGame(){
   }
   else if(game.type==='werewolf'){
     st=Object.assign({},st,{roles:{},phase:'choose',alive:players.map(function(p){return p.user_id}),day:1,votes:{},night_action:null,mode:0});
+  }
+  else if(game.type==='doudizhu'){
+    var dzIds=players.slice().sort(function(a,b){return a.seat-b.seat}).map(function(p){return p.user_id});
+    var dzDeck=ddzShuffle(ddzNewDeck());
+    var dzHands={};
+    dzIds.forEach(function(uid,i){dzHands[uid]=ddzSort(dzDeck.slice(i*17,i*17+17))});
+    st=Object.assign({},st,{phase:'bid',order:dzIds,hands:dzHands,bottom:dzDeck.slice(51,54),bids:{},bidTurn:0,bidCount:0,maxBid:0,maxBidder:null,landlord:null,currentTurn:null,lastPlay:null,passCount:0,winner:null,winnerSide:null,multiplier:1,bombCount:0});
   }
   var ng=Object.assign({},game,{status:'playing',state:st});
   try{await updateGame(ng);showToast('游戏开始！')}catch(e){showToast('开始失败：'+e.message)}
@@ -876,6 +961,7 @@ function renderGpmPlayers(players,game){
     currentTurnId=game.state.turn==='black'?bId:wId;
   }
   if(game.type==='draw'&&game.status==='playing')currentTurnId=(game.state.order||[])[game.state.drawer_index];
+  if(game.type==='doudizhu'&&game.status==='playing')currentTurnId=game.state.currentTurn;
   el.innerHTML=players.map(function(p){
     var has=p.avatar_url&&String(p.avatar_url).indexOf('http')===0;
     var isHost=p.user_id===game.host_id;
@@ -945,6 +1031,7 @@ function renderGameContent(game,inGame){
     else if(game.type==='draw')renderDraw(game,el);
     else if(game.type==='spy')renderSpy(game,el);
     else if(game.type==='werewolf')renderWerewolf(game,el);
+    else if(game.type==='doudizhu')renderDoudizhu(game,el);
     else el.innerHTML='<div style="text-align:center;padding:20px;opacity:.5;">加载中…</div>';
   }
 }
@@ -1280,6 +1367,228 @@ async function advanceWerewolfPhase(){
   }
 }
 window.advanceWerewolfPhase=advanceWerewolfPhase;
+/* ============================================================
+   斗地主 —— 核心逻辑
+============================================================ */
+var ddzSuits=['♠','♥','♣','♦'];
+function ddzVal(id){return id<52?(Math.floor(id/4))+3:(id===52?16:17);}
+function ddzSuit(id){return id<52?id%4:-1;}
+function ddzNewDeck(){var d=[];for(var i=0;i<54;i++)d.push(i);return d;}
+function ddzShuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function ddzSort(c){return c.slice().sort(function(a,b){return ddzVal(a)-ddzVal(b)||ddzSuit(a)-ddzSuit(b);});}
+function ddzValName(v){return v===16?'小王':v===17?'大王':v===15?'2':v===14?'A':v===13?'K':v===12?'Q':v===11?'J':String(v);}
+function ddzCardHTML(id,opts){
+  opts=opts||{};
+  var v=ddzVal(id);
+  var cls='ddz-card'+(opts.mini?' mini':'')+(opts.sel?' sel':'');
+  if(v>=16){
+    cls+=' red';
+    return '<div class="'+cls+'" data-id="'+id+'"><div class="rk">'+(v===17?'大':'小')+'</div><div class="su">王</div></div>';
+  }
+  var suit=ddzSuit(id);
+  var red=(suit===1||suit===3);
+  cls+=red?' red':' black';
+  return '<div class="'+cls+'" data-id="'+id+'"><div class="rk">'+ddzValName(v)+'</div><div class="su">'+ddzSuits[suit]+'</div></div>';
+}
+function ddzCheckPlane(cnt,keys,n){
+  var trioVals=keys.filter(function(k){return cnt[k]>=3&&k<=14;}).sort(function(a,b){return a-b;});
+  var segs=[],cur=[];
+  for(var i=0;i<trioVals.length;i++){
+    if(!cur.length||trioVals[i]===cur[cur.length-1]+1)cur.push(trioVals[i]);
+    else{if(cur.length>=2)segs.push(cur);cur=[trioVals[i]];}
+  }
+  if(cur.length>=2)segs.push(cur);
+  for(var s=0;s<segs.length;s++){
+    var seg=segs[s];
+    for(var L=seg.length;L>=2;L--){
+      for(var st=0;st+L<=seg.length;st++){
+        var sub=seg.slice(st,st+L);
+        var remain=n-3*L;
+        if(remain===L){
+          var rc=Object.assign({},cnt);sub.forEach(function(v){rc[v]-=3;});
+          var tot=0;Object.keys(rc).forEach(function(k){tot+=rc[k];});
+          if(tot===L)return{type:'plane_single',len:L,value:sub[sub.length-1]};
+        }
+        if(remain===2*L){
+          var rc2=Object.assign({},cnt);sub.forEach(function(v){rc2[v]-=3;});
+          var tot2=0,okp=true;Object.keys(rc2).forEach(function(k){var c=rc2[k];tot2+=c;if(c!==0&&c!==2)okp=false;});
+          if(tot2===2*L&&okp)return{type:'plane_pair',len:L,value:sub[sub.length-1]};
+        }
+      }
+    }
+  }
+  return null;
+}
+function ddzAnalyze(cards){
+  if(!cards||!cards.length)return null;
+  var vals=cards.map(ddzVal).sort(function(a,b){return a-b;});
+  var n=vals.length;
+  var cnt={};vals.forEach(function(v){cnt[v]=(cnt[v]||0)+1;});
+  var keys=Object.keys(cnt).map(Number).sort(function(a,b){return a-b;});
+  var counts=keys.map(function(k){return cnt[k];});
+  var maxCnt=Math.max.apply(null,counts);
+  if(n===2&&vals[0]===16&&vals[1]===17)return{type:'rocket',len:1,value:100};
+  if(n===4&&keys.length===1)return{type:'bomb',len:1,value:keys[0]};
+  if(n===1)return{type:'single',len:1,value:vals[0]};
+  if(n===2&&keys.length===1)return{type:'pair',len:1,value:keys[0]};
+  if(n===3&&keys.length===1)return{type:'trio',len:1,value:keys[0]};
+  if(n===4&&maxCnt===3){var tv=keys.filter(function(k){return cnt[k]===3})[0];return{type:'trio_single',len:1,value:tv};}
+  if(n===5&&maxCnt===3&&keys.length===2){var tv2=keys.filter(function(k){return cnt[k]===3})[0];return{type:'trio_pair',len:1,value:tv2};}
+  if(n>=5&&keys.length===n&&vals[n-1]<=14){
+    var ok=true;for(var i=1;i<n;i++){if(vals[i]!==vals[i-1]+1){ok=false;break;}}
+    if(ok)return{type:'straight',len:n,value:vals[n-1]};
+  }
+  if(n>=6&&n%2===0&&keys.length===n/2&&counts.every(function(c){return c===2;})&&vals[n-1]<=14){
+    var ok2=true;for(var i=1;i<keys.length;i++){if(keys[i]!==keys[i-1]+1){ok2=false;break;}}
+    if(ok2)return{type:'straight_pair',len:keys.length,value:keys[keys.length-1]};
+  }
+  if(n>=6&&n%3===0&&keys.length===n/3&&counts.every(function(c){return c===3;})&&vals[n-1]<=14){
+    var ok3=true;for(var i=1;i<keys.length;i++){if(keys[i]!==keys[i-1]+1){ok3=false;break;}}
+    if(ok3)return{type:'plane',len:keys.length,value:keys[keys.length-1]};
+  }
+  return ddzCheckPlane(cnt,keys,n);
+}
+function ddzCanBeat(play,last){
+  if(!play)return false;
+  if(!last)return true;
+  if(play.type==='rocket')return true;
+  if(last.type==='rocket')return false;
+  if(play.type==='bomb'&&last.type!=='bomb')return true;
+  if(play.type==='bomb'&&last.type==='bomb')return play.value>last.value;
+  if(last.type==='bomb')return false;
+  if(play.type!==last.type)return false;
+  if(play.len!==last.len)return false;
+  return play.value>last.value;
+}
+function renderDoudizhu(game,el){
+  var st=game.state||{},players=game.players||[];
+  var order=st.order||[];
+  var myHand=st.hands?st.hands[currentUser.id]:null;
+  if(st.phase==='finished'){
+    var msg=st.aborted?'游戏已中止':(st.winnerSide==='landlord'?'地主获胜':'农民获胜');
+    var h1='<div class="ddz-result"><div class="big">'+msg+'</div>';
+    if(st.multiplier&&st.multiplier>1)h1+='<div style="font-size:.8em;opacity:.8;">倍数 x'+st.multiplier+'</div>';
+    if(game.host_id===currentUser.id)h1+='<button class="lobby-btn start" style="margin-top:16px;" onclick="restartGame()">再来一轮</button>';
+    else h1+='<div style="font-size:.75em;opacity:.7;margin-top:14px;">等待房主重开…</div>';
+    h1+='</div>';el.innerHTML=h1;return;
+  }
+  if(st.phase==='bid'){
+    var curBidUid=order[st.bidTurn];
+    var isMyBid=curBidUid===currentUser.id;
+    var h2='<div class="ddz-wrap">';
+    h2+='<div class="ddz-info"><span>叫地主阶段</span><span>轮到：'+escapeHtml((players.find(function(p){return p.user_id===curBidUid})||{}).nickname||'')+'</span></div>';
+    h2+='<div class="ddz-table">';
+    players.forEach(function(p){
+      var cnt=st.hands&&st.hands[p.user_id]?st.hands[p.user_id].length:0;
+      var isTurn=p.user_id===curBidUid;
+      h2+='<div class="ddz-seat'+(isTurn?' turn':'')+'"><div class="avatar" style="'+(p.avatar_url?'background-image:url('+escapeHtml(p.avatar_url)+');':'')+'">'+(p.avatar_url?'':escapeHtml(String(p.nickname||'U').charAt(0)))+'</div><span class="name">'+escapeHtml(p.nickname)+'</span><span class="ddz-count">'+cnt+'张</span></div>';
+    });
+    h2+='</div>';
+    if(myHand)h2+='<div class="ddz-hand">'+ddzSort(myHand).map(function(c){return ddzCardHTML(c)}).join('')+'</div>';
+    if(isMyBid)h2+='<div class="ddz-actions"><button class="ddz-btn" onclick="ddzBid(true)">叫地主</button><button class="ddz-btn pass" onclick="ddzBid(false)">不叫</button></div>';
+    else h2+='<div class="ddz-status">等待叫地主…</div>';
+    h2+='</div>';el.innerHTML=h2;return;
+  }
+  var h3='<div class="ddz-wrap">';
+  h3+='<div class="ddz-info"><span>地主：'+escapeHtml((players.find(function(p){return p.user_id===st.landlord})||{}).nickname||'')+'</span><span>倍数 x'+(st.multiplier||1)+'</span></div>';
+  h3+='<div class="ddz-table">';
+  h3+='<div style="display:flex;gap:4px;justify-content:center;align-items:center;font-size:.7em;opacity:.85;">底牌：'+(st.bottom||[]).map(function(c){return ddzCardHTML(c,{mini:true})}).join('')+'</div>';
+  players.filter(function(p){return p.user_id!==currentUser.id}).forEach(function(p){
+    var cnt=st.hands&&st.hands[p.user_id]?st.hands[p.user_id].length:0;
+    var isTurn=p.user_id===st.currentTurn;
+    var isLL=st.landlord===p.user_id;
+    h3+='<div class="ddz-seat'+(isLL?' landlord':'')+(isTurn?' turn':'')+'"><div class="avatar" style="'+(p.avatar_url?'background-image:url('+escapeHtml(p.avatar_url)+');':'')+'">'+(p.avatar_url?'':escapeHtml(String(p.nickname||'U').charAt(0)))+'</div><span class="name">'+escapeHtml(p.nickname)+'</span><span class="ddz-count">'+cnt+'张</span></div>';
+  });
+  if(st.lastPlay&&st.lastPlay.cards){
+    var lpName=(players.find(function(p){return p.user_id===st.lastPlay.uid})||{}).nickname||'';
+    h3+='<div class="ddz-play-area"><span class="ddz-play-label">'+escapeHtml(lpName)+' 出牌：</span>'+st.lastPlay.cards.map(function(c){return ddzCardHTML(c,{mini:true})}).join('')+'</div>';
+  }else{
+    h3+='<div class="ddz-play-area"><span class="ddz-play-label">'+(st.currentTurn===currentUser.id?'轮到你出牌':'等待出牌…')+'</span></div>';
+  }
+  h3+='</div>';
+  h3+='<div class="ddz-hand" id="ddzHand">'+(myHand?ddzSort(myHand).map(function(c){return ddzCardHTML(c)}).join(''):'')+'</div>';
+  var isMyTurn=st.currentTurn===currentUser.id;
+  if(isMyTurn){
+    h3+='<div class="ddz-actions"><button class="ddz-btn" onclick="ddzPlay()">出牌</button>';
+    if(st.lastPlay&&st.lastPlay.uid!==currentUser.id)h3+='<button class="ddz-btn pass" onclick="ddzPass()">不要</button>';
+    h3+='</div>';
+  }else{
+    h3+='<div class="ddz-status">等待 '+escapeHtml((players.find(function(p){return p.user_id===st.currentTurn})||{}).nickname||'')+' 出牌…</div>';
+  }
+  h3+='</div>';
+  el.innerHTML=h3;
+  var handEl=document.getElementById('ddzHand');
+  if(handEl){handEl.querySelectorAll('.ddz-card').forEach(function(c){c.onclick=function(){this.classList.toggle('sel');};});}
+}
+async function ddzBid(want){
+  var game=state.room&&state.room.current_game;
+  if(!game||game.type!=='doudizhu')return;
+  var st=game.state;
+  if(st.phase!=='bid')return;
+  if(st.order[st.bidTurn]!==currentUser.id){showToast('还没轮到你');return}
+  var ns=Object.assign({},st);
+  if(want){
+    ns.landlord=currentUser.id;ns.phase='play';ns.currentTurn=currentUser.id;
+    var hands=Object.assign({},st.hands);
+    hands[currentUser.id]=ddzSort((hands[currentUser.id]||[]).concat(st.bottom||[]));
+    ns.hands=hands;ns.lastPlay=null;ns.passCount=0;
+  }else{
+    ns.bidCount=(st.bidCount||0)+1;ns.bidTurn=(st.bidTurn||0)+1;
+    if(ns.bidCount>=3){
+      var ids=st.order;var deck=ddzShuffle(ddzNewDeck());var hands2={};
+      ids.forEach(function(uid,i){hands2[uid]=ddzSort(deck.slice(i*17,i*17+17))});
+      ns.phase='bid';ns.hands=hands2;ns.bottom=deck.slice(51,54);ns.bidTurn=0;ns.bidCount=0;
+      showToast('三家都不叫，重新发牌');
+    }
+  }
+  try{await updateGame(Object.assign({},game,{state:ns}))}catch(e){showToast('操作失败：'+e.message)}
+}
+window.ddzBid=ddzBid;
+async function ddzPlay(){
+  var game=state.room&&state.room.current_game;
+  if(!game||game.type!=='doudizhu')return;
+  var st=game.state;
+  if(st.phase!=='play'||st.currentTurn!==currentUser.id)return;
+  var handEl=document.getElementById('ddzHand');
+  var sel=[];handEl.querySelectorAll('.ddz-card.sel').forEach(function(e){sel.push(parseInt(e.dataset.id,10))});
+  if(!sel.length){showToast('请选择要出的牌');return}
+  var type=ddzAnalyze(sel);
+  if(!type){showToast('牌型不合法');return}
+  var last=st.lastPlay;
+  if(last&&last.uid!==currentUser.id&&!ddzCanBeat(type,last.typeInfo)){showToast('打不过上家');return}
+  var ns=Object.assign({},st);
+  var hands=Object.assign({},st.hands);
+  var myHand=hands[currentUser.id]||[];
+  var newHand=myHand.filter(function(c){return sel.indexOf(c)<0});
+  hands[currentUser.id]=newHand;ns.hands=hands;
+  ns.lastPlay={uid:currentUser.id,cards:ddzSort(sel).slice(),typeInfo:type};
+  ns.passCount=0;
+  if(type.type==='bomb'||type.type==='rocket'){ns.multiplier=(st.multiplier||1)*2;}
+  var order=st.order;var myIdx=order.indexOf(currentUser.id);
+  ns.currentTurn=order[(myIdx+1)%order.length];
+  if(newHand.length===0){
+    ns.phase='finished';ns.winner=currentUser.id;
+    ns.winnerSide=(currentUser.id===st.landlord)?'landlord':'farmer';
+  }
+  try{await updateGame(Object.assign({},game,{state:ns}))}catch(e){showToast('出牌失败：'+e.message)}
+}
+window.ddzPlay=ddzPlay;
+async function ddzPass(){
+  var game=state.room&&state.room.current_game;
+  if(!game||game.type!=='doudizhu')return;
+  var st=game.state;
+  if(st.phase!=='play'||st.currentTurn!==currentUser.id)return;
+  if(!st.lastPlay||st.lastPlay.uid===currentUser.id){showToast('你必须出牌');return}
+  var ns=Object.assign({},st);
+  var order=st.order;var myIdx=order.indexOf(currentUser.id);
+  var nextUid=order[(myIdx+1)%order.length];
+  ns.currentTurn=nextUid;ns.passCount=(st.passCount||0)+1;
+  if(nextUid===st.lastPlay.uid){ns.lastPlay=null;ns.passCount=0;}
+  try{await updateGame(Object.assign({},game,{state:ns}))}catch(e){showToast('操作失败：'+e.message)}
+}
+window.ddzPass=ddzPass;
+
+
 
 /* ============================================================
    房间消息
@@ -1294,6 +1603,34 @@ function renderMessages(){
   c.innerHTML=state.messages.map(function(m){var self=m.user_id===currentUser.id;var has=m.avatar_url&&String(m.avatar_url).indexOf('http')===0;return '<div class="rm-msg'+(self?' self':'')+'"><div class="rm-avatar" style="'+(has?'background-image:url('+escapeHtml(m.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(m.author||'U').charAt(0).toUpperCase()))+'</div><div class="rm-bubble"><div class="rm-name">'+escapeHtml(m.author||'')+'</div><div class="rm-text">'+escapeHtml(m.content||'')+'</div></div></div>'}).join('');
   c.scrollTop=c.scrollHeight;
 }
+async function clearRoomMessages(){
+  if(!isAdmin){showToast('只有管理员能清空');return}
+  showConfirm('清空房间消息','确定要清空本房间的所有聊天消息吗？此操作不可恢复！',async function(){
+    try{
+      var res=await window.sb.from('room_messages').delete().eq('room_id',state.room.id);
+      if(res.error)throw res.error;
+      state.messages=[];renderMessages();showToast('消息已清空');
+    }catch(e){showToast('清空失败：'+e.message)}
+  });
+}
+window.clearRoomMessages=clearRoomMessages;
+async function disbandRoom(){
+  if(!isAdmin){showToast('只有管理员能解散房间');return}
+  if(!state.room)return;
+  showConfirm('解散房间','确定要解散「'+state.room.name+'」吗？房间及所有消息将被永久删除！',async function(){
+    try{
+      var rid=state.room.id;
+      await window.sb.from('room_messages').delete().eq('room_id',rid);
+      var res=await window.sb.from('rooms').delete().eq('id',rid);
+      if(res.error)throw res.error;
+      showToast('房间已解散');
+      leaveRoomLocal();
+      history.replaceState({},'',location.pathname);
+      showList();loadRooms();
+    }catch(e){showToast('解散失败：'+e.message)}
+  });
+}
+window.disbandRoom=disbandRoom;
 async function sendMsg(){
   if(!state.room)return;if(isUserBanned()){showToast('账号已被封禁');return}
   var r=state.room,muted=r.muted_user_ids||[];if(!isAdmin&&muted.indexOf(currentUser.id)>=0){showToast('你已被禁言');return}
@@ -1346,6 +1683,15 @@ async function openRoomEditor(){
   }).join('');
   overlay.innerHTML='<div class="re-panel"><div class="re-head"><h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>房间设置</h3><button id="reClose"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="re-body"><div class="re-field"><label>房间名称</label><input type="text" id="reName" maxlength="20" value="'+escapeHtml(room.name)+'" /></div><div class="re-field"><label>连麦模式</label><div class="re-radio-row"><label class="re-radio"><input type="radio" name="reMicMode" value="free" '+(room.mic_mode!=='host'?'checked':'')+'> 自由连麦</label><label class="re-radio"><input type="radio" name="reMicMode" value="host" '+(room.mic_mode==='host'?'checked':'')+'> 主持人连麦</label></div></div><div class="re-field"><label>连麦开关</label><label class="re-chk" style="font-size:.85em;"><input type="checkbox" id="reMicEnabled" '+(room.mic_enabled!==false?'checked':'')+'> 允许连麦</label></div><div class="re-field"><label>游戏设置</label><label class="re-chk" style="font-size:.85em;color:var(--danger);"><input type="checkbox" id="reGameDisabled" '+(room.game_disabled?'checked':'')+'> 禁止本房间所有游戏</label></div><div class="re-field"><label>协助管理员 &amp; 权限</label>'+(userRows||'<div style="font-size:.8em;color:var(--text-muted);padding:8px 0;">暂无其他用户</div>')+'</div></div><div class="re-foot"><button class="cancel" id="reCancel">取消</button><button class="ok" id="reSave">保存</button></div></div>';
   document.body.appendChild(overlay);
+  try{
+    var danger=document.createElement('div');
+    danger.className='re-danger';
+    danger.innerHTML='<div class="re-danger-title">危险操作</div><button class="re-danger-btn" id="reClearMsgs">清空房间消息</button><button class="re-danger-btn" id="reDisband">解散房间</button>';
+    var foot=overlay.querySelector('.re-foot');
+    if(foot)foot.parentNode.insertBefore(danger,foot);else overlay.querySelector('.re-body').appendChild(danger);
+    var cm=overlay.querySelector('#reClearMsgs');if(cm)cm.onclick=clearRoomMessages;
+    var db=overlay.querySelector('#reDisband');if(db)db.onclick=function(){overlay.remove();disbandRoom()};
+  }catch(e){}
   overlay.querySelectorAll('input[data-co]').forEach(function(cb){cb.onchange=function(){var uid=this.dataset.co;var box=overlay.querySelector('[data-perms-for="'+uid+'"]');if(box)box.classList.toggle('on',this.checked)}});
   overlay.querySelector('#reClose').onclick=function(){overlay.remove()};
   overlay.querySelector('#reCancel').onclick=function(){overlay.remove()};
