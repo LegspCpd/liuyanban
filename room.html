@@ -303,7 +303,9 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .member-mute-btn{background:var(--bg-input);border:none;border-radius:8px;padding:4px 10px;font-size:.68em;font-weight:700;font-family:inherit;cursor:pointer;color:var(--text-muted);flex-shrink:0}
 .member-mute-btn.on{background:rgba(229,57,53,.12);color:var(--danger)}
 .re-danger{margin:4px 18px 10px;padding:12px 14px;border:1px solid rgba(229,57,53,.3);border-radius:10px;background:rgba(229,57,53,.05)}
-.re-danger-title{font-size:.72em;font-weight:800;color:var(--danger);margin-bottom:8px}
+.re-danger-title{font-size:.72em;font-weight:800;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none}
+.re-danger-title.open svg{transform:rotate(180deg)}
+.re-danger-body{margin-top:8px}
 .re-danger-btn{display:block;width:100%;margin-bottom:6px;padding:9px;border:none;border-radius:8px;background:rgba(229,57,53,.12);color:var(--danger);font-weight:700;font-family:inherit;font-size:.82em;cursor:pointer}
 .re-danger-btn:last-child{margin-bottom:0}
 .re-danger-btn:hover{background:var(--danger);color:#fff}
@@ -1703,9 +1705,11 @@ async function openRoomEditor(){
   try{
     var danger=document.createElement('div');
     danger.className='re-danger';
-    danger.innerHTML='<div class="re-danger-title">危险操作</div><button class="re-danger-btn" id="reClearMsgs">清空房间消息</button><button class="re-danger-btn" id="reDisband">解散房间</button>';
+    danger.innerHTML='<div class="re-danger-title" id="reDangerToggle">危险操作 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;transition:transform .2s;"><polyline points="6 9 12 15 18 9"/></svg></div><div class="re-danger-body" id="reDangerBody" style="display:none;"><button class="re-danger-btn" id="reClearMsgs">清空房间消息</button><button class="re-danger-btn" id="reDisband">解散房间</button></div>';
     var foot=overlay.querySelector('.re-foot');
     if(foot)foot.parentNode.insertBefore(danger,foot);else overlay.querySelector('.re-body').appendChild(danger);
+    var dt=overlay.querySelector('#reDangerToggle');
+    if(dt)dt.onclick=function(){var b=overlay.querySelector('#reDangerBody');if(!b)return;var open=b.style.display!=='none';b.style.display=open?'none':'block';dt.classList.toggle('open',!open);};
     var cm=overlay.querySelector('#reClearMsgs');if(cm)cm.onclick=clearRoomMessages;
     var db=overlay.querySelector('#reDisband');if(db)db.onclick=function(){overlay.remove();disbandRoom()};
   }catch(e){}
