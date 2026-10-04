@@ -350,6 +350,13 @@ body.pseudo-fs .room-body[data-theme="doudizhu"] #gameStage{background:#0b3d1e}
 .member-mute-btn.on{background:rgba(229,57,53,.12);color:var(--danger)}
 .re-danger{margin:4px 18px 10px;padding:12px 14px;border:1px solid rgba(229,57,53,.3);border-radius:10px;background:rgba(229,57,53,.05)}
 .re-danger-title{font-size:.72em;font-weight:800;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none}
+/* 房间设置 Tab */
+.re-tabs{display:flex;gap:6px;padding:10px 18px 0;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto}
+.re-tab{padding:9px 16px;border:none;background:none;font-family:inherit;font-size:.85em;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.re-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.re-tabpane{display:none}
+.re-tabpane.active{display:block}
+.re-danger-body .re-danger-btn{margin-top:6px}
 .re-danger-title.open svg{transform:rotate(180deg)}
 .re-danger-body{margin-top:8px}
 .re-danger-btn{display:block;width:100%;margin-bottom:6px;padding:9px;border:none;border-radius:8px;background:rgba(229,57,53,.12);color:var(--danger);font-weight:700;font-family:inherit;font-size:.82em;cursor:pointer}
@@ -1876,17 +1883,8 @@ async function openRoomEditor(){
   }).join('');
   overlay.innerHTML='<div class="re-panel"><div class="re-head"><h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>房间设置</h3><button id="reClose"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="re-body"><div class="re-field"><label>房间名称</label><input type="text" id="reName" maxlength="20" value="'+escapeHtml(room.name)+'" /></div><div class="re-field"><label>连麦模式</label><div class="re-radio-row"><label class="re-radio"><input type="radio" name="reMicMode" value="free" '+(room.mic_mode!=='host'?'checked':'')+'> 自由连麦</label><label class="re-radio"><input type="radio" name="reMicMode" value="host" '+(room.mic_mode==='host'?'checked':'')+'> 主持人连麦</label></div></div><div class="re-field"><label>连麦开关</label><label class="re-chk" style="font-size:.85em;"><input type="checkbox" id="reMicEnabled" '+(room.mic_enabled!==false?'checked':'')+'> 允许连麦</label></div><div class="re-field"><label>游戏设置</label><label class="re-chk" style="font-size:.85em;color:var(--danger);"><input type="checkbox" id="reGameDisabled" '+(room.game_disabled?'checked':'')+'> 禁止本房间所有游戏</label></div><div class="re-field"><label>协助管理员 &amp; 权限</label>'+(userRows||'<div style="font-size:.8em;color:var(--text-muted);padding:8px 0;">暂无其他用户</div>')+'</div></div><div class="re-foot"><button class="cancel" id="reCancel">取消</button><button class="ok" id="reSave">保存</button></div></div>';
   document.body.appendChild(overlay);
-  try{
-    var danger=document.createElement('div');
-    danger.className='re-danger';
-    danger.innerHTML='<div class="re-danger-title" id="reDangerToggle">危险操作 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;transition:transform .2s;"><polyline points="6 9 12 15 18 9"/></svg></div><div class="re-danger-body" id="reDangerBody" style="display:none;"><button class="re-danger-btn" id="reClearMsgs">清空房间消息</button><button class="re-danger-btn" id="reDisband">解散房间</button></div>';
-    var foot=overlay.querySelector('.re-foot');
-    if(foot)foot.parentNode.insertBefore(danger,foot);else overlay.querySelector('.re-body').appendChild(danger);
-    var dt=overlay.querySelector('#reDangerToggle');
-    if(dt)dt.onclick=function(){var b=overlay.querySelector('#reDangerBody');if(!b)return;var open=b.style.display!=='none';b.style.display=open?'none':'block';dt.classList.toggle('open',!open);};
-    var cm=overlay.querySelector('#reClearMsgs');if(cm)cm.onclick=clearRoomMessages;
-    var db=overlay.querySelector('#reDisband');if(db)db.onclick=function(){overlay.remove();disbandRoom()};
-  }catch(e){}
+  // 把设置内容重构成 Tab 结构（基本设置 / 成员权限 / 危险操作）
+  try{ restructureRoomEditor(overlay); }catch(e){}
   overlay.querySelectorAll('input[data-co]').forEach(function(cb){cb.onchange=function(){var uid=this.dataset.co;var box=overlay.querySelector('[data-perms-for="'+uid+'"]');if(box)box.classList.toggle('on',this.checked)}});
   overlay.querySelector('#reClose').onclick=function(){overlay.remove()};
   overlay.querySelector('#reCancel').onclick=function(){overlay.remove()};
@@ -1905,6 +1903,46 @@ async function openRoomEditor(){
   };
 }
 window.openRoomEditor=openRoomEditor;
+function restructureRoomEditor(overlay){
+  var body=overlay.querySelector(".re-body"); if(!body) return;
+  var fields=Array.prototype.slice.call(body.querySelectorAll(":scope > .re-field"));
+  if(!fields.length) return;
+  // 分类：前几个字段=基本设置；含“协管/权限”的=成员权限
+  var basicFields=[], memberFields=[];
+  fields.forEach(function(f){
+    var t=f.querySelector("label")?f.querySelector("label").textContent:"";
+    if(/协管|权限|成员|管理/.test(t)) memberFields.push(f); else basicFields.push(f);
+  });
+  body.innerHTML="";
+  body.classList.add("re-body-tabbed");
+  // Tab 栏
+  var tabs=document.createElement("div"); tabs.className="re-tabs";
+  tabs.innerHTML='<button class="re-tab active" data-rtab="basic">基本设置</button><button class="re-tab" data-rtab="member">成员权限</button><button class="re-tab" data-rtab="danger">危险操作</button>';
+  body.parentNode.insertBefore(tabs, body);
+  // pane1 基本
+  var p1=document.createElement("div"); p1.className="re-tabpane active"; p1.dataset.pane="basic";
+  basicFields.forEach(function(f){p1.appendChild(f);});
+  // pane2 成员
+  var p2=document.createElement("div"); p2.className="re-tabpane"; p2.dataset.pane="member";
+  if(memberFields.length){memberFields.forEach(function(f){p2.appendChild(f);});}
+  else{p2.innerHTML='<div style="font-size:.8em;color:var(--text-muted);padding:8px 0;">暂无其他用户</div>';}
+  // pane3 危险
+  var p3=document.createElement("div"); p3.className="re-tabpane"; p3.dataset.pane="danger";
+  p3.innerHTML='<div class="re-danger-body" id="reDangerBody"><button class="re-danger-btn" id="reClearMsgs">清空房间消息</button><button class="re-danger-btn" id="reDisband">解散房间</button></div>';
+  body.appendChild(p1); body.appendChild(p2); body.appendChild(p3);
+  // Tab 切换
+  tabs.querySelectorAll(".re-tab").forEach(function(btn){
+    btn.onclick=function(){
+      var t=this.dataset.rtab;
+      tabs.querySelectorAll(".re-tab").forEach(function(b){b.classList.toggle("active",b.dataset.rtab===t);});
+      body.querySelectorAll(".re-tabpane").forEach(function(p){p.classList.toggle("active",p.dataset.pane===t);});
+    };
+  });
+  // 绑定危险操作
+  var cm=overlay.querySelector("#reClearMsgs"); if(cm) cm.onclick=clearRoomMessages;
+  var db=overlay.querySelector("#reDisband"); if(db) db.onclick=function(){overlay.remove();disbandRoom();};
+}
+window.switchReTab=function(){};
 
 /* ============================================================
    事件
