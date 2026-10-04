@@ -240,7 +240,7 @@
                     Seven<span>戚</span><small id="headerSub">· 个人中心</small>
                 </div>
             </div>
-            <div class="user-area" id="headerUserArea" onclick="window.location.href='/liuyanban/profile.html'">
+            <div class="user-area" id="headerUserArea" onclick="window.location.href='/liuyanban/user.html'">
                 <div class="avatar" id="headerAvatar">U</div>
                 <span class="user-name" id="headerUserName">用户</span>
                 <span class="chevron">▾</span>
@@ -255,25 +255,6 @@
                 <div class="settings-card">
                     <div class="settings-title">设置中心</div>
 
-                    <div class="settings-item" id="goToProfileEdit" role="button" tabindex="0">
-                        <div class="item-left">
-                            <div class="item-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                    <circle cx="12" cy="7" r="4"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="item-label">更新资料</div>
-                                <div class="item-sublabel">头像、昵称管理</div>
-                            </div>
-                        </div>
-                        <span class="item-arrow">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="9 18 15 12 9 6"/>
-                            </svg>
-                        </span>
-                    </div>
 
                     <div class="settings-item" id="goToMessages" role="button" tabindex="0">
                         <div class="item-left">
@@ -708,7 +689,7 @@
             document.getElementById('goToManageSites').style.display = 'flex';
         }
 
-        document.getElementById('goToProfileEdit').onclick = function() { switchView('profileEditView'); };
+
         document.getElementById('goToMessages').onclick = function() { switchView('messagesView'); loadNotifications(); };
         document.getElementById('goToFeedback').onclick = function() { switchView('feedbackView'); initFeedbackView(); };
         document.getElementById('goToAdminFeedback').onclick = function() { switchView('adminFeedbackView'); loadAdminFeedback(); };

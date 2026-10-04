@@ -41,6 +41,9 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .post-card .post-author .avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;background:var(--primary);background-size:cover;background-position:center}
 .post-card .post-author .name{font-weight:600;font-size:.9em}
 .post-card .post-author .official-tag{background:var(--official-blue);color:#fff;font-size:.55em;padding:0 6px;border-radius:99px}
+.post-card .post-author .role-tag{color:#fff;font-size:.55em;padding:0 6px;border-radius:99px}
+.detail-post .post-author .role-tag{color:#fff;font-size:.55em;padding:0 6px;border-radius:99px}
+.detail-comments .comment-item .meta .role-tag{color:#fff;font-size:.5em;padding:0 4px;border-radius:99px}
 .post-card .post-author .time{font-size:.7em;color:var(--text-muted);margin-left:auto}
 .post-card .post-title{font-weight:700;font-size:1em;margin:4px 0 2px 0}
 .post-card .post-content{font-size:.85em;color:var(--text);line-height:1.6;margin-bottom:6px;word-break:break-word}
@@ -145,6 +148,16 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .admin-user-card .user-actions .btn-ban{background:var(--danger-bg);color:var(--danger-text)}
 .admin-user-card .user-actions .btn-unban{background:var(--success-bg);color:var(--success)}
 .admin-user-card .user-actions .btn-login{background:var(--primary-bg);color:var(--primary)}
+/* 身份批量发放 */
+.role-user-list{max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:6px;margin-bottom:12px}
+.role-user-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:.85em}
+.role-user-item:hover{background:var(--bg-input)}
+.role-user-item input{flex-shrink:0}
+.role-user-item span:first-of-type{flex:1}
+.role-batch-btn{width:100%;padding:11px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:700;font-family:inherit;font-size:.85em;cursor:pointer}
+.role-ids-input{width:100%;box-sizing:border-box;min-height:70px;padding:10px;border:2px solid var(--border);border-radius:8px;font-family:inherit;font-size:.8em;outline:none;resize:vertical;margin-bottom:8px}
+.btn-role{background:var(--primary-bg);color:var(--primary)}
+.admin-user-card .user-actions .btn-role{background:var(--primary-bg);color:var(--primary)}
 .admin-cat-item,.admin-role-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;margin-bottom:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);flex-wrap:wrap;gap:8px}
 .admin-cat-item .cat-info,.admin-role-item .role-info{display:flex;align-items:center;gap:10px}
 .admin-cat-item .cat-actions,.admin-role-item .role-actions{display:flex;gap:4px;flex-wrap:wrap}
@@ -433,6 +446,21 @@ async function addComment(postId, author, user_id, content) {
 async function deletePost(id) { await window.sb.from('posts').delete().eq('id', id); }
 async function fetchAllUsers() { var r = await window.sb.from('users').select('*'); return r.data || []; }
 async function fetchUserRoles() { var r = await window.sb.from('user_roles').select('*'); return r.data || []; }
+function goUser(uid){ if(uid) location.href = '/liuyanban/user.html?id=' + uid; }
+window.goUser = goUser;
+var globalRoleMap = {};  // user_id -> {role_name, role_color}
+async function loadGlobalRoles(){
+  try{
+    var roles = await fetchUserRoles();
+    globalRoleMap = {};
+    roles.forEach(function(r){ globalRoleMap[r.user_id] = r; });
+  }catch(e){ globalRoleMap = {}; }
+}
+function roleTagHTML(userId){
+  var r = globalRoleMap[userId];
+  if(!r) return '';
+  return '<span class="role-tag" style="background:'+escapeHtml(r.role_color||'#2e7d32')+'">'+escapeHtml(r.role_name||'')+'</span>';
+}
 async function banUser(userId, reason, until) { await window.sb.from('users').update({ banned_reason: reason, banned_until: until }).eq('id', userId); }
 async function unbanUser(userId) { await window.sb.from('users').update({ banned_until: null }).eq('id', userId); }
 async function assignRoleToUser(userId, roleName, roleColor) {
@@ -544,8 +572,9 @@ async function renderPosts() {
         html += '<div class="post-card" data-postid="' + p.id + '">';
         html += '<div class="post-author">';
         html += '<div class="avatar" style="' + (avatar && avatar.startsWith('http') ? 'background-image:url(' + avatar + ');background-size:cover;background-position:center;' : '') + '">' + (avatar && !avatar.startsWith('http') ? name.charAt(0).toUpperCase() : '') + '</div>';
-        html += '<span class="name">' + escapeHtml(name) + '</span>';
+        html += '<span class="name" style="cursor:pointer;" onclick="goUser(\'' + p.user_id + '\')">' + escapeHtml(name) + '</span>';
         if (p.is_official) html += '<span class="official-tag">官方</span>';
+        html += roleTagHTML(p.user_id);
         html += '<span class="time">' + time + '</span>';
         html += '</div>';
         if (p.title) html += '<div class="post-title">' + escapeHtml(p.title) + '</div>';
@@ -644,7 +673,7 @@ async function renderDetail(id) {
             var ca = cu ? (cu.avatar_url || getUserAvatar(cu)) : getUserAvatar({ nickname: c.author });
             return '<div class="comment-item" data-comment-id="' + c.id + '" id="comment-' + c.id + '">' +
                 '<div class="avatar" style="' + (ca && ca.startsWith('http') ? 'background-image:url(' + ca + ');background-size:cover;background-position:center;' : '') + '">' + (ca && !ca.startsWith('http') ? cn.charAt(0).toUpperCase() : '') + '</div>' +
-                '<div class="body"><div class="meta"><span class="name">' + escapeHtml(cn) + '</span>' + (c.is_official ? '<span class="official-tag">官方</span>' : '') + '<span class="time">' + new Date(c.created_at).toLocaleString('zh-CN', { hour: '2-digit', minute: '2-digit' }) + '</span></div>' +
+                '<div class="body"><div class="meta"><span class="name" style="cursor:pointer;" onclick="goUser(\'' + c.user_id + '\')">' + escapeHtml(cn) + '</span>' + (c.is_official ? '<span class="official-tag">官方</span>' : '') + roleTagHTML(c.user_id) + '<span class="time">' + new Date(c.created_at).toLocaleString('zh-CN', { hour: '2-digit', minute: '2-digit' }) + '</span></div>' +
                 '<div class="txt">' + escapeHtml(c.content) + '</div></div></div>';
         }).join('') :
         '<div style="color:var(--text-muted);padding:12px 0;">暂无评论</div>';
@@ -653,8 +682,8 @@ async function renderDetail(id) {
         '<div class="detail-post">' +
         '<div class="post-author">' +
         '<div class="avatar" style="' + (avatar && avatar.startsWith('http') ? 'background-image:url(' + avatar + ');background-size:cover;background-position:center;' : '') + '">' + (avatar && !avatar.startsWith('http') ? name.charAt(0).toUpperCase() : '') + '</div>' +
-        '<span class="name">' + escapeHtml(name) + '</span>' +
-        (post.is_official ? '<span class="official-tag">官方</span>' : '') +
+        '<span class="name" style="cursor:pointer;" onclick="goUser(\'' + post.user_id + '\')">' + escapeHtml(name) + '</span>' +
+        (post.is_official ? '<span class="official-tag">官方</span>' : '') + roleTagHTML(post.user_id) +
         '<span class="time">' + time + '</span>' +
         detailReportBtn +
         '</div>' +
@@ -764,6 +793,7 @@ async function renderAdminPanel(){
         '<div class="phone-row">'+escapeHtml(u.phone)+'</div></div></div>'+
         '<div class="user-actions">'+
         (isBanned?'<button class="btn-unban" onclick="unbanUserById(\''+u.id+'\')">解封</button>':'<button class="btn-ban" onclick="banUserPrompt(\''+u.id+'\',\''+escapeHtml(u.nickname)+'\')">封号</button>')+
+        '<button class="btn-role" onclick="assignRolePrompt(\''+u.id+'\',\''+escapeHtml(u.nickname)+'\')">发身份</button>'+
         '<button class="btn-login" onclick="loginAsUser(\''+u.id+'\')">一键登录</button></div></div>';
     });
     adminPanelContent.innerHTML = usersHtml;
@@ -771,6 +801,8 @@ async function renderAdminPanel(){
   }
   if(adminTab==="role"){
     var roles2 = await fetchUserRoles();
+    var allUsers = await fetchAllUsers();
+    var roleMap2 = {}; roles2.forEach(function(r){ roleMap2[r.user_id]=r; });
     var uniqueRoles = {};
     roles2.forEach(function(r){ var key=r.role_name+"|"+r.role_color; if(!uniqueRoles[key])uniqueRoles[key]={name:r.role_name,color:r.role_color,count:0}; uniqueRoles[key].count++; });
     var rolesHtml = '<div class="admin-collapse open"><div class="admin-collapse-head" onclick="toggleCollapse(this)"><span>已有身份</span>'+chev+'</div><div class="admin-collapse-body">';
@@ -780,7 +812,22 @@ async function renderAdminPanel(){
     }
     if(!hasRole) rolesHtml += '<div style="font-size:.8em;color:var(--text-muted);padding:10px 0;">暂无身份</div>';
     rolesHtml += '</div></div>';
-    rolesHtml += '<div class="admin-collapse open"><div class="admin-collapse-head" onclick="toggleCollapse(this)"><span>创建身份</span>'+chev+'</div><div class="admin-collapse-body"><div class="admin-add-row"><input id="newRoleName" placeholder="新身份名称" /><input type="color" id="newRoleColor" value="#2e7d32" style="width:48px;height:38px;padding:2px;border:2px solid var(--border);border-radius:8px;cursor:pointer;" /><button onclick="createRole()">创建</button></div></div></div>';
+    // 创建/批量发放
+    rolesHtml += '<div class="admin-collapse open"><div class="admin-collapse-head" onclick="toggleCollapse(this)"><span>创建 / 批量发放身份</span>'+chev+'</div><div class="admin-collapse-body">';
+    rolesHtml += '<div class="admin-add-row" style="margin-bottom:14px;"><input id="newRoleName" placeholder="身份名称" /><input type="color" id="newRoleColor" value="#2e7d32" style="width:48px;height:38px;padding:2px;border:2px solid var(--border);border-radius:8px;cursor:pointer;" /></div>';
+    rolesHtml += '<div style="font-size:.75em;font-weight:700;margin-bottom:8px;">勾选要发放的用户（可多选）：</div>';
+    rolesHtml += '<div class="role-user-list">';
+    allUsers.forEach(function(u){
+      var cur = roleMap2[u.id];
+      rolesHtml += '<label class="role-user-item"><input type="checkbox" class="role-user-cb" value="'+u.id+'" />'+
+        '<span>'+escapeHtml(u.nickname)+'</span>'+
+        (cur?'<span class="role-badge" style="background:'+cur.role_color+'">'+escapeHtml(cur.role_name)+'</span>':'')+
+        '</label>';
+    });
+    rolesHtml += '</div>';
+    rolesHtml += '<button class="role-batch-btn" onclick="batchAssignRole()">批量发放给选中用户</button>';
+    rolesHtml += '<div style="margin-top:12px;"><div style="font-size:.72em;color:var(--text-muted);margin-bottom:4px;">或粘贴用户ID（逗号/换行分隔）：</div><textarea id="roleIdsInput" class="role-ids-input" placeholder="uuid1, uuid2 ..."></textarea><button class="role-batch-btn" onclick="batchAssignByIds()">按ID发放</button></div>';
+    rolesHtml += '</div></div>';
     adminPanelContent.innerHTML = rolesHtml;
     return;
   }
@@ -842,6 +889,45 @@ window.loginAsUser = async function(userId) {
         if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
     } catch (err) { showToast('一键登录失败：' + err.message); }
 };
+window.assignRolePrompt = function(userId, nickname){
+  showPrompt("发放身份", "给「"+nickname+"」发放身份（格式：名称#颜色，如 版主#2e7d32）", "如 版主#2e7d32", async function(val){
+    if(!val) return;
+    var parts = val.split("#");
+    var nm = (parts[0]||"").trim(); var cl = (parts[1]||"#2e7d32").trim();
+    if(!nm) return showToast("请输入身份名称");
+    await assignRoleToUser(userId, nm, cl);
+    await loadGlobalRoles();
+    showToast("已发放身份"); renderAdminPanel();
+  });
+};
+window.batchAssignRole = async function(){
+  var nameEl = document.getElementById("newRoleName");
+  var colorEl = document.getElementById("newRoleColor");
+  var nm = nameEl ? nameEl.value.trim() : "";
+  var cl = colorEl ? colorEl.value : "#2e7d32";
+  if(!nm) return showToast("请先填写身份名称");
+  var checked = Array.prototype.slice.call(document.querySelectorAll(".role-user-cb:checked"));
+  if(!checked.length) return showToast("请至少勾选一个用户");
+  for(var i=0;i<checked.length;i++){ await assignRoleToUser(checked[i].value, nm, cl); }
+  await loadGlobalRoles();
+  showToast("已给 "+checked.length+" 位用户发放身份");
+  renderAdminPanel();
+};
+window.batchAssignByIds = async function(){
+  var nameEl = document.getElementById("newRoleName");
+  var colorEl = document.getElementById("newRoleColor");
+  var nm = nameEl ? nameEl.value.trim() : "";
+  var cl = colorEl ? colorEl.value : "#2e7d32";
+  if(!nm) return showToast("请先填写身份名称");
+  var ta = document.getElementById("roleIdsInput");
+  var raw = ta ? ta.value : "";
+  var ids = raw.split(/[,\s\n]+/).map(function(s){return s.trim();}).filter(function(s){return s;});
+  if(!ids.length) return showToast("请输入用户ID");
+  for(var i=0;i<ids.length;i++){ await assignRoleToUser(ids[i], nm, cl); }
+  await loadGlobalRoles();
+  showToast("已给 "+ids.length+" 个ID发放身份");
+  renderAdminPanel();
+};
 window.removeRoleFromAll = function(roleName) {
     showConfirm('删除身份', '确定删除身份 "' + roleName + '"？', async function() { await removeRoleFromAll(roleName); showToast('身份已删除'); renderAdminPanel(); });
 };
@@ -869,7 +955,7 @@ async function loadAllData() {
 
 (function init() {
     if (!currentUser || !currentUser.id) window.location.href = '/liuyanban/index.html';
-    loadCategories().then(loadAllData);
+    loadGlobalRoles().then(function(){ loadCategories().then(loadAllData); });
 
     window.sb.channel('public-posts')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, function() { loadAllData(); })

@@ -862,11 +862,20 @@
         // ============================================================
         // 登录/注册
         // ============================================================
+        function genUserNo() {
+            var d = new Date();
+            var p = function(n){ return (n<10?'0':'')+n; };
+            var ts = '' + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+            var letters = 'abcdefghijklmnopqrstuvwxyz';
+            var r = '';
+            for (var i=0;i<3;i++) r += letters.charAt(Math.floor(Math.random()*26));
+            return ts + r;
+        }
         async function registerUser(phone, password, nickname) {
             var hashed = await hashPassword(password);
             var avatar = generateDefaultAvatar(nickname);
             var res = await window.sb.from('users')
-                .insert([{ phone: phone, password: hashed, nickname: nickname, avatar_url: avatar }])
+                .insert([{ phone: phone, password: hashed, nickname: nickname, avatar_url: avatar, user_no: genUserNo() }])
                 .select();
             if (res.error) {
                 if (res.error.code === '23505') throw new Error(T().phoneExists);

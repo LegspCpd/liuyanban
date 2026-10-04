@@ -155,7 +155,7 @@ function renderHeader(title, activeTab) {
         } else {
             avatarContent = displayName.charAt(0).toUpperCase();
         }
-        userAreaHtml = '<div class="user-area" onclick="window.location.href=\'/liuyanban/profile.html\'">' +
+        userAreaHtml = '<div class="user-area" onclick="window.location.href=\'/liuyanban/user.html\'">' +
             '<div class="avatar" style="' + avatarStyle + '">' + avatarContent + '</div>' +
             '<span class="user-name">' + escapeHtml(displayName) + '</span>' +
             '<span class="chevron">▾</span>' +
