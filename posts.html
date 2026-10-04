@@ -42,6 +42,16 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .post-card .post-author .name{font-weight:600;font-size:.9em}
 .post-card .post-author .official-tag{background:var(--official-blue);color:#fff;font-size:.55em;padding:0 6px;border-radius:99px}
 .post-card .post-author .role-tag{color:#fff;font-size:.55em;padding:0 6px;border-radius:99px}
+/* 迷你资料卡 */
+.mini-card{position:fixed;z-index:8000;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:14px;width:230px;display:none;animation:miniIn .16s ease}
+.mini-card.show{display:block}
+@keyframes miniIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.mini-card .mc-top{display:flex;gap:10px;align-items:center;cursor:pointer}
+.mini-card .mc-avatar{width:44px;height:44px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px;flex-shrink:0;background-size:cover;background-position:center}
+.mini-card .mc-name{font-weight:700;font-size:.95em;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mini-card .mc-no{font-size:.68em;color:var(--text-light);margin-top:2px}
+.mini-card .mc-bio{font-size:.78em;color:var(--text-muted);margin-top:10px;line-height:1.5;max-height:44px;overflow:hidden}
+.mini-card .mc-go{margin-top:10px;font-size:.72em;color:var(--primary);font-weight:700;text-align:center;padding-top:8px;border-top:1px solid var(--border)}
 .detail-post .post-author .role-tag{color:#fff;font-size:.55em;padding:0 6px;border-radius:99px}
 .detail-comments .comment-item .meta .role-tag{color:#fff;font-size:.5em;padding:0 4px;border-radius:99px}
 .post-card .post-author .time{font-size:.7em;color:var(--text-muted);margin-left:auto}
@@ -237,6 +247,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 </div>
 </div>
 
+<div class="mini-card" id="miniCard"></div>
 <div id="toast"></div>
 
 <script src="/liuyanban/common.js"></script>
@@ -448,6 +459,80 @@ async function fetchAllUsers() { var r = await window.sb.from('users').select('*
 async function fetchUserRoles() { var r = await window.sb.from('user_roles').select('*'); return r.data || []; }
 function goUser(uid){ if(uid) location.href = '/liuyanban/user.html?id=' + uid; }
 window.goUser = goUser;
+// ====== 迷你资料卡 ======
+var miniCardEl = document.getElementById("miniCard");
+var miniTimer = null;
+var isTouch = ("ontouchstart" in window);
+var miniOpenFor = null;
+
+function showMiniCard(anchor, uid, name, avatar){
+  if(!uid) return;
+  miniOpenFor = uid;
+  var role = globalRoleMap[uid];
+  var roleHtml = role ? '<span class="role-tag" style="background:'+role.role_color+'">'+escapeHtml(role.role_name)+'</span>' : "";
+  var avStyle = (avatar && avatar.indexOf("http")===0) ? 'background-image:url('+avatar+');background-size:cover;background-position:center;' : "";
+  var avText = (avatar && avatar.indexOf("http")===0) ? "" : escapeHtml(String(name||"U").charAt(0).toUpperCase());
+  miniCardEl.innerHTML = '<div class="mc-top" data-uid="'+uid+'">'+
+    '<div class="mc-avatar" style="'+avStyle+'">'+avText+'</div>'+
+    '<div><div class="mc-name">'+escapeHtml(name||"")+roleHtml+'</div><div class="mc-no">加载中…</div></div></div>'+
+    '<div class="mc-bio">加载中…</div>'+
+    '<div class="mc-go">点击查看主页 ›</div>';
+  miniCardEl.classList.add("show");
+  // 定位（头像右边一点）
+  var r = anchor.getBoundingClientRect();
+  var left = r.right + 10;
+  var top = r.top;
+  if(left + 240 > window.innerWidth) left = r.left - 240;
+  if(top + 200 > window.innerHeight) top = window.innerHeight - 210;
+  if(top < 8) top = 8;
+  miniCardEl.style.left = left + "px";
+  miniCardEl.style.top = top + "px";
+  // 加载资料
+  window.sb.from("users").select("nickname,avatar_url,bio,user_no").eq("id", uid).single().then(function(res){
+    if(res.data && miniOpenFor===uid){
+      var d = res.data;
+      var bioEl = miniCardEl.querySelector(".mc-bio");
+      var noEl = miniCardEl.querySelector(".mc-no");
+      if(bioEl) bioEl.textContent = d.bio || "这个人很懒，什么都没写~";
+      if(noEl) noEl.textContent = "ID: " + (d.user_no || uid.slice(0,8));
+    }
+  }).catch(function(){});
+  // 点卡片进主页
+  miniCardEl.querySelector(".mc-top").onclick = function(){ goUser(uid); hideMiniCard(); };
+  miniCardEl.querySelector(".mc-go").onclick = function(){ goUser(uid); hideMiniCard(); };
+}
+function hideMiniCard(){ miniCardEl.classList.remove("show"); miniOpenFor = null; }
+window.hideMiniCard = hideMiniCard;
+
+// 事件委托（滚动/点击时用）
+document.addEventListener("click", function(e){
+  var av = e.target.closest && e.target.closest(".author-avatar");
+  if(av){
+    var uid = av.dataset.uid;
+    if(isTouch){
+      // 手机：第一次点弹卡，再点进主页
+      if(miniOpenFor === uid){ goUser(uid); hideMiniCard(); }
+      else { e.stopPropagation(); showMiniCard(av, uid, av.dataset.name, av.dataset.avatar); }
+    } else {
+      goUser(uid);
+    }
+    return;
+  }
+  if(!e.target.closest || !e.target.closest(".mini-card")) hideMiniCard();
+});
+document.addEventListener("mouseover", function(e){
+  if(isTouch) return;
+  var av = e.target.closest && e.target.closest(".author-avatar");
+  if(av){ clearTimeout(miniTimer); showMiniCard(av, av.dataset.uid, av.dataset.name, av.dataset.avatar); }
+});
+document.addEventListener("mouseout", function(e){
+  if(isTouch) return;
+  var av = e.target.closest && e.target.closest(".author-avatar");
+  if(av){ clearTimeout(miniTimer); miniTimer = setTimeout(hideMiniCard, 220); }
+});
+miniCardEl.addEventListener("mouseenter", function(){ clearTimeout(miniTimer); });
+miniCardEl.addEventListener("mouseleave", function(){ if(!isTouch) miniTimer = setTimeout(hideMiniCard, 180); });
+window.addEventListener("scroll", hideMiniCard, true);
 var globalRoleMap = {};  // user_id -> {role_name, role_color}
 async function loadGlobalRoles(){
   try{
@@ -571,7 +656,7 @@ async function renderPosts() {
 
         html += '<div class="post-card" data-postid="' + p.id + '">';
         html += '<div class="post-author">';
-        html += '<div class="avatar" style="' + (avatar && avatar.startsWith('http') ? 'background-image:url(' + avatar + ');background-size:cover;background-position:center;' : '') + '">' + (avatar && !avatar.startsWith('http') ? name.charAt(0).toUpperCase() : '') + '</div>';
+        html += '<div class="avatar author-avatar" data-uid="' + p.user_id + '" data-name="' + escapeHtml(name) + '" data-avatar="' + escapeHtml(avatar||'') + '" style="cursor:pointer;' + (avatar && avatar.startsWith('http') ? 'background-image:url(' + avatar + ');background-size:cover;background-position:center;' : '') + '">' + (avatar && !avatar.startsWith('http') ? name.charAt(0).toUpperCase() : '') + '</div>';
         html += '<span class="name" style="cursor:pointer;" onclick="goUser(\'' + p.user_id + '\')">' + escapeHtml(name) + '</span>';
         if (p.is_official) html += '<span class="official-tag">官方</span>';
         html += roleTagHTML(p.user_id);
