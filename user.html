@@ -412,10 +412,29 @@ document.getElementById('editAvatarInput').onchange = async function(e){
 
 // ====== 初始化 ======
 (async function init(){
-  if (typeof renderFooter === "function") renderFooter("profile");
-  await render();
-  if (typeof renderHeader === "function") renderHeader("用户主页", "profile");
+  await render();  // 先渲染，确定 isSelf
+  if (isSelf) {
+    // 看自己：保留底部导航 + 顶部头像
+    if (typeof renderFooter === "function") renderFooter("profile");
+    if (typeof renderHeader === "function") renderHeader("用户主页", "profile");
+  } else {
+    // 看别人：隐藏底部导航，顶部改为"返回按钮"（左）+ 无标题
+    var fc = document.getElementById("footer-container");
+    if (fc) fc.style.display = "none";
+    var hc = document.getElementById("header-container");
+    if (hc) {
+      hc.innerHTML = '<div class="app-header" style="justify-content:flex-start;">' +
+        '<button class="back-btn" onclick="goBackFromUser()" title="返回" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text);display:flex;border-radius:8px;">' +
+        '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>' +
+        '</button></div>';
+    }
+  }
 })();
+function goBackFromUser(){
+  if (window.history.length > 1) window.history.back();
+  else location.href = '/liuyanban/posts.html';
+}
+window.goBackFromUser = goBackFromUser;
 
 </script>
 </body>
