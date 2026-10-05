@@ -1,858 +1,1401 @@
-// ============================================================
-// 初始化 Supabase 客户端
-// ============================================================
-if (!window.sb) {
-    var SUPABASE_URL = "https://ulvhuqtpdafspbdvkogs.supabase.co";
-    var SUPABASE_ANON_KEY = "sb_publishable_Ew8kKf2z05kmYIK2XNu00g_dzAirtIM";
-    window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-}
-
-// ============================================================
-// 启动动画
-// ============================================================
-(function bootLoader() {
-    if (sessionStorage.getItem('sq_boot_shown') === '1') return;
-    sessionStorage.setItem('sq_boot_shown', '1');
-
-    if (!document.getElementById('boot-loader-styles')) {
-        var style = document.createElement('style');
-        style.id = 'boot-loader-styles';
-        style.textContent =
-            '.boot-loader-wrapper{position:fixed;inset:0;z-index:9999999;background:#000;display:flex;align-items:center;justify-content:center;font-family:"Poppins","Space Grotesk","PingFang SC",sans-serif;font-size:1.6em;font-weight:600;user-select:none;color:#fff;transition:opacity 1s ease;overflow:hidden;}' +
-            '.boot-loader-wrapper.fade-out{opacity:0;pointer-events:none;}' +
-            '.boot-loader-inner{position:relative;display:flex;align-items:center;justify-content:center;height:120px;width:auto;margin:2rem;transform:scale(1.55);}' +
-            '.boot-loader{position:absolute;top:0;left:0;height:100%;width:100%;z-index:1;background-color:transparent;-webkit-mask:repeating-linear-gradient(90deg,transparent 0,transparent 6px,black 7px,black 8px);mask:repeating-linear-gradient(90deg,transparent 0,transparent 6px,black 7px,black 8px);}' +
-            '.boot-loader::after{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 50% 50%, #ff0 0%, transparent 50%),radial-gradient(circle at 45% 45%, #f00 0%, transparent 45%),radial-gradient(circle at 55% 55%, #0ff 0%, transparent 45%),radial-gradient(circle at 45% 55%, #0f0 0%, transparent 45%),radial-gradient(circle at 55% 45%, #00f 0%, transparent 45%);-webkit-mask:radial-gradient(circle at 50% 50%,transparent 0%,transparent 10%,black 25%);mask:radial-gradient(circle at 50% 50%,transparent 0%,transparent 10%,black 25%);animation:boot-transform 2s infinite alternate, boot-opacity 4s infinite;animation-timing-function:cubic-bezier(0.6,0.8,0.5,1);}' +
-            '@keyframes boot-transform{0%{transform:translate(-55%);}100%{transform:translate(55%);}}' +
-            '@keyframes boot-opacity{0%,100%{opacity:0;}15%{opacity:1;}65%{opacity:0;}}' +
-            '.boot-letter{display:inline-block;opacity:0;animation:boot-letter-anim 4s infinite linear;z-index:2;white-space:pre;}' +
-            '@keyframes boot-letter-anim{0%{opacity:0;}5%{opacity:1;text-shadow:0 0 4px #fff;transform:scale(1.1) translateY(-2px);}20%{opacity:0.2;}100%{opacity:0;}}';
-        document.head.appendChild(style);
-    }
-
-    function insert() {
-        if (!document.body) { document.addEventListener('DOMContentLoaded', insert); return; }
-        var wrap = document.createElement('div');
-        wrap.className = 'boot-loader-wrapper';
-        wrap.id = 'bootLoader';
-        var inner = document.createElement('div');
-        inner.className = 'boot-loader-inner';
-        var text = 'Seven戚  出品';
-        var chars = text.split('');
-        chars.forEach(function (c, i) {
-            var span = document.createElement('span');
-            span.className = 'boot-letter';
-            span.style.animationDelay = (0.1 + i * 0.105).toFixed(3) + 's';
-            span.textContent = c;
-            inner.appendChild(span);
-        });
-        var loaderDiv = document.createElement('div');
-        loaderDiv.className = 'boot-loader';
-        inner.appendChild(loaderDiv);
-        wrap.appendChild(inner);
-        document.body.appendChild(wrap);
-
-        setTimeout(function() {
-            setTimeout(function() {
-                wrap.classList.add('fade-out');
-                document.documentElement.classList.remove('sq-boot-hide');
-                setTimeout(function() { wrap.remove(); }, 1000);
-            }, 300);
-        }, 3500);
-    }
-    insert();
-})();
-
-// ============================================================
-// 页面加载转圈（所有页面通用）
-// ============================================================
-(function pageLoading() {
-    // 注入样式
-    if (!document.getElementById('page-loading-styles')) {
-        var st = document.createElement('style');
-        st.id = 'page-loading-styles';
-        st.textContent =
-            '.page-loading-mask{position:fixed;inset:0;z-index:999999;background:var(--bg,#f5faf5);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;transition:opacity .35s ease;}' +
-            '.page-loading-mask.fade-out{opacity:0;pointer-events:none;}' +
-            '.page-loading-spinner{width:40px;height:40px;border:3px solid var(--border,#c8e0c8);border-top-color:var(--primary,#2e7d32);border-radius:50%;animation:pageLoadSpin .8s linear infinite;}' +
-            '@keyframes pageLoadSpin{to{transform:rotate(360deg);}}' +
-            '.page-loading-text{font-size:.8em;color:var(--text-muted,#5a7a6a);font-family:var(--font,system-ui,sans-serif);}';
-        document.head.appendChild(st);
-    }
-
-    function show() {
-        if (document.getElementById('pageLoadingMask')) return;
-        var mask = document.createElement('div');
-        mask.className = 'page-loading-mask';
-        mask.id = 'pageLoadingMask';
-        mask.innerHTML = '<div class="page-loading-spinner"></div><div class="page-loading-text">加载中…</div>';
-        document.body.appendChild(mask);
-    }
-
-    function hide() {
-        var m = document.getElementById('pageLoadingMask');
-        if (!m) return;
-        m.classList.add('fade-out');
-        setTimeout(function() { m.remove(); }, 400);
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', show);
-    } else {
-        show();
-    }
-    window.addEventListener('load', function() {
-        // 延迟一点，避免闪一下就消失
-        setTimeout(hide, 200);
-    });
-    // 兜底：最多 8 秒后强制隐藏（防卡死）
-    setTimeout(hide, 8000);
-    // 暴露给页面，数据加载完后可主动调用（更精准）
-    window.hidePageLoading = hide;
-})();
-
-// ============================================================
-// SVG 图标库
-// ============================================================
-var SVG_ICONS = {
-    flag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
-    comment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
-    ban: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
-    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>',
-    undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>',
-    eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
-    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
-    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-    alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-    inbox: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>',
-    user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
-    sound: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>',
-    arrowLeft: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
-    checkCircle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-    xCircle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
-    logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
-    shop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
-    user2: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>'
-};
-
-function svgIcon(name, size) {
-    var icon = SVG_ICONS[name];
-    if (!icon) return '';
-    if (size) return icon.replace('<svg ', '<svg width="' + size + '" height="' + size + '" ');
-    return icon;
-}
-
-// ============================================================
-// 会话管理
-// ============================================================
-function getSessionUser() {
-    var stored = localStorage.getItem('sq_user_session');
-    if (stored) { try { return JSON.parse(stored); } catch (e) { return null; } }
-    return null;
-}
-function setSessionUser(user) { localStorage.setItem('sq_user_session', JSON.stringify(user)); }
-function clearSession() { localStorage.removeItem('sq_user_session'); }
-
-// ============================================================
-// 通用工具
-// ============================================================
-function showToast(msg) {
-    var toast = document.getElementById('toast');
-    if (!toast) return;
-    toast.textContent = msg;
-    toast.classList.add('show');
-    clearTimeout(window.toastTimer);
-    window.toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 3000);
-}
-
-function escapeHtml(s) {
-    if (!s) return '';
-    return String(s).replace(/[&<>"']/g, function (c) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-}
-
-function getUserAvatar(user) {
-    if (user && user.avatar_url) return user.avatar_url;
-    var name = user ? user.nickname : 'U';
-    var color = '#2e7d32';
-    var initial = name.charAt(0).toUpperCase();
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
-        '<rect width="100" height="100" fill="' + color + '" rx="50"/>' +
-        '<text x="50" y="58" font-size="40" text-anchor="middle" fill="white" font-family="sans-serif">' + initial + '</text></svg>';
-    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-}
-
-// ============================================================
-// 渲染头部
-// ============================================================
-function renderHeader(title, activeTab) {
-    var user = getSessionUser();
-    var headerContainer = document.getElementById('header-container');
-    if (!headerContainer) return;
-
-    var userAreaHtml = '';
-    if (user && user.id) {
-        var avatar = user.avatar_url || getUserAvatar(user);
-        var displayName = user.nickname || '用户';
-        var avatarStyle = '', avatarContent = '';
-        if (avatar && avatar.startsWith('http')) {
-            avatarStyle = 'background-image:url(' + avatar + ');background-size:cover;background-position:center;';
-        } else {
-            avatarContent = displayName.charAt(0).toUpperCase();
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Seven戚 · 个人中心</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --bg: #f5faf5; --bg-card: #ffffff; --bg-input: #eaf3ea;
+            --border: #c8e0c8; --text: #1e3a2e; --text-muted: #5a7a6a;
+            --text-light: #8aaa9a; --primary: #2e7d32; --primary-light: #4caf50;
+            --primary-glow: rgba(76, 175, 80, 0.25); --primary-bg: #e8f5e9;
+            --shadow: 0 8px 32px rgba(46, 125, 50, 0.12);
+            --radius: 16px; --radius-sm: 10px;
+            --font: "Space Grotesk", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --danger: #e57373; --danger-bg: #ffebee; --danger-text: #c62828;
+            --success: #2e7d32; --success-bg: #e8f5e9;
+            --warning: #ffa726; --warning-bg: #fff3e0;
         }
-        userAreaHtml = '<div class="user-area" onclick="window.location.href=\'/liuyanban/user.html\'">' +
-            '<div class="avatar" style="' + avatarStyle + '">' + avatarContent + '</div>' +
-            '<span class="user-name">' + escapeHtml(displayName) + '</span>' +
-            '<span class="chevron">▾</span>' +
+        html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow: hidden; }
+        #mainApp { display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: var(--bg); }
+
+        /* ===== 头部 ===== */
+        .app-header { flex-shrink: 0; padding: 12px 16px 8px 16px; background: rgba(255,255,255,0.92); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; z-index: 50; min-height: 56px; gap: 8px; }
+        .app-header .header-left { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; }
+        .app-header .brand { font-weight: 900; font-size: 1.1em; color: var(--text); display: flex; align-items: center; gap: 0.2em; white-space: nowrap; overflow: hidden; }
+        .app-header .brand span { color: var(--primary); }
+        .app-header .brand small { font-weight: 400; font-size: 0.55em; color: var(--text-muted); margin-left: 0.2em; }
+        .app-header .user-area { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px 8px 4px 4px; border-radius: 99px; flex-shrink: 0; }
+        .app-header .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 14px; flex-shrink: 0; background-size: cover; background-position: center; }
+        .app-header .user-name { font-weight: 600; font-size: 0.8em; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .app-header .chevron { color: var(--text-muted); font-size: 0.6em; }
+
+        /* ===== 底部导航 ===== */
+        .app-tabs { flex-shrink: 0; display: flex; background: rgba(255,255,255,0.96); border-top: 1px solid var(--border); padding: 6px 0 calc(6px + var(--safe-bottom)); z-index: 50; }
+        .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; font-family: var(--font); font-size: 0.6em; font-weight: 600; color: var(--text-muted); padding: 4px 0; cursor: pointer; text-decoration: none; position: relative; }
+        .tab-btn .tab-icon { font-size: 1.6em; line-height: 1.2; display: flex; align-items: center; justify-content: center; width: 1.7em; height: 1.7em; }
+        .tab-btn .tab-icon svg { width: 100%; height: 100%; display: block; stroke: currentColor; fill: none; }
+        .tab-btn.active { color: var(--primary); }
+        .tab-btn.active::after { content: ''; position: absolute; top: -1px; left: 30%; right: 30%; height: 3px; background: var(--primary); border-radius: 0 0 4px 4px; }
+        .tab-btn .badge { position: absolute; top: -2px; right: 15%; background: #e57373; color: #fff; font-size: 0.6em; font-weight: 700; padding: 1px 6px; border-radius: 99px; min-width: 16px; text-align: center; transform: translateY(-2px); }
+
+        /* ===== 内容 ===== */
+        .profile-content { flex: 1; overflow-y: auto; padding: 16px 20px 12px 20px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+        .view { width: 100%; max-width: 480px; display: none; flex-direction: column; animation: fadeSlideIn 0.35s ease; }
+        .view.active { display: flex; }
+        @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ===== 设置卡片 ===== */
+        .settings-card { background: var(--bg-card); border-radius: var(--radius); padding: 1.8em 1.5em; width: 100%; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .settings-title { font-size: 0.7em; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+        .settings-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 10px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.2s; border-radius: var(--radius-sm); margin-bottom: 4px; text-decoration: none; }
+        .settings-item:last-child { border-bottom: none; margin-bottom: 0; }
+        .settings-item:hover { background: var(--primary-bg); }
+        .settings-item.no-click { cursor: default; }
+        .settings-item.no-click:hover { background: transparent; }
+        .settings-item .item-left { display: flex; align-items: center; gap: 12px; }
+        .settings-item .item-icon { width: 38px; height: 38px; border-radius: 50%; background: var(--primary-bg); display: grid; place-items: center; flex-shrink: 0; color: var(--primary); }
+        .settings-item .item-icon svg { width: 20px; height: 20px; }
+        .settings-item .item-icon.warn { background: var(--warning-bg); color: var(--warning); }
+        .settings-item .item-icon.danger { background: var(--danger-bg); color: var(--danger-text); }
+        .settings-item .item-label { font-size: 0.95em; font-weight: 600; color: var(--text); }
+        .settings-item .item-sublabel { font-size: 0.7em; color: var(--text-light); margin-top: 2px; font-weight: 400; }
+        .settings-item .item-arrow { color: var(--text-light); display: flex; }
+        .settings-item .item-arrow svg { width: 18px; height: 18px; }
+
+        /* ===== 开关 ===== */
+        .toggle-switch { display: inline-block; position: relative; width: 52px; height: 30px; flex-shrink: 0; }
+        .toggle-input { display: none; }
+        .toggle-label { position: absolute; top: 0; left: 0; width: 52px; height: 30px; background-color: #ccc; border-radius: 30px; cursor: pointer; transition: background-color 0.3s ease; }
+        .toggle-label::before { content: ""; position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; background-color: #fff; border-radius: 50%; transition: transform 0.3s ease; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15); }
+        .toggle-input:checked + .toggle-label { background-color: var(--primary); }
+        .toggle-input:checked + .toggle-label::before { transform: translateX(22px); }
+
+        /* ===== 资料卡 ===== */
+        .profile-card { background: var(--bg-card); border-radius: var(--radius); padding: 2em 2.2em; width: 100%; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--primary); color: #fff; display: grid; place-items: center; font-size: 32px; font-weight: 700; margin: 0 auto 12px; object-fit: cover; background-size: cover; background-position: center; }
+        .avatar-upload { text-align: center; margin-top: 4px; margin-bottom: 16px; }
+        .avatar-upload label { font-size: 0.8em; color: var(--primary); cursor: pointer; text-decoration: underline; }
+        .avatar-upload input[type="file"] { display: none; }
+        .field-group { margin-bottom: 16px; }
+        .field-group label { display: block; font-size: 0.7em; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .field-group input, .field-group textarea, .field-group select { width: 100%; padding: 10px 12px; border-radius: var(--radius-sm); border: 2px solid var(--border); background: var(--bg-input); font-family: inherit; font-size: 0.9em; outline: none; transition: border-color 0.2s; color: var(--text); }
+        .field-group textarea { resize: vertical; min-height: 100px; }
+        .field-group input:focus, .field-group textarea:focus, .field-group select:focus { border-color: var(--primary); }
+        .btn-primary { width: 100%; padding: 12px; border-radius: var(--radius-sm); border: none; background: var(--primary); color: #fff; font-weight: 700; font-size: 1em; cursor: pointer; transition: background 0.2s; font-family: inherit; }
+        .btn-primary:hover { background: var(--primary-light); }
+        .btn-primary:disabled { opacity: 0.5; pointer-events: none; }
+        .btn-danger { width: 100%; padding: 10px; border-radius: var(--radius-sm); border: none; background: var(--danger-bg); color: var(--danger-text); font-weight: 700; font-size: 1em; cursor: pointer; transition: background 0.2s; font-family: inherit; margin-top: 8px; }
+        .btn-danger:hover { background: #ffcdd2; }
+        .btn-secondary-outline { width: 100%; padding: 8px 12px; border-radius: var(--radius-sm); border: 2px solid var(--border); background: transparent; color: var(--text-muted); font-weight: 600; font-size: 0.85em; cursor: pointer; transition: all 0.2s; font-family: inherit; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-secondary-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-bg); }
+        .btn-secondary-outline svg { width: 16px; height: 16px; }
+
+        /* ===== 网站选择网格 ===== */
+        .site-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 8px; }
+        .site-card { padding: 12px 14px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-card); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; position: relative; }
+        .site-card:hover { border-color: var(--primary-light); }
+        .site-card.selected { border-color: var(--primary); background: var(--primary-bg); box-shadow: 0 0 0 3px rgba(46,125,50,0.1); }
+        .site-card.selected::after { content: ''; position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; background: var(--primary); border-radius: 50%; }
+        .site-card .site-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--primary-bg); display: grid; place-items: center; flex-shrink: 0; color: var(--primary); }
+        .site-card.selected .site-icon { background: #fff; }
+        .site-card .site-icon svg { width: 16px; height: 16px; }
+        .site-card .site-name { font-size: 0.85em; font-weight: 600; line-height: 1.3; word-break: break-word; }
+
+        /* ===== 反馈列表 ===== */
+        .fb-item { padding: 12px 14px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border); margin-bottom: 10px; }
+        .fb-item .fb-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px; flex-wrap: wrap; }
+        .fb-item .fb-site { font-weight: 700; font-size: 0.9em; color: var(--text); }
+        .fb-item .fb-status { font-size: 0.65em; padding: 2px 10px; border-radius: 99px; font-weight: 600; }
+        .fb-item .fb-status.pending { background: var(--warning-bg); color: var(--warning); }
+        .fb-item .fb-status.replied { background: #e3f2fd; color: #2b6cff; }
+        .fb-item .fb-status.resolved { background: var(--success-bg); color: var(--success); }
+        .fb-item .fb-content { font-size: 0.85em; color: var(--text); line-height: 1.5; margin-bottom: 6px; word-break: break-word; }
+        .fb-item .fb-reply { background: var(--primary-bg); border-left: 3px solid var(--primary); padding: 8px 12px; border-radius: 6px; font-size: 0.8em; color: var(--text); margin-top: 6px; }
+        .fb-item .fb-time { font-size: 0.7em; color: var(--text-light); }
+        .fb-item .fb-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .fb-item .fb-actions button { padding: 5px 14px; border-radius: 99px; border: none; font-weight: 600; font-size: 0.75em; cursor: pointer; font-family: inherit; }
+        .fb-item .fb-actions .btn-reply { background: var(--primary-bg); color: var(--primary); }
+        .fb-item .fb-actions .btn-del { background: var(--danger-bg); color: var(--danger-text); }
+
+        /* ===== 管理网站列表 ===== */
+        .admin-site-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px; }
+        .admin-site-item .site-name { font-size: 0.9em; font-weight: 600; }
+        .admin-site-item .site-actions button { background: var(--danger-bg); color: var(--danger-text); border: none; padding: 4px 12px; border-radius: 99px; font-size: 0.75em; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-family: inherit; }
+        .admin-site-item .site-actions button svg { width: 12px; height: 12px; }
+        .admin-add-row { display: flex; gap: 8px; margin-top: 12px; }
+        .admin-add-row input { flex: 1; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--border); font-family: inherit; font-size: 0.9em; outline: none; }
+        .admin-add-row input:focus { border-color: var(--primary); }
+        .admin-add-row button { padding: 10px 18px; border-radius: 10px; border: none; background: var(--primary); color: #fff; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+        /* ===== 消息中心 ===== */
+        .ntf-filter-tabs { display: flex; gap: 4px; margin-bottom: 12px; background: var(--bg-input); border-radius: 99px; padding: 3px; overflow-x: auto; }
+        .ntf-tab { flex: 1; padding: 6px 0; border: none; background: transparent; border-radius: 99px; font-family: inherit; font-size: 0.7em; font-weight: 600; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 3px; white-space: nowrap; }
+        .ntf-tab.active { background: var(--bg-card); color: var(--primary); box-shadow: 0 2px 8px rgba(46,125,50,0.15); }
+        .ntf-tab-badge { background: var(--danger); color: #fff; font-size: 0.8em; padding: 0 5px; border-radius: 99px; min-width: 16px; text-align: center; line-height: 16px; display: none; }
+        .ntf-tab-badge.visible { display: inline-block; }
+        .ntf-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px 12px; border-radius: 12px; margin-bottom: 8px; background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; transition: all 0.25s ease; position: relative; overflow: hidden; }
+        .ntf-card:hover { box-shadow: 0 4px 16px rgba(46,125,50,0.1); transform: translateY(-1px); }
+        .ntf-card.unread { background: linear-gradient(135deg, #f0faf0 0%, #ffffff 100%); border-color: var(--primary); }
+        .ntf-card.unread::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--primary); border-radius: 0 3px 3px 0; }
+        .ntf-card.report-card { border-left: 4px solid var(--warning); }
+        .ntf-card.feedback-card { border-left: 4px solid #2b6cff; }
+        .ntf-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: transparent; margin-top: 6px; }
+        .ntf-card.unread .ntf-dot { background: var(--primary); }
+        .ntf-type-icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; }
+        .ntf-type-icon svg { width: 20px; height: 20px; }
+        .ntf-type-icon.comment { background: #e3f2fd; color: #2b6cff; }
+        .ntf-type-icon.report { background: var(--warning-bg); color: var(--warning); }
+        .ntf-type-icon.system { background: #f3e5f5; color: #8e24aa; }
+        .ntf-type-icon.ban { background: var(--danger-bg); color: var(--danger-text); }
+        .ntf-type-icon.result-ok { background: var(--success-bg); color: var(--success); }
+        .ntf-type-icon.result-no { background: #f5f5f5; color: #757575; }
+        .ntf-type-icon.feedback { background: #e3f2fd; color: #2b6cff; }
+        .ntf-body { flex: 1; min-width: 0; }
+        .ntf-title { font-size: 0.9em; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 2px; }
+        .ntf-snippet { font-size: 0.8em; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 4px; }
+        .ntf-meta { font-size: 0.7em; color: var(--text-light); display: flex; align-items: center; gap: 8px; }
+        .ntf-meta .unread-tag { color: var(--primary); font-weight: 600; }
+        .ntf-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .ntf-actions button { padding: 5px 12px; border-radius: 99px; border: none; font-family: inherit; font-size: 0.72em; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s; }
+        .ntf-actions button svg { width: 12px; height: 12px; }
+        .ntf-actions .btn-approve { background: var(--success-bg); color: var(--success); }
+        .ntf-actions .btn-approve:hover { background: #c8e6c9; }
+        .ntf-actions .btn-reject { background: var(--danger-bg); color: var(--danger-text); }
+        .ntf-actions .btn-reject:hover { background: #ffcdd2; }
+        .ntf-actions .btn-view { background: #e3f2fd; color: #2b6cff; }
+        .ntf-actions .btn-view:hover { background: #bbdefb; }
+        .ntf-group-label { font-size: 0.7em; font-weight: 700; color: var(--text-light); padding: 12px 4px 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .ntf-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.9em; }
+        .ntf-empty .big { margin-bottom: 8px; opacity: 0.4; display: flex; justify-content: center; }
+        .ntf-empty .big svg { width: 60px; height: 60px; }
+        .ntf-loading { text-align: center; padding: 30px 0; color: var(--text-muted); font-size: 0.85em; }
+        .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== 关于我们 ===== */
+        .about-card { text-align: center; padding: 20px 0; }
+        .about-card .about-avatar-link { display: inline-block; text-decoration: none; transition: transform 0.3s ease, box-shadow 0.3s ease; border-radius: 50%; }
+        .about-card .about-avatar-link:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(46, 125, 50, 0.3); }
+        .about-card .about-avatar { width: 100px; height: 100px; border-radius: 50%; background: #2e7d32; color: #fff; display: grid; place-items: center; font-size: 40px; font-weight: 900; margin: 0 auto 12px; cursor: pointer; object-fit: cover; }
+        .about-card h2 { font-size: 1.4em; margin-bottom: 4px; }
+        .about-card .sub { color: var(--text-muted); font-size: 0.9em; margin-bottom: 16px; }
+        .about-card .desc { font-size: 0.95em; line-height: 1.6; color: var(--text); max-width: 320px; margin: 0 auto 20px; }
+        .shop-ad { background: linear-gradient(135deg, #2e7d32, #4caf50); border-radius: var(--radius-sm); padding: 16px; color: #fff; margin-top: 16px; cursor: pointer; transition: transform 0.2s; box-shadow: var(--shadow); display: flex; align-items: center; gap: 12px; text-align: left; }
+        .shop-ad:hover { transform: scale(1.02); }
+        .shop-ad svg { width: 36px; height: 36px; flex-shrink: 0; }
+        .shop-ad h3 { font-size: 1.1em; margin-bottom: 4px; }
+        .shop-ad p { font-size: 0.8em; opacity: 0.9; }
+
+        /* ===== Toast ===== */
+        #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: #fff; padding: 0.7em 1.6em; border-radius: 2em; font-weight: 600; font-size: 0.85em; opacity: 0; transition: all 0.4s ease; z-index: 9999; pointer-events: none; white-space: nowrap; box-shadow: var(--shadow); }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ===== Modal ===== */
+        .custom-modal { position: fixed; inset: 0; z-index: 2000; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 20px; }
+        .custom-modal.active { display: flex; }
+        .modal-box { background: var(--bg-card); border-radius: var(--radius); max-width: 420px; width: 100%; padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .modal-title { font-size: 1.2em; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+        .modal-body { font-size: 0.95em; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px; white-space: pre-wrap; word-break: break-word; }
+        .modal-body textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--border); font-family: inherit; font-size: 0.9em; outline: none; resize: vertical; min-height: 80px; box-sizing: border-box; }
+        .modal-body textarea:focus { border-color: var(--primary); }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+        .modal-actions button { padding: 6px 18px; border-radius: var(--radius-sm); border: none; font-weight: 600; font-size: 0.85em; cursor: pointer; transition: background 0.2s; font-family: inherit; }
+        .modal-actions .btn-danger { background: var(--danger); color: #fff; margin-top: 0; width: auto; }
+        .modal-actions .btn-danger:hover { background: #c62828; }
+        .modal-actions .btn-secondary { background: var(--bg-input); color: var(--text-muted); }
+        .modal-actions .btn-secondary:hover { background: var(--border); }
+        .modal-actions .btn-primary { background: var(--primary); color: #fff; width: auto; }
+        .modal-actions .btn-primary:hover { background: var(--primary-light); }
+
+        @media (max-width: 480px) {
+            .profile-content { padding: 12px 14px; }
+            .settings-card { padding: 1.2em 1em; }
+            .profile-card { padding: 1.2em 1.2em; }
+            .app-header { padding: 10px 12px 6px 12px; min-height: 48px; }
+            .app-header .brand { font-size: 0.95em; }
+            .app-header .user-name { max-width: 50px; font-size: 0.7em; }
+        }
+    </style>
+</head>
+<body>
+    <div id="mainApp">
+        <!-- ===== 头部 ===== -->
+        <div class="app-header" id="customHeader">
+            <div class="header-left">
+                <div class="brand" id="headerBrand">
+                    Seven<span>戚</span><small id="headerSub">· 个人中心</small>
+                </div>
+            </div>
+            <div class="user-area" id="headerUserArea" onclick="window.location.href='/liuyanban/user.html'">
+                <div class="avatar" id="headerAvatar">U</div>
+                <span class="user-name" id="headerUserName">用户</span>
+                <span class="chevron">▾</span>
+            </div>
+        </div>
+
+        <!-- ===== 内容 ===== -->
+        <div class="profile-content">
+
+            <!-- ===== 设置 ===== -->
+            <div class="view" id="settingsView" style="display:none;">
+                <div class="settings-card">
+                    <div class="settings-title">设置中心</div>
+
+
+                    <div class="settings-item" id="goToMessages" role="button" tabindex="0">
+                        <div class="item-left">
+                            <div class="item-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+                                    <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="item-label">消息中心</div>
+                                <div class="item-sublabel" id="unreadHint">查看评论通知</div>
+                            </div>
+                        </div>
+                        <span class="item-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </span>
+                    </div>
+
+                    <div class="settings-item" id="goToFeedback" role="button" tabindex="0">
+                        <div class="item-left">
+                            <div class="item-icon warn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                    <line x1="12" y1="9" x2="12" y2="13"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="item-label">反馈 Bug</div>
+                                <div class="item-sublabel">选择软件 → 描述问题</div>
+                            </div>
+                        </div>
+                        <span class="item-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </span>
+                    </div>
+
+                    <div class="settings-item" id="goToAdminFeedback" role="button" tabindex="0" style="display:none;">
+                        <div class="item-left">
+                            <div class="item-icon danger">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="item-label">反馈管理</div>
+                                <div class="item-sublabel">查看/回复用户反馈（管理员）</div>
+                            </div>
+                        </div>
+                        <span class="item-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </span>
+                    </div>
+
+                    <div class="settings-item" id="goToManageSites" role="button" tabindex="0" style="display:none;">
+                        <div class="item-left">
+                            <div class="item-icon danger">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7"/>
+                                    <rect x="14" y="3" width="7" height="7"/>
+                                    <rect x="14" y="14" width="7" height="7"/>
+                                    <rect x="3" y="14" width="7" height="7"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="item-label">网站管理</div>
+                                <div class="item-sublabel">增删反馈目标网站（管理员）</div>
+                            </div>
+                        </div>
+                        <span class="item-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </span>
+                    </div>
+
+                    <div class="settings-item" id="goToAbout" role="button" tabindex="0">
+                        <div class="item-left">
+                            <div class="item-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="16" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="item-label">关于我们</div>
+                                <div class="item-sublabel">创作者 &amp; 商城</div>
+                            </div>
+                        </div>
+                        <span class="item-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </span>
+                    </div>
+
+                    <div class="settings-item no-click">
+                        <div class="item-left">
+                            <div class="item-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="item-label">提醒音效</div>
+                                <div class="item-sublabel" id="soundStatusHint">新消息提示音 · 已开启</div>
+                            </div>
+                        </div>
+                        <div class="toggle-switch">
+                            <input class="toggle-input" id="soundToggle" type="checkbox" />
+                            <label class="toggle-label" for="soundToggle"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="width: 100%; margin-top: 12px;">
+                    <button class="btn-danger" id="logoutBtnFromSettings">退出登录</button>
+                </div>
+            </div>
+
+            <!-- ===== 更新资料 ===== -->
+            <div class="view" id="profileEditView">
+                <div class="profile-card">
+                    <button class="btn-secondary-outline" id="backToSettings">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        返回设置
+                    </button>
+                    <div class="profile-avatar" id="profileAvatar">S</div>
+                    <div class="avatar-upload">
+                        <label for="avatarFileInput">更换头像</label>
+                        <input type="file" id="avatarFileInput" accept="image/*" />
+                    </div>
+                    <div class="field-group">
+                        <label>昵称</label>
+                        <input type="text" id="profileNameInput" maxlength="12" />
+                    </div>
+                    <button class="btn-primary" id="saveProfileBtn">保存</button>
+                    <button class="btn-danger" id="logoutBtn">退出登录</button>
+                </div>
+            </div>
+
+            <!-- ===== 消息中心 ===== -->
+            <div class="view" id="messagesView">
+                <div class="profile-card" style="padding: 1.2em 1em;">
+                    <button class="btn-secondary-outline" id="backToSettingsFromMsg">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        返回设置
+                    </button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <span style="font-weight:700; font-size:1.1em; display:flex; align-items:center; gap:6px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            消息中心
+                        </span>
+                        <button id="markAllReadBtn" style="background:none; border:none; color:var(--primary); font-size:0.75em; font-weight:600; cursor:pointer; padding:4px 8px; border-radius:6px;">全部已读</button>
+                    </div>
+                    <div class="ntf-filter-tabs" id="ntfFilterTabs">
+                        <button class="ntf-tab active" data-filter="all">全部</button>
+                        <button class="ntf-tab" data-filter="unread">未读 <span id="unreadTabCount" class="ntf-tab-badge"></span></button>
+                        <button class="ntf-tab" data-filter="report">举报</button>
+                        <button class="ntf-tab" data-filter="feedback">反馈</button>
+                    </div>
+                    <div id="notificationList">
+                        <div class="ntf-loading"><span class="spinner"></span>加载中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== 反馈 Bug ===== -->
+            <div class="view" id="feedbackView">
+                <div class="profile-card" style="padding: 1.2em 1em;">
+                    <button class="btn-secondary-outline" id="backToSettingsFromFb">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        返回设置
+                    </button>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px;">
+                        <span style="font-weight:700; font-size:1.1em;">反馈 Bug</span>
+                        <div style="display:flex; gap:4px;">
+                            <button id="fbTabNew" class="fb-tab-btn active" style="background:none;border:none;color:var(--primary);font-size:0.75em;font-weight:600;cursor:pointer;padding:4px 8px;border-radius:6px;">我要反馈</button>
+                            <button id="fbTabMine" class="fb-tab-btn" style="background:none;border:none;color:var(--text-muted);font-size:0.75em;font-weight:600;cursor:pointer;padding:4px 8px;border-radius:6px;">我的反馈</button>
+                        </div>
+                    </div>
+
+                    <div id="fbSubmitPanel">
+                        <div class="field-group">
+                            <label>1. 选择问题网站</label>
+                            <div class="site-grid" id="siteGrid">
+                                <div style="text-align:center;color:var(--text-muted);padding:20px 0;grid-column:1/-1;font-size:0.85em;">加载中...</div>
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label>2. 问题描述</label>
+                            <textarea id="fbContent" placeholder="请详细描述你遇到的问题..." maxlength="1000"></textarea>
+                        </div>
+                        <div class="field-group">
+                            <label>3. 联系方式（选填）</label>
+                            <input type="text" id="fbContact" placeholder="QQ / 微信 / 手机号" maxlength="50" />
+                        </div>
+                        <button class="btn-primary" id="fbSubmitBtn">提交反馈</button>
+                    </div>
+
+                    <div id="fbMinePanel" style="display:none;">
+                        <div id="myFeedbackList">
+                            <div style="text-align:center;color:var(--text-muted);padding:20px 0;font-size:0.85em;">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== 管理员反馈管理 ===== -->
+            <div class="view" id="adminFeedbackView">
+                <div class="profile-card" style="padding: 1.2em 1em;">
+                    <button class="btn-secondary-outline" id="backToSettingsFromAdminFb">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        返回设置
+                    </button>
+                    <div style="font-weight:700; font-size:1.1em; margin-bottom:12px;">反馈管理</div>
+                    <div id="adminFeedbackList">
+                        <div style="text-align:center;color:var(--text-muted);padding:20px 0;font-size:0.85em;">加载中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== 网站管理 ===== -->
+            <div class="view" id="manageSitesView">
+                <div class="profile-card" style="padding: 1.2em 1em;">
+                    <button class="btn-secondary-outline" id="backToSettingsFromSites">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        返回设置
+                    </button>
+                    <div style="font-weight:700; font-size:1.1em; margin-bottom:12px;">网站管理</div>
+                    <div id="adminSitesList"></div>
+                    <div class="admin-add-row">
+                        <input type="text" id="newSiteName" placeholder="输入网站名称" maxlength="30" />
+                        <button id="addSiteBtn">添加</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== 关于我们 ===== -->
+            <div class="view" id="aboutView">
+                <div class="profile-card" style="padding: 1.2em 1em;">
+                    <button class="btn-secondary-outline" id="backToSettingsFromAbout">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        返回设置
+                    </button>
+                    <div class="about-card">
+                        <a class="about-avatar-link" href="https://sevenseven712.github.io/Seven712/" target="_blank" rel="noopener noreferrer">
+                            <img src="https://i.ibb.co/Y4rD6F2Y/b-8ee0f1b16f3c823eeff690735ca17e1f.jpg" alt="Seven戚" class="about-avatar" />
+                        </a>
+                        <h2>Seven戚</h2>
+                        <div class="sub">全栈开发者 · 社区创始人</div>
+                        <div class="desc">多多推广本网站，谢谢你们 Thanks♪(･ω･)ﾉ</div>
+                        <div class="shop-ad" onclick="window.open('https://sevenseven712.github.io/shangcheng/', '_blank')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                                <line x1="3" y1="6" x2="21" y2="6"/>
+                                <path d="M16 10a4 4 0 0 1-8 0"/>
+                            </svg>
+                            <div>
+                                <h3>软件商城</h3>
+                                <p>精选实用软件 → 点击进入</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===== 底部导航 ===== -->
+        <div id="footer-container"></div>
+    </div>
+
+    <!-- ===== 确认弹窗 ===== -->
+    <div class="custom-modal" id="confirmModal">
+        <div class="modal-box">
+            <div class="modal-title" id="confirmTitle">确认</div>
+            <div class="modal-body" id="confirmBody">确定要执行此操作吗？</div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="confirmCancel">取消</button>
+                <button class="btn-danger" id="confirmOk">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 反馈回复弹窗 ===== -->
+    <div class="custom-modal" id="replyModal">
+        <div class="modal-box">
+            <div class="modal-title">回复用户</div>
+            <div class="modal-body">
+                <textarea id="replyText" placeholder="输入回复内容..." maxlength="500"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="replyCancel">取消</button>
+                <button class="btn-primary" id="replyOk">发送回复</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script src="/liuyanban/common.js"></script>
+    <script>
+        // ============ 工具 ============
+        function showToast(msg) {
+            var t = document.getElementById('toast');
+            if (!t) return;
+            t.textContent = msg; t.classList.add('show');
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(function() { t.classList.remove('show'); }, 2800);
+        }
+        function escapeHtml(s) {
+            if (!s) return '';
+            return String(s).replace(/[&<>"']/g, function(c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+        function showConfirm(title, body, onOk) {
+            var modal = document.getElementById('confirmModal');
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmBody').textContent = body;
+            modal.classList.add('active');
+            var c = document.getElementById('confirmCancel');
+            var o = document.getElementById('confirmOk');
+            var cleanup = function() { modal.classList.remove('active'); c.onclick = null; o.onclick = null; };
+            c.onclick = cleanup;
+            o.onclick = function() { if (onOk) onOk(); cleanup(); };
+        }
+
+        // ============ Supabase ============
+        var SUPABASE_URL = "https://ulvhuqtpdafspbdvkogs.supabase.co";
+        var SUPABASE_ANON_KEY = "sb_publishable_Ew8kKf2z05kmYIK2XNu00g_dzAirtIM";
+        window.sb = window.sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ============ 会话 ============
+        var currentUser = getSessionUser();
+        if (!currentUser || !currentUser.id) window.location.href = '/liuyanban/index.html';
+        var isAdmin = currentUser.phone === '17355394710';
+
+
+
+        // ============ 头部 ============
+        function updateHeader() {
+            var user = getSessionUser();
+            if (!user) return;
+            var av = document.getElementById('headerAvatar');
+            var nm = document.getElementById('headerUserName');
+            if (user.avatar_url && user.avatar_url.startsWith('http')) {
+                av.style.backgroundImage = 'url(' + user.avatar_url + ')';
+                av.style.backgroundSize = 'cover';
+                av.style.backgroundPosition = 'center';
+                av.textContent = '';
+            } else {
+                av.style.backgroundImage = '';
+                av.textContent = (user.nickname || 'U').charAt(0).toUpperCase();
+            }
+            nm.textContent = user.nickname || '用户';
+
+            var pa = document.getElementById('profileAvatar');
+            if (pa) {
+                if (user.avatar_url && user.avatar_url.startsWith('http')) {
+                    pa.style.backgroundImage = 'url(' + user.avatar_url + ')';
+                    pa.style.backgroundSize = 'cover';
+                    pa.style.backgroundPosition = 'center';
+                    pa.textContent = '';
+                } else {
+                    pa.style.backgroundImage = '';
+                    pa.textContent = (user.nickname || 'U').charAt(0).toUpperCase();
+                }
+            }
+            var ni = document.getElementById('profileNameInput');
+            if (ni) ni.value = user.nickname || '';
+        }
+        updateHeader();
+
+        // ============ 视图切换 ============
+        var currentView = 'settingsView';
+        var viewTitles = {
+            settingsView: '个人中心', profileEditView: '更新资料', messagesView: '消息中心',
+            feedbackView: '反馈 Bug', adminFeedbackView: '反馈管理',
+            manageSitesView: '网站管理', aboutView: '关于我们'
+        };
+        function switchView(id) {
+            if (id === 'settingsView') { window.location.href = '/liuyanban/user.html'; return; }
+            currentView = id;
+            document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+            var t = document.getElementById(id);
+            if (t) t.classList.add('active');
+            var hs = document.getElementById('headerSub');
+            if (hs) hs.textContent = (id === 'settingsView') ? '· 个人中心' : '· ' + (viewTitles[id] || '');
+        }
+        // 是否通过 URL 参数直达子视图（从 user.html 六宫格进入）
+        var cameFromUrl = !!new URLSearchParams(location.search).get('view');
+        function goBack() {
+            // 从 user.html 直达子视图 → 直接返回 user.html
+            if (cameFromUrl) { window.location.href = '/liuyanban/user.html'; return; }
+            // 页面内自己点进子视图 → 回设置中心；否则回用户主页
+            if (currentView !== 'settingsView') { switchView('settingsView'); }
+            else { window.location.href = '/liuyanban/user.html'; }
+        }
+        window.goBack = goBack;
+
+        if (isAdmin) {
+            document.getElementById('goToAdminFeedback').style.display = 'flex';
+            document.getElementById('goToManageSites').style.display = 'flex';
+        }
+
+
+        document.getElementById('goToMessages').onclick = function() { switchView('messagesView'); loadNotifications(); };
+        document.getElementById('goToFeedback').onclick = function() { switchView('feedbackView'); initFeedbackView(); };
+        document.getElementById('goToAdminFeedback').onclick = function() { switchView('adminFeedbackView'); loadAdminFeedback(); };
+        document.getElementById('goToManageSites').onclick = function() { switchView('manageSitesView'); loadAdminSites(); };
+        document.getElementById('goToAbout').onclick = function() { switchView('aboutView'); };
+        function backToUser(){ window.location.href = '/liuyanban/user.html'; }
+        window.backToUser = backToUser;
+        document.getElementById('backToSettings').onclick = backToUser;
+        document.getElementById('backToSettingsFromMsg').onclick = backToUser;
+        document.getElementById('backToSettingsFromFb').onclick = backToUser;
+        document.getElementById('backToSettingsFromAdminFb').onclick = backToUser;
+        document.getElementById('backToSettingsFromSites').onclick = backToUser;
+        document.getElementById('backToSettingsFromAbout').onclick = backToUser;
+
+        // ============ 音效开关 ============
+        var soundToggle = document.getElementById('soundToggle');
+        var soundStatusHint = document.getElementById('soundStatusHint');
+        var soundEnabled = localStorage.getItem('sq_sound_enabled') !== 'false';
+        soundToggle.checked = soundEnabled;
+        soundStatusHint.textContent = soundEnabled ? '新消息提示音 · 已开启' : '新消息提示音 · 已关闭';
+        soundToggle.onchange = function() {
+            var e = this.checked;
+            localStorage.setItem('sq_sound_enabled', e);
+            soundStatusHint.textContent = e ? '新消息提示音 · 已开启' : '新消息提示音 · 已关闭';
+            showToast(e ? '提醒音效已开启' : '提醒音效已关闭');
+        };
+
+        // ============ 头像/昵称 ============
+        async function uploadAvatar(file, userId) {
+            var ext = file.name.split('.').pop();
+            var fn = 'avatars/' + userId + '/profile.' + ext;
+            var up = await window.sb.storage.from('avatars').upload(fn, file, { upsert: true });
+            if (up.error) throw up.error;
+            var urlData = window.sb.storage.from('avatars').getPublicUrl(fn);
+            return urlData.data.publicUrl;
+        }
+        async function updateUser(id, up) {
+            var r = await window.sb.from('users').update(up).eq('id', id);
+            if (r.error) throw r.error;
+        }
+        document.getElementById('avatarFileInput').onchange = async function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { showToast('图片不能超过 5MB'); this.value = ''; return; }
+            try {
+                showToast('上传中...');
+                var url = await uploadAvatar(file, currentUser.id);
+                await updateUser(currentUser.id, { avatar_url: url });
+                currentUser.avatar_url = url;
+                setSessionUser(currentUser);
+                updateHeader();
+                showToast('头像已更新');
+            } catch (err) { showToast('上传失败：' + err.message); }
+            this.value = '';
+        };
+        document.getElementById('saveProfileBtn').onclick = async function() {
+            var n = document.getElementById('profileNameInput').value.trim();
+            if (!n) return showToast('请输入昵称');
+            if (n.toLowerCase() === 'seven戚' && currentUser.phone !== '17355394710') return showToast('该昵称不可用');
+            try {
+                await updateUser(currentUser.id, { nickname: n });
+                currentUser.nickname = n;
+                setSessionUser(currentUser);
+                updateHeader();
+                showToast('昵称已更新');
+            } catch (err) { showToast('更新失败：' + err.message); }
+        };
+
+        // ============ 退出登录 ============
+        function handleLogout() {
+            showConfirm('退出登录', '确定要退出登录吗？', function() {
+                clearSession();
+                showToast('已退出登录');
+                setTimeout(function() { window.location.href = '/liuyanban/index.html'; }, 500);
+            });
+        }
+        document.getElementById('logoutBtn').onclick = handleLogout;
+        document.getElementById('logoutBtnFromSettings').onclick = handleLogout;
+
+        // ============ 消息中心 ============
+        var allNotifications = [];
+        var currentNtfFilter = 'all';
+
+        async function loadNotifications() {
+            var c = document.getElementById('notificationList');
+            c.innerHTML = '<div class="ntf-loading"><span class="spinner"></span>加载中...</div>';
+            try {
+                var res = await window.sb.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+                if (res.error) throw res.error;
+                allNotifications = res.data || [];
+                renderNotifications();
+                updateUnreadTabCount();
+                var u = allNotifications.filter(function(n) { return !n.is_read; }).length;
+                var h = document.getElementById('unreadHint');
+                if (h) h.textContent = u > 0 ? '有 ' + u + ' 条未读通知' : '暂无未读通知';
+                if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+            } catch (err) {
+                c.innerHTML = '<div class="ntf-empty">加载失败：' + escapeHtml(err.message) + '</div>';
+            }
+        }
+
+        function updateUnreadTabCount() {
+            var u = allNotifications.filter(function(n) { return !n.is_read; }).length;
+            var b = document.getElementById('unreadTabCount');
+            if (b) { b.textContent = u > 9 ? '9+' : u; b.className = 'ntf-tab-badge' + (u > 0 ? ' visible' : ''); }
+        }
+
+        function renderNotifications() {
+            var c = document.getElementById('notificationList');
+            var f = allNotifications;
+            if (currentNtfFilter === 'unread') f = f.filter(function(n) { return !n.is_read; });
+            else if (currentNtfFilter === 'report') f = f.filter(function(n) { return n.notification_type === 'report' || n.type === 'report'; });
+            else if (currentNtfFilter === 'feedback') f = f.filter(function(n) { return n.notification_type === 'feedback' || n.type === 'feedback'; });
+
+            if (!f.length) {
+                var msg = currentNtfFilter === 'unread' ? '没有未读通知' :
+                          currentNtfFilter === 'report' ? '没有待处理的举报' :
+                          currentNtfFilter === 'feedback' ? '暂无反馈通知' : '暂无通知';
+                c.innerHTML = '<div class="ntf-empty"><div class="big"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>' + msg + '</div>';
+                return;
+            }
+
+            var g = { today: [], yesterday: [], earlier: [] };
+            var now = new Date();
+            var t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            var t1 = new Date(t0.getTime() - 86400000);
+            f.forEach(function(n) {
+                var d = new Date(n.created_at);
+                if (d >= t0) g.today.push(n);
+                else if (d >= t1) g.yesterday.push(n);
+                else g.earlier.push(n);
+            });
+
+            var html = '';
+            function rg(label, items) {
+                if (!items.length) return '';
+                var s = '<div class="ntf-group-label">' + label + '</div>';
+                items.forEach(function(n) { s += renderNotificationCard(n); });
+                return s;
+            }
+            html += rg('今天', g.today) + rg('昨天', g.yesterday) + rg('更早', g.earlier);
+            c.innerHTML = html;
+
+            c.querySelectorAll('.ntf-card').forEach(function(el) {
+                el.onclick = function(e) {
+                    if (e.target.closest('.ntf-actions')) return;
+                    var id = this.dataset.id;
+                    var pid = this.dataset.postid;
+                    var cid = this.dataset.commentid;
+                    var nt = this.dataset.ntftype;
+                    markNotificationRead(id);
+                    if (nt === 'report' || nt === 'feedback') return;
+                    if (pid && cid) window.location.href = '/liuyanban/posts.html?comment=' + cid + '&post=' + pid;
+                };
+            });
+        }
+
+        function renderNotificationCard(n) {
+            var r = n.is_read;
+            var nt = n.notification_type || n.type || 'comment';
+            var t = formatRelativeTime(n.created_at);
+            var icons = {
+                comment: { cls: 'comment', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' },
+                report: { cls: 'report', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' },
+                system: { cls: 'system', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' },
+                ban: { cls: 'ban', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>' },
+                report_result: { cls: 'result-ok', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' },
+                feedback: { cls: 'feedback', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' }
+            };
+            var info = icons[nt] || icons.comment;
+            var title = '', snippet = '';
+            if (nt === 'report') { title = '新举报待处理'; snippet = '原因：' + (n.report_reason || '未填写') + (n.extra_text ? ' · ' + n.extra_text : ''); }
+            else if (nt === 'feedback') { title = '用户提交了新反馈'; snippet = n.extra_text || '点击查看详情'; }
+            else if (nt === 'ban') { title = '你的账号已被封禁'; snippet = '解封时间：' + (n.ban_until ? new Date(n.ban_until).toLocaleString('zh-CN') : '未知'); }
+            else if (nt === 'report_result') { title = '举报处理结果'; snippet = n.extra_text || '管理员已处理你的举报'; }
+            else { title = '收到新评论'; snippet = n.extra_text || n.comment_content || '有人评论了你的帖子'; }
+
+            var actions = '';
+            if (nt === 'report' && n.report_id) {
+                actions = '<div class="ntf-actions">' +
+                    '<button class="btn-view" onclick="event.stopPropagation();viewReportDetail(\'' + n.report_id + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>查看</button>' +
+                    '<button class="btn-approve" onclick="event.stopPropagation();handleReport(\'' + n.report_id + '\',\'approved\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>同意</button>' +
+                    '<button class="btn-reject" onclick="event.stopPropagation();handleReport(\'' + n.report_id + '\',\'rejected\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>驳回</button>' +
+                    '</div>';
+            }
+            if (nt === 'feedback' && n.feedback_id) {
+                actions = '<div class="ntf-actions">' +
+                    '<button class="btn-view" onclick="event.stopPropagation();goToFeedbackDetail(\'' + n.feedback_id + '\')">查看反馈</button>' +
+                    '</div>';
+            }
+
+            return '<div class="ntf-card ' + (r ? '' : 'unread') + (nt === 'report' ? ' report-card' : '') + (nt === 'feedback' ? ' feedback-card' : '') +
+                '" data-id="' + n.id + '" data-postid="' + (n.post_id || '') + '" data-commentid="' + (n.source_id || '') +
+                '" data-ntftype="' + nt + '" data-reportid="' + (n.report_id || '') + '" data-feedbackid="' + (n.feedback_id || '') + '">' +
+                '<div class="ntf-dot"></div>' +
+                '<div class="ntf-type-icon ' + info.cls + '">' + info.svg + '</div>' +
+                '<div class="ntf-body">' +
+                    '<div class="ntf-title">' + title + '</div>' +
+                    '<div class="ntf-snippet">' + escapeHtml(snippet) + '</div>' +
+                    '<div class="ntf-meta"><span>' + t + '</span>' + (r ? '' : '<span class="unread-tag">未读</span>') + '</div>' +
+                    actions +
+                '</div>' +
             '</div>';
-    } else {
-        userAreaHtml = '<div class="user-area" onclick="window.location.href=\'/liuyanban/index.html\'">登录</div>';
-    }
-
-    headerContainer.innerHTML = '<div class="app-header">' +
-        '<div class="brand" onclick="window.location.href=\'/liuyanban/posts.html\'">' +
-        'Seven<span>戚</span><small>· ' + escapeHtml(title) + '</small>' +
-        '</div>' + userAreaHtml + '</div>';
-}
-
-// ============================================================
-// 底部导航 SVG 图标
-// ============================================================
-var FOOTER_ICONS = {
-    messages: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M40 33V42C40 43.1046 39.1046 44 38 44H31.5" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 16V6C40 4.89543 39.1046 4 38 4H10C8.89543 4 8 4.89543 8 6V42C8 43.1046 8.89543 44 10 44H16" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 16H30" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M23 44L40 23" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M16 24H24" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>',
-    posts: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18V42H39V18L24 6L9 18Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 29V42H29V29H19Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M9 42H39" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>',
-    chats: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6H44V36H29L24 41L19 36H4V6Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 21H25.0025" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M33.001 21H34.9999" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M13.001 21H14.9999" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>',
-    profile: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M42 44C42 34.0589 33.9411 26 24 26C14.0589 26 6 34.0589 6 44" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-};
-
-(function injectFooterIconStyles() {
-    if (document.getElementById('footer-svg-icon-styles')) return;
-    var style = document.createElement('style');
-    style.id = 'footer-svg-icon-styles';
-    style.textContent =
-        '.tab-btn .tab-icon{display:flex;align-items:center;justify-content:center;width:1.7em;height:1.7em;line-height:1;}' +
-        '.tab-btn .tab-icon svg{width:100%;height:100%;display:block;stroke:currentColor;fill:none;}' +
-        '.tab-btn .tab-icon svg path,.tab-btn .tab-icon svg circle{stroke:currentColor;}' +
-        '.header-settings-btn{background:none;border:none;cursor:pointer;padding:6px;color:var(--text,#1e3a2e);display:flex;border-radius:8px;}' +
-        '.header-settings-btn svg{width:24px;height:24px;stroke:currentColor;fill:none;}' +
-        '.header-settings-btn:hover{background:rgba(46,125,50,.1);}';
-    document.head.appendChild(style);
-})();
-
-function renderFooterBase(activeTab) {
-    var tabs = [
-        { id: 'posts', name: '帖子', href: '/liuyanban/posts.html' },
-        { id: 'messages', name: '留言板', href: '/liuyanban/messages.html' },
-        { id: 'chats', name: '消息', href: '/liuyanban/chats.html' },
-        { id: 'profile', name: '个人', href: '/liuyanban/user.html' }
-    ];
-
-    var footerHtml = '<div class="app-tabs">';
-    tabs.forEach(function (tab) {
-        var activeClass = (tab.id === activeTab) ? 'active' : '';
-        var icon = FOOTER_ICONS[tab.id] || '';
-        footerHtml += '<a href="' + tab.href + '" class="tab-btn ' + activeClass + '" style="position:relative;">' +
-            '<span class="tab-icon">' + icon + '</span>' + escapeHtml(tab.name) + '</a>';
-    });
-    footerHtml += '</div>';
-
-    var footerContainer = document.getElementById('footer-container');
-    if (footerContainer) footerContainer.innerHTML = footerHtml;
-}
-
-// ============================================================
-// 未读消息
-// ============================================================
-async function getUnreadChatCount(userId) {
-    if (!userId || !window.sb) return 0;
-    try {
-        var res = await window.sb.from('users').select('last_chat_read_at').eq('id', userId).single();
-        if (res.error) throw res.error;
-        var lastRead = (res.data && res.data.last_chat_read_at) || new Date(0).toISOString();
-        var cnt = await window.sb.from('chats')
-            .select('*', { count: 'exact', head: true })
-            .gt('created_at', lastRead)
-            .neq('user_id', userId);
-        if (cnt.error) throw cnt.error;
-        return cnt.count || 0;
-    } catch (e) { return 0; }
-}
-
-async function updateChatBadge() {
-    var user = getSessionUser();
-    if (!user || !user.id || !window.sb) return;
-    var unread = 0;
-    try { unread = await getUnreadChatCount(user.id); } catch (e) { return; }
-    var footerContainer = document.getElementById('footer-container');
-    if (!footerContainer) return;
-    var chatTab = footerContainer.querySelector('a[href="/liuyanban/chats.html"]');
-    if (!chatTab) return;
-    var old = chatTab.querySelector('.badge');
-    if (old) old.remove();
-    if (unread > 0) {
-        var badge = document.createElement('span');
-        badge.className = 'badge';
-        badge.style.cssText = 'position:absolute;top:-2px;right:15%;background:#e57373;color:#fff;font-size:0.5em;font-weight:700;padding:1px 5px;border-radius:99px;min-width:16px;text-align:center;transform:translateY(-2px);';
-        badge.textContent = unread > 9 ? '9+' : unread;
-        chatTab.appendChild(badge);
-    }
-}
-
-function renderFooter(activeTab) {
-    renderFooterBase(activeTab);
-    if (getSessionUser() && window.sb) updateChatBadge();
-}
-
-async function updateLastChatRead(userId) {
-    if (!userId || !window.sb) return;
-    try {
-        await window.sb.from('users').update({ last_chat_read_at: new Date().toISOString() }).eq('id', userId);
-    } catch (e) {}
-}
-
-// ============================================================
-// 提醒音效
-// ============================================================
-function playReminderSound() {
-    try {
-        var AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        var ctx = new AudioCtx();
-        var osc = ctx.createOscillator();
-        var gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.28);
-        setTimeout(function () { ctx.close(); }, 400);
-    } catch (e) {}
-}
-
-function getSoundEnabled() {
-    return localStorage.getItem('sq_sound_enabled') !== 'false';
-}
-
-// ============================================================
-// 通知横幅
-// ============================================================
-var chatNotificationBanner = null;
-function showChatNotificationBanner() {
-    if (chatNotificationBanner) {
-        chatNotificationBanner.remove();
-        clearTimeout(chatNotificationBanner._timeout);
-    }
-    var banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#2e7d32;color:white;padding:12px 28px;border-radius:50px;z-index:99999;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.3);font-family:"Space Grotesk","PingFang SC",sans-serif;font-weight:600;font-size:0.9em;display:flex;align-items:center;gap:8px;white-space:nowrap;';
-    banner.innerHTML = svgIcon('bell', 18) + '<span>收到一条新消息</span>';
-    banner.addEventListener('click', function () {
-        window.location.href = '/liuyanban/chats.html';
-        banner.remove();
-    });
-    document.body.appendChild(banner);
-    chatNotificationBanner = banner;
-    banner._timeout = setTimeout(function () { banner.remove(); chatNotificationBanner = null; }, 3000);
-}
-
-// ============================================================
-// 全局聊天监听
-// ============================================================
-var globalChatChannel = null;
-var globalChatListenerInitialized = false;
-
-async function initializeGlobalChatListener() {
-    var user = getSessionUser();
-    if (!user || !user.id) return;
-    if (globalChatChannel) {
-        await window.sb.removeChannel(globalChatChannel);
-        globalChatChannel = null;
-        globalChatListenerInitialized = false;
-    }
-    if (globalChatListenerInitialized) return;
-    globalChatChannel = window.sb.channel('global-chats-listener-' + user.id)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, function (payload) {
-            var newMsg = payload.new;
-            if (!newMsg || newMsg.user_id === user.id) return;
-            updateChatBadge();
-            if (getSoundEnabled()) playReminderSound();
-            if (!window.location.href.includes('chats.html')) showChatNotificationBanner();
-        })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chats' }, function () {
-            updateChatBadge();
-        })
-        .subscribe();
-    globalChatListenerInitialized = true;
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeGlobalChatListener);
-} else {
-    initializeGlobalChatListener();
-}
-window.addEventListener('storage', function (e) {
-    if (e.key === 'sq_user_session') initializeGlobalChatListener();
-});
-
-// ============================================================
-// 通知未读红点
-// ============================================================
-async function updateNotificationBadge() {
-    var user = getSessionUser();
-    if (!user || !user.id || !window.sb) return;
-    try {
-        var res = await window.sb.from('notifications')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', user.id)
-            .eq('is_read', false);
-        if (res.error) throw res.error;
-        var footerContainer = document.getElementById('footer-container');
-        if (!footerContainer) return;
-        var profileTab = footerContainer.querySelector('a[href="/liuyanban/profile.html"]');
-        if (!profileTab) return;
-        var old = profileTab.querySelector('.badge');
-        if (old) old.remove();
-        if (res.count > 0) {
-            var badge = document.createElement('span');
-            badge.className = 'badge';
-            badge.style.cssText = 'position:absolute;top:-2px;right:15%;background:#e57373;color:#fff;font-size:0.5em;font-weight:700;padding:1px 5px;border-radius:99px;min-width:16px;text-align:center;transform:translateY(-2px);';
-            badge.textContent = res.count > 9 ? '9+' : res.count;
-            profileTab.appendChild(badge);
         }
-    } catch (e) {}
-}
 
-// ============================================================
-// 顶部横幅
-// ============================================================
-var topBannerTimeout = null;
-function showTopBanner(text) {
-    var old = document.querySelector('.custom-top-banner');
-    if (old) { old.remove(); clearTimeout(topBannerTimeout); }
-    var banner = document.createElement('div');
-    banner.className = 'custom-top-banner';
-    banner.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#2e7d32;color:#fff;padding:12px 28px;border-radius:50px;z-index:99999;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.3);font-family:"Space Grotesk","PingFang SC",sans-serif;font-weight:600;font-size:0.9em;display:flex;align-items:center;gap:8px;white-space:nowrap;';
-    banner.innerHTML = svgIcon('bell', 18) + '<span>' + (text || '收到新消息') + '</span>';
-    banner.addEventListener('click', function () {
-        window.location.href = '/liuyanban/profile.html?view=messages';
-        banner.remove();
-        clearTimeout(topBannerTimeout);
-    });
-    document.body.appendChild(banner);
-    topBannerTimeout = setTimeout(function () { banner.remove(); }, 5000);
-}
+        function formatRelativeTime(isoStr) {
+            var now = new Date(), d = new Date(isoStr), diff = (now - d) / 1000;
+            if (diff < 60) return '刚刚';
+            if (diff < 3600) return Math.floor(diff / 60) + '分钟前';
+            if (diff < 86400) return Math.floor(diff / 3600) + '小时前';
+            if (diff < 172800) return '昨天';
+            if (diff < 604800) return Math.floor(diff / 86400) + '天前';
+            return d.toLocaleString('zh-CN', { month: 'short', day: 'numeric' });
+        }
 
-// ============================================================
-// 站内通知推送
-// ============================================================
-window.pushNotification = window.pushNotification || async function(userId, payload) {
-    if (!window.sb || !userId) return;
-    try {
-        await window.sb.from('notifications').insert([Object.assign({
-            user_id: userId,
-            is_read: false
-        }, payload)]);
-        if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
-    } catch (e) { console.warn('通知发送失败', e); }
-};
+        async function markNotificationRead(id) {
+            try {
+                await window.sb.from('notifications').update({ is_read: true }).eq('id', id);
+                var n = allNotifications.find(function(x) { return x.id === id; });
+                if (n) n.is_read = true;
+                updateUnreadTabCount();
+                if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+            } catch (e) {}
+        }
 
-// ============================================================
-// 举报工具
-// ============================================================
-async function submitReport(reporterId, reportedUserId, contentType, contentId, contentSnapshot, reason, description) {
-    var res = await window.sb.from('reports').insert([{
-        reporter_id: reporterId,
-        reported_user_id: reportedUserId,
-        content_type: contentType,
-        content_id: contentId,
-        content_snapshot: contentSnapshot,
-        reason: reason,
-        description: description || ''
-    }]).select();
-    if (res.error) throw res.error;
-    var report = res.data[0];
+        // ============ 举报处理（带措施选择） ============
+        async function handleReport(reportId, result) {
+            if (result === 'approved') {
+                openMeasureDialog(reportId);
+            } else {
+                showConfirm('驳回举报', '确定驳回此举报吗？举报人会收到通知。', async function() {
+                    try {
+                        await window.sb.from('reports').update({
+                            status: 'rejected',
+                            reviewed_by: currentUser.id,
+                            reviewed_at: new Date().toISOString()
+                        }).eq('id', reportId);
 
-    var adminRes = await window.sb.from('users').select('id').eq('phone', '17355394710').single();
-    if (adminRes.data) {
-        await pushNotification(adminRes.data.id, {
-            type: 'report',
-            notification_type: 'report',
-            report_id: report.id,
-            report_reason: reason,
-            extra_text: contentSnapshot ? contentSnapshot.substring(0, 100) : ''
-        });
-    }
-    return report;
-}
+                        var rRes = await window.sb.from('reports').select('*').eq('id', reportId).single();
+                        if (rRes.error) throw rRes.error;
+                        var report = rRes.data;
+                        var typeText = { post: '帖子', comment: '评论', message: '留言', chat: '聊天消息' }[report.content_type] || '内容';
+                        var snippet = await getFullSnippet(report);
 
-// ============================================================
-// 举报弹窗
-// ============================================================
-function openReportDialog(reportedUserId, contentType, contentId, contentSnapshot) {
-    var old = document.getElementById('reportOverlay');
-    if (old) old.remove();
+                        await window.pushNotification(report.reporter_id, {
+                            type: 'report_result',
+                            notification_type: 'report_result',
+                            extra_text: '你举报的' + typeText + '「' + snippet + '」经审核未违反社区规定，已驳回。'
+                        });
 
-    var overlay = document.createElement('div');
-    overlay.className = 'report-overlay';
-    overlay.id = 'reportOverlay';
+                        showToast('已驳回，举报人已收到通知');
+                        loadNotifications();
+                    } catch (err) { showToast('驳回失败：' + err.message); }
+                });
+            }
+        }
+        window.handleReport = handleReport;
 
-    var typeText = { post: '帖子', comment: '评论', message: '留言', chat: '聊天消息' }[contentType] || '内容';
+        async function getFullSnippet(report) {
+            try {
+                if (report.content_type === 'post') {
+                    var r = await window.sb.from('posts').select('title, content').eq('id', report.content_id).single();
+                    if (r.data) {
+                        var s = (r.data.title || r.data.content || '').replace(/<[^>]*>/g, '').trim();
+                        return s.substring(0, 20) || '（无内容）';
+                    }
+                } else if (report.content_type === 'message') {
+                    var r2 = await window.sb.from('messages').select('text').eq('id', report.content_id).single();
+                    if (r2.data) return (r2.data.text || '').substring(0, 20) || '（无内容）';
+                } else if (report.content_type === 'chat') {
+                    var r3 = await window.sb.from('chats').select('content').eq('id', report.content_id).single();
+                    if (r3.data) return (r3.data.content || '').substring(0, 20) || '（无内容）';
+                } else if (report.content_type === 'comment') {
+                    var r4 = await window.sb.from('post_comments').select('content').eq('id', report.content_id).single();
+                    if (r4.data) return (r4.data.content || '').substring(0, 20) || '（无内容）';
+                }
+            } catch (e) {}
+            var s = (report.content_snapshot || '').replace(/<[^>]*>/g, '').trim();
+            return s.substring(0, 20) || '（无内容）';
+        }
 
-    overlay.innerHTML =
-        '<div class="report-panel">' +
-            '<div class="report-header">' +
-                '<h3>' + svgIcon('flag', 20) + ' 举报' + typeText + '</h3>' +
-                '<button class="report-close" onclick="closeReportDialog()">' + svgIcon('x', 20) + '</button>' +
-            '</div>' +
-            '<div class="report-body">' +
-                '<div class="report-field">' +
-                    '<label>举报原因（必选）</label>' +
-                    '<div class="report-reasons">' +
-                        '<label class="report-reason-option"><input type="radio" name="reportReason" value="色情低俗"> 色情低俗</label>' +
-                        '<label class="report-reason-option"><input type="radio" name="reportReason" value="骚扰辱骂"> 骚扰辱骂</label>' +
-                        '<label class="report-reason-option"><input type="radio" name="reportReason" value="垃圾广告"> 垃圾广告</label>' +
-                        '<label class="report-reason-option"><input type="radio" name="reportReason" value="虚假信息"> 虚假信息</label>' +
-                        '<label class="report-reason-option"><input type="radio" name="reportReason" value="政治敏感"> 政治敏感</label>' +
-                        '<label class="report-reason-option"><input type="radio" name="reportReason" value="其他"> 其他</label>' +
+        function openMeasureDialog(reportId) {
+            var old = document.getElementById('measureOverlay');
+            if (old) old.remove();
+
+            var overlay = document.createElement('div');
+            overlay.id = 'measureOverlay';
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;';
+
+            overlay.innerHTML =
+                '<div style="background:#fff;border-radius:16px;max-width:440px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,0.2);">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px 12px;border-bottom:1px solid #e8f0e8;">' +
+                        '<h3 style="font-size:1.05em;margin:0;display:flex;align-items:center;gap:6px;">' +
+                            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                                '<path d="M9 11l3 3L22 4"/>' +
+                                '<path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>' +
+                            '</svg>' +
+                            '选择处理措施' +
+                        '</h3>' +
+                        '<button id="measureClose" style="background:none;border:none;font-size:1.3em;cursor:pointer;color:#8aaa9a;padding:4px;display:flex;">' +
+                            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+                        '</button>' +
                     '</div>' +
-                '</div>' +
-                '<div class="report-field">' +
-                    '<label>补充说明（选填）</label>' +
-                    '<textarea id="reportDescription" placeholder="请描述具体情况..." maxlength="500"></textarea>' +
-                '</div>' +
-                '<div class="report-field">' +
-                    '<label>被举报内容预览</label>' +
-                    '<div class="report-preview">' + (contentSnapshot ? contentSnapshot.replace(/</g, '&lt;') : '(无内容)') + '</div>' +
-                '</div>' +
-            '</div>' +
-            '<div class="report-footer">' +
-                '<button class="report-cancel" onclick="closeReportDialog()">取消</button>' +
-                '<button class="report-submit" id="reportSubmitBtn">提交举报</button>' +
-            '</div>' +
-        '</div>';
+                    '<div style="padding:16px 20px;overflow-y:auto;flex:1;">' +
+                        '<div style="margin-bottom:14px;">' +
+                            '<label style="display:block;font-size:0.75em;font-weight:600;color:#5a7a6a;margin-bottom:8px;">处理措施（必选）</label>' +
+                            '<div style="display:flex;flex-direction:column;gap:8px;">' +
+                                '<label class="measure-opt" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid #c8e0c8;border-radius:10px;cursor:pointer;font-size:0.9em;font-weight:600;">' +
+                                    '<input type="radio" name="measureType" value="warn" style="accent-color:#2e7d32;"> 警告（发送警告通知）' +
+                                '</label>' +
+                                '<label class="measure-opt" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid #c8e0c8;border-radius:10px;cursor:pointer;font-size:0.9em;font-weight:600;">' +
+                                    '<input type="radio" name="measureType" value="delete" style="accent-color:#2e7d32;"> 删除违规内容' +
+                                '</label>' +
+                                '<label class="measure-opt" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid #c8e0c8;border-radius:10px;cursor:pointer;font-size:0.9em;font-weight:600;">' +
+                                    '<input type="radio" name="measureType" value="ban" style="accent-color:#2e7d32;"> 禁言处理' +
+                                '</label>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div id="banDaysGroup" style="display:none;margin-bottom:14px;">' +
+                            '<label style="display:block;font-size:0.75em;font-weight:600;color:#5a7a6a;margin-bottom:6px;">禁言天数</label>' +
+                            '<input type="number" id="banDays" value="3" min="1" max="3650" style="width:100%;padding:10px 12px;border:2px solid #c8e0c8;border-radius:10px;font-family:inherit;font-size:0.9em;outline:none;box-sizing:border-box;">' +
+                        '</div>' +
+                        '<div style="background:#f5faf5;border:1px solid #e0e0e0;border-radius:8px;padding:10px 12px;font-size:0.78em;color:#5a7a6a;line-height:1.5;">' +
+                            '处理后，举报人和被举报人都会收到站内通知。' +
+                        '</div>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:8px;padding:12px 20px 18px;border-top:1px solid #e8f0e8;">' +
+                        '<button id="measureCancel" style="flex:1;padding:10px;border-radius:10px;border:none;background:#eaf3ea;color:#5a7a6a;font-weight:700;font-size:0.9em;cursor:pointer;font-family:inherit;">取消</button>' +
+                        '<button id="measureOk" style="flex:1;padding:10px;border-radius:10px;border:none;background:#2e7d32;color:#fff;font-weight:700;font-size:0.9em;cursor:pointer;font-family:inherit;">确认处理</button>' +
+                    '</div>' +
+                '</div>';
 
-    document.body.appendChild(overlay);
+            document.body.appendChild(overlay);
 
-    document.getElementById('reportSubmitBtn').onclick = function() {
-        var reasonEl = document.querySelector('input[name="reportReason"]:checked');
-        if (!reasonEl) { showToast('请选择举报原因'); return; }
-        var descEl = document.getElementById('reportDescription');
-        var description = descEl ? descEl.value.trim() : '';
-        doSubmitReport(reportedUserId, contentType, contentId, contentSnapshot, reasonEl.value, description);
-    };
+            var radios = overlay.querySelectorAll('input[name="measureType"]');
+            var banGroup = overlay.querySelector('#banDaysGroup');
 
-    injectReportStyles();
-}
+            radios.forEach(function(r) {
+                r.onchange = function() {
+                    banGroup.style.display = this.value === 'ban' ? 'block' : 'none';
+                    overlay.querySelectorAll('.measure-opt').forEach(function(el) {
+                        el.style.borderColor = '#c8e0c8';
+                        el.style.background = '#fff';
+                    });
+                    this.parentElement.style.borderColor = '#2e7d32';
+                    this.parentElement.style.background = '#e8f5e9';
+                };
+            });
 
-function closeReportDialog() {
-    var el = document.getElementById('reportOverlay');
-    if (el) el.remove();
-}
-
-async function doSubmitReport(reportedUserId, contentType, contentId, contentSnapshot, reason, description) {
-    try {
-        var cu = getSessionUser();
-        if (!cu || !cu.id) { showToast('请先登录'); return; }
-        await submitReport(cu.id, reportedUserId, contentType, contentId, contentSnapshot, reason, description);
-        closeReportDialog();
-        showToast('举报已提交，管理员会尽快处理');
-    } catch (err) {
-        showToast('举报失败：' + err.message);
-    }
-}
-
-function injectReportStyles() {
-    if (document.getElementById('report-dialog-styles')) return;
-    var style = document.createElement('style');
-    style.id = 'report-dialog-styles';
-    style.textContent =
-        '.report-overlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;}' +
-        '.report-panel{background:#fff;border-radius:16px;max-width:460px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(0,0,0,0.2);overflow:hidden;}' +
-        '.report-header{display:flex;justify-content:space-between;align-items:center;padding:18px 20px 12px;border-bottom:1px solid #e8f0e8;}' +
-        '.report-header h3{font-size:1.05em;margin:0;display:flex;align-items:center;gap:8px;}' +
-        '.report-header h3 svg{width:20px;height:20px;color:#e57373;}' +
-        '.report-close{background:none;border:none;cursor:pointer;color:#8aaa9a;padding:4px;display:flex;}' +
-        '.report-close svg{width:20px;height:20px;}' +
-        '.report-body{padding:16px 20px;overflow-y:auto;flex:1;}' +
-        '.report-field{margin-bottom:14px;}' +
-        '.report-field label{display:block;font-size:0.75em;font-weight:600;color:#5a7a6a;margin-bottom:6px;}' +
-        '.report-reasons{display:grid;grid-template-columns:1fr 1fr;gap:6px;}' +
-        '.report-reason-option{display:flex;align-items:center;gap:6px;padding:8px 10px;border:1.5px solid #c8e0c8;border-radius:8px;font-size:0.85em;cursor:pointer;}' +
-        '.report-reason-option input[type="radio"]{accent-color:#2e7d32;}' +
-        '.report-field textarea{width:100%;padding:10px 12px;border:2px solid #c8e0c8;border-radius:10px;font-family:inherit;font-size:0.85em;outline:none;resize:vertical;min-height:70px;box-sizing:border-box;}' +
-        '.report-preview{background:#f5faf5;border:1px solid #e0e0e0;border-radius:8px;padding:10px 12px;font-size:0.8em;color:#5a7a6a;line-height:1.5;max-height:80px;overflow:hidden;}' +
-        '.report-footer{display:flex;gap:8px;padding:12px 20px 18px;border-top:1px solid #e8f0e8;}' +
-        '.report-footer button{flex:1;padding:10px;border-radius:10px;border:none;font-family:inherit;font-weight:700;font-size:0.9em;cursor:pointer;}' +
-        '.report-cancel{background:#eaf3ea;color:#5a7a6a;}' +
-        '.report-submit{background:#e57373;color:#fff;}';
-    document.head.appendChild(style);
-}
-
-window.submitReport = submitReport;
-window.openReportDialog = openReportDialog;
-window.closeReportDialog = closeReportDialog;
-window.doSubmitReport = doSubmitReport;
-
-// ============================================================
-// 头像提醒弹窗
-// ============================================================
-function showAvatarPrompt() {
-    var old = document.getElementById('avatarPromptOverlay');
-    if (old) return;
-
-    var overlay = document.createElement('div');
-    overlay.id = 'avatarPromptOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(30,58,46,0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;animation:apFadeIn 0.3s ease;';
-
-    overlay.innerHTML =
-        '<div style="background:#fff;border-radius:16px;max-width:360px;width:100%;padding:2em;text-align:center;box-shadow:0 8px 32px rgba(46,125,50,0.12);border:1px solid #c8e0c8;animation:apPopIn 0.35s cubic-bezier(0.34,1.56,0.64,1);">' +
-            '<div style="width:72px;height:72px;border-radius:50%;background:#e8f5e9;display:grid;place-items:center;margin:0 auto 0.8em;">' +
-                '<svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-                    '<circle cx="12" cy="12" r="10"/>' +
-                    '<circle cx="12" cy="10" r="3"/>' +
-                    '<path d="M6.168 18.849A4 4 0 0 1 10 16h4a4 4 0 0 1 3.834 2.855"/>' +
-                '</svg>' +
-            '</div>' +
-            '<div style="font-size:1.15em;font-weight:700;color:#1e3a2e;margin-bottom:0.5em;line-height:1.4;">你还没有一个属于自己的标志呢！</div>' +
-            '<div style="font-size:0.9em;color:#5a7a6a;line-height:1.6;margin-bottom:1.4em;">快点为自己设置一个个性头像吧~</div>' +
-            '<div style="display:flex;gap:8px;">' +
-                '<button id="avatarPromptLater" style="flex:1;padding:0.75em;border-radius:10px;border:1.5px solid #c8e0c8;background:transparent;color:#5a7a6a;font-weight:600;font-size:0.9em;cursor:pointer;font-family:inherit;">稍后再说</button>' +
-                '<button id="avatarPromptGo" style="flex:1;padding:0.75em;border-radius:10px;border:none;background:#2e7d32;color:#fff;font-weight:700;font-size:0.9em;cursor:pointer;font-family:inherit;">去设置头像</button>' +
-            '</div>' +
-        '</div>';
-
-    document.body.appendChild(overlay);
-
-    if (!document.getElementById('avatar-prompt-styles')) {
-        var style = document.createElement('style');
-        style.id = 'avatar-prompt-styles';
-        style.textContent =
-            '@keyframes apFadeIn{from{opacity:0}to{opacity:1}}' +
-            '@keyframes apPopIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}';
-        document.head.appendChild(style);
-    }
-
-    document.getElementById('avatarPromptLater').onclick = function() {
-        sessionStorage.setItem('sq_avatar_prompt_shown', '1');
-        overlay.remove();
-    };
-    document.getElementById('avatarPromptGo').onclick = function() {
-        sessionStorage.setItem('sq_avatar_prompt_shown', '1');
-        window.location.href = '/liuyanban/profile.html?view=avatar';
-    };
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
-            sessionStorage.setItem('sq_avatar_prompt_shown', '1');
-            overlay.remove();
+            overlay.querySelector('#measureClose').onclick = function() { overlay.remove(); };
+            overlay.querySelector('#measureCancel').onclick = function() { overlay.remove(); };
+            overlay.querySelector('#measureOk').onclick = async function() {
+                var sel = overlay.querySelector('input[name="measureType"]:checked');
+                if (!sel) { alert('请选择处理措施'); return; }
+                var measure = sel.value;
+                var days = parseInt(overlay.querySelector('#banDays').value) || 3;
+                overlay.remove();
+                await doApproveReport(reportId, measure, days);
+            };
         }
-    });
-}
-window.showAvatarPrompt = showAvatarPrompt;
+        window.openMeasureDialog = openMeasureDialog;
 
-(function autoAvatarCheck() {
-    function tryCheck() {
-        var user = typeof getSessionUser === 'function' ? getSessionUser() : null;
-        if (!user || !user.id) return;
-        if (window.location.pathname.indexOf('profile.html') >= 0) return;
-        if (user.avatar_url && user.avatar_url.indexOf('http') === 0) return;
-        if (sessionStorage.getItem('sq_avatar_prompt_shown') === '1') return;
-        showAvatarPrompt();
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(tryCheck, 900);
+        async function doApproveReport(reportId, measure, banDays) {
+            try {
+                var rRes = await window.sb.from('reports').select('*').eq('id', reportId).single();
+                if (rRes.error) throw rRes.error;
+                var report = rRes.data;
+                var typeText = { post: '帖子', comment: '评论', message: '留言', chat: '聊天消息' }[report.content_type] || '内容';
+                var snippet = await getFullSnippet(report);
+
+                await window.sb.from('reports').update({
+                    status: 'approved',
+                    reviewed_by: currentUser.id,
+                    reviewed_at: new Date().toISOString(),
+                    measure: measure,
+                    ban_days: measure === 'ban' ? banDays : null,
+                    admin_note: measure + (measure === 'ban' ? '（' + banDays + '天）' : '')
+                }).eq('id', reportId);
+
+                var measureText = '';
+                if (measure === 'ban') {
+                    var until = new Date(Date.now() + banDays * 86400000).toISOString();
+                    await window.sb.from('users').update({
+                        banned_reason: '被举报违规',
+                        banned_until: until
+                    }).eq('id', report.reported_user_id);
+                    measureText = '禁言 ' + banDays + ' 天（至 ' + new Date(until).toLocaleString('zh-CN') + '）';
+                } else if (measure === 'delete') {
+                    var tableMap = { post: 'posts', comment: 'post_comments', message: 'messages', chat: 'chats' };
+                    var table = tableMap[report.content_type];
+                    if (table) {
+                        await window.sb.from(table).delete().eq('id', report.content_id);
+                    }
+                    measureText = '删除违规内容';
+                } else if (measure === 'warn') {
+                    measureText = '警告（已发送警告通知）';
+                }
+
+                await window.pushNotification(report.reporter_id, {
+                    type: 'report_result',
+                    notification_type: 'report_result',
+                    extra_text: '你举报的' + typeText + '「' + snippet + '」已被接受并处理，处理措施：' + measureText
+                });
+
+                await window.pushNotification(report.reported_user_id, {
+                    type: 'report_result',
+                    notification_type: 'report_result',
+                    extra_text: '你的' + typeText + '「' + snippet + '」被举报，目前对你采取：' + measureText + '，请文明聊天'
+                });
+
+                showToast('已处理，双方已收到通知');
+                loadNotifications();
+            } catch (err) { showToast('处理失败：' + err.message); }
+        }
+        window.doApproveReport = doApproveReport;
+
+        async function viewReportDetail(reportId) {
+            try {
+                var res = await window.sb.from('reports').select('*').eq('id', reportId).single();
+                if (res.error) throw res.error;
+                var r = res.data;
+                var typeText = { post: '帖子', comment: '评论', message: '留言', chat: '聊天消息' }[r.content_type] || '内容';
+                var snippet = await getFullSnippet(r);
+                var statusText = { pending: '待处理', approved: '已处理', rejected: '已驳回' }[r.status] || r.status;
+                var detailText =
+                    '类型：' + typeText + '\n' +
+                    '内容摘要：' + snippet + '\n' +
+                    '举报原因：' + r.reason + '\n' +
+                    '补充描述：' + (r.description || '无') + '\n' +
+                    '当前状态：' + statusText;
+                showConfirm('举报详情', detailText, function() {});
+            } catch (err) { showToast('加载失败：' + err.message); }
+        }
+        window.viewReportDetail = viewReportDetail;
+
+        function goToFeedbackDetail(fid) {
+            switchView('adminFeedbackView');
+            loadAdminFeedback(fid);
+        }
+        window.goToFeedbackDetail = goToFeedbackDetail;
+
+        document.querySelectorAll('.ntf-tab').forEach(function(tab) {
+            tab.onclick = function() {
+                document.querySelectorAll('.ntf-tab').forEach(function(t) { t.classList.remove('active'); });
+                this.classList.add('active');
+                currentNtfFilter = this.dataset.filter;
+                renderNotifications();
+            };
         });
-    } else {
-        setTimeout(tryCheck, 900);
-    }
-})();
+        document.getElementById('markAllReadBtn').onclick = async function() {
+            await window.sb.from('notifications').update({ is_read: true }).eq('user_id', currentUser.id).eq('is_read', false);
+            showToast('全部已读');
+            loadNotifications();
+            if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+        };
 
-// ============================================================
-// ★ 全局在线状态（Presence）
-// ============================================================
-(function initGlobalPresence(){
-  function startPresence(){
-    var user = (typeof getSessionUser === 'function') ? getSessionUser() : null;
-    if (!user || !user.id) return;
-    if (!window.sb) return;
+        // ============ 反馈模块 ============
+        var allSites = [];
+        var selectedSiteId = null;
+        var fbCurrentTab = 'submit';
 
-    if (window.__globalPresenceChannel) {
-      try { window.sb.removeChannel(window.__globalPresenceChannel); } catch(e){}
-      window.__globalPresenceChannel = null;
-    }
+        async function loadSites() {
+            var res = await window.sb.from('feedback_sites').select('*').order('sort_order', { ascending: true });
+            allSites = res.data || [];
+        }
 
-    var ch = window.sb.channel('sq-chat-online', {
-      config: { presence: { key: user.id } }
-    });
+        async function initFeedbackView() {
+            if (!allSites.length) await loadSites();
+            renderSiteGrid();
+            switchFbTab('submit');
+        }
 
-    ch.on('presence', { event: 'sync' }, function(){});
+        function renderSiteGrid() {
+            var g = document.getElementById('siteGrid');
+            if (!allSites.length) {
+                g.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px 0;grid-column:1/-1;font-size:0.85em;">暂无网站</div>';
+                return;
+            }
+            g.innerHTML = allSites.map(function(s) {
+                return '<div class="site-card' + (selectedSiteId === s.id ? ' selected' : '') + '" data-id="' + s.id + '">' +
+                    '<div class="site-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg></div>' +
+                    '<div class="site-name">' + escapeHtml(s.name) + '</div>' +
+                '</div>';
+            }).join('');
+            g.querySelectorAll('.site-card').forEach(function(el) {
+                el.onclick = function() {
+                    selectedSiteId = this.dataset.id;
+                    g.querySelectorAll('.site-card').forEach(function(x) { x.classList.remove('selected'); });
+                    this.classList.add('selected');
+                };
+            });
+        }
 
-    ch.subscribe(function(status){
-      if (status === 'SUBSCRIBED') {
-        ch.track({
-          user_id: user.id,
-          nickname: user.nickname || '用户',
-          avatar_url: user.avatar_url || '',
-          online_at: new Date().toISOString()
-        });
-        console.log('[presence] 已上线:', user.nickname);
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        setTimeout(startPresence, 3000);
-      }
-    });
+        function switchFbTab(tab) {
+            fbCurrentTab = tab;
+            document.getElementById('fbSubmitPanel').style.display = tab === 'submit' ? 'block' : 'none';
+            document.getElementById('fbMinePanel').style.display = tab === 'mine' ? 'block' : 'none';
+            document.getElementById('fbTabNew').style.color = tab === 'submit' ? 'var(--primary)' : 'var(--text-muted)';
+            document.getElementById('fbTabMine').style.color = tab === 'mine' ? 'var(--primary)' : 'var(--text-muted)';
+            if (tab === 'mine') loadMyFeedback();
+        }
+        document.getElementById('fbTabNew').onclick = function() { switchFbTab('submit'); };
+        document.getElementById('fbTabMine').onclick = function() { switchFbTab('mine'); };
 
-    window.__globalPresenceChannel = ch;
-  }
+        document.getElementById('fbSubmitBtn').onclick = async function() {
+            if (!selectedSiteId) return showToast('请先选择网站');
+            var content = document.getElementById('fbContent').value.trim();
+            if (!content) return showToast('请填写问题描述');
+            var contact = document.getElementById('fbContact').value.trim();
+            var site = allSites.find(function(s) { return s.id === selectedSiteId; });
+            var btn = this;
+            btn.disabled = true; btn.textContent = '提交中...';
+            try {
+                var ins = await window.sb.from('feedback').insert([{
+                    user_id: currentUser.id,
+                    user_nickname: currentUser.nickname,
+                    site_id: selectedSiteId,
+                    site_name: site.name,
+                    content: content,
+                    contact: contact
+                }]).select();
+                if (ins.error) throw ins.error;
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(startPresence, 300); });
-  } else {
-    setTimeout(startPresence, 300);
-  }
-  window.addEventListener('storage', function(e){
-    if (e.key === 'sq_user_session') setTimeout(startPresence, 200);
-  });
-})();
+                var adminRes = await window.sb.from('users').select('id').eq('phone', '17355394710').single();
+                if (adminRes.data) {
+                    await window.pushNotification(adminRes.data.id, {
+                        type: 'feedback', notification_type: 'feedback',
+                        feedback_id: ins.data[0].id,
+                        extra_text: '[' + site.name + '] ' + content.substring(0, 60)
+                    });
+                }
+                showToast('反馈已提交，感谢你的反馈！');
+                document.getElementById('fbContent').value = '';
+                document.getElementById('fbContact').value = '';
+                selectedSiteId = null;
+                renderSiteGrid();
+            } catch (err) { showToast('提交失败：' + err.message); }
+            btn.disabled = false; btn.textContent = '提交反馈';
+        };
 
-// ============================================================
-// ★★★ 封号实时监听 ★★★
-// 数据库 users.banned_until 变化 → 本地 session 立即更新
-// → 触发 sq-ban-changed 事件 → 各页面横幅更新
-// ============================================================
-(function initBanWatcher(){
-  function applyBanUpdate(bannedUntil, bannedReason){
-    var s = getSessionUser();
-    if (!s) return;
-    if ((s.banned_until || null) === (bannedUntil || null) &&
-        (s.banned_reason || null) === (bannedReason || null)) {
-      return; // 无变化，不重复触发
-    }
-    s.banned_until = bannedUntil;
-    s.banned_reason = bannedReason;
-    setSessionUser(s);
+        async function loadMyFeedback() {
+            var c = document.getElementById('myFeedbackList');
+            c.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px 0;font-size:0.85em;">加载中...</div>';
+            var res = await window.sb.from('feedback').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+            var data = res.data || [];
+            if (!data.length) {
+                c.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px 0;font-size:0.85em;">还没有反馈记录</div>';
+                return;
+            }
+            var statusMap = { pending: '待处理', replied: '已回复', resolved: '已解决' };
+            c.innerHTML = data.map(function(f) {
+                return '<div class="fb-item">' +
+                    '<div class="fb-head">' +
+                        '<span class="fb-site">' + escapeHtml(f.site_name) + '</span>' +
+                        '<span class="fb-status ' + f.status + '">' + (statusMap[f.status] || f.status) + '</span>' +
+                    '</div>' +
+                    '<div class="fb-content">' + escapeHtml(f.content) + '</div>' +
+                    (f.admin_reply ? '<div class="fb-reply"><b>管理员回复：</b>' + escapeHtml(f.admin_reply) + '</div>' : '') +
+                    '<div class="fb-time">' + new Date(f.created_at).toLocaleString('zh-CN') + '</div>' +
+                '</div>';
+            }).join('');
+        }
 
-    console.log('[ban] 本地封号状态已更新:', bannedUntil);
+        // ============ 管理员反馈管理 ============
+        var highlightFbId = null;
+        async function loadAdminFeedback(highlightId) {
+            highlightFbId = highlightId || null;
+            var c = document.getElementById('adminFeedbackList');
+            c.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px 0;font-size:0.85em;">加载中...</div>';
+            var res = await window.sb.from('feedback').select('*').order('created_at', { ascending: false });
+            var data = res.data || [];
+            if (!data.length) {
+                c.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px 0;font-size:0.85em;">还没有反馈</div>';
+                return;
+            }
+            var statusMap = { pending: '待处理', replied: '已回复', resolved: '已解决' };
+            c.innerHTML = data.map(function(f) {
+                var isHl = (highlightFbId && f.id === highlightFbId);
+                return '<div class="fb-item" style="' + (isHl ? 'border:2px solid var(--primary);' : '') + '">' +
+                    '<div class="fb-head">' +
+                        '<span class="fb-site">[' + escapeHtml(f.site_name) + '] ' + escapeHtml(f.user_nickname || '匿名') + '</span>' +
+                        '<span class="fb-status ' + f.status + '">' + (statusMap[f.status] || f.status) + '</span>' +
+                    '</div>' +
+                    '<div class="fb-content">' + escapeHtml(f.content) + '</div>' +
+                    (f.contact ? '<div class="fb-time">联系方式：' + escapeHtml(f.contact) + '</div>' : '') +
+                    (f.admin_reply ? '<div class="fb-reply"><b>已回复：</b>' + escapeHtml(f.admin_reply) + '</div>' : '') +
+                    '<div class="fb-time">' + new Date(f.created_at).toLocaleString('zh-CN') + '</div>' +
+                    '<div class="fb-actions">' +
+                        '<button class="btn-reply" onclick="replyFeedback(\'' + f.id + '\')">' + (f.admin_reply ? '重新回复' : '回复') + '</button>' +
+                        '<button class="btn-del" onclick="deleteFeedback(\'' + f.id + '\')">删除</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
 
-    window.dispatchEvent(new CustomEvent('sq-ban-changed', {
-      detail: { banned_until: bannedUntil, banned_reason: bannedReason }
-    }));
+        var replyingFeedbackId = null;
+        function replyFeedback(fid) {
+            replyingFeedbackId = fid;
+            document.getElementById('replyText').value = '';
+            document.getElementById('replyModal').classList.add('active');
+            document.getElementById('replyText').focus();
+        }
+        window.replyFeedback = replyFeedback;
 
-    // 被封禁时弹顶部提示
-    if (bannedUntil && new Date(bannedUntil) > new Date()) {
-      if (typeof showTopBanner === 'function') {
-        showTopBanner('你的账号已被封禁：' + (bannedReason || '违规'));
-      }
-    }
-  }
+        document.getElementById('replyCancel').onclick = function() {
+            document.getElementById('replyModal').classList.remove('active');
+            replyingFeedbackId = null;
+        };
+        document.getElementById('replyOk').onclick = async function() {
+            var txt = document.getElementById('replyText').value.trim();
+            if (!txt) return showToast('请输入回复内容');
+            try {
+                var res = await window.sb.from('feedback').select('*').eq('id', replyingFeedbackId).single();
+                var f = res.data;
+                await window.sb.from('feedback').update({ admin_reply: txt, status: 'replied' }).eq('id', replyingFeedbackId);
+                if (f && f.user_id) {
+                    await window.pushNotification(f.user_id, {
+                        type: 'feedback', notification_type: 'feedback',
+                        feedback_id: replyingFeedbackId,
+                        extra_text: '管理员回复了你的反馈：' + txt.substring(0, 60)
+                    });
+                }
+                document.getElementById('replyModal').classList.remove('active');
+                replyingFeedbackId = null;
+                showToast('回复已发送');
+                loadAdminFeedback();
+            } catch (err) { showToast('回复失败：' + err.message); }
+        };
 
-  function startWatch(){
-    var user = (typeof getSessionUser === 'function') ? getSessionUser() : null;
-    if (!user || !user.id) return;
-    if (!window.sb) return;
+        async function deleteFeedback(fid) {
+            showConfirm('删除反馈', '确定删除此条反馈吗？', async function() {
+                try {
+                    var r = await window.sb.from('feedback').delete().eq('id', fid);
+                    if (r.error) throw r.error;
+                    showToast('已删除');
+                    loadAdminFeedback();
+                } catch (err) { showToast('删除失败：' + err.message); }
+            });
+        }
+        window.deleteFeedback = deleteFeedback;
 
-    if (window.__banWatchChannel) {
-      try { window.sb.removeChannel(window.__banWatchChannel); } catch(e){}
-      window.__banWatchChannel = null;
-    }
+        // ============ 网站管理 ============
+        async function loadAdminSites() {
+            await loadSites();
+            renderAdminSites();
+        }
+        function renderAdminSites() {
+            var c = document.getElementById('adminSitesList');
+            if (!allSites.length) {
+                c.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px 0;font-size:0.85em;">暂无网站，请在下方添加</div>';
+                return;
+            }
+            c.innerHTML = allSites.map(function(s) {
+                return '<div class="admin-site-item">' +
+                    '<span class="site-name">' + escapeHtml(s.name) + '</span>' +
+                    '<div class="site-actions">' +
+                        '<button onclick="deleteSite(\'' + s.id + '\',\'' + escapeHtml(s.name).replace(/'/g, "\\'") + '\')">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>' +
+                        '删除</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+        document.getElementById('addSiteBtn').onclick = async function() {
+            var name = document.getElementById('newSiteName').value.trim();
+            if (!name) return showToast('请输入网站名称');
+            try {
+                var maxOrder = allSites.reduce(function(m, s) { return Math.max(m, s.sort_order || 0); }, 0);
+                await window.sb.from('feedback_sites').insert([{ name: name, sort_order: maxOrder + 1 }]);
+                document.getElementById('newSiteName').value = '';
+                showToast('已添加');
+                await loadSites();
+                renderAdminSites();
+            } catch (err) { showToast('添加失败：' + err.message); }
+        };
+        async function deleteSite(sid, name) {
+            showConfirm('删除网站', '确定删除「' + name + '」吗？', async function() {
+                await window.sb.from('feedback_sites').delete().eq('id', sid);
+                showToast('已删除');
+                await loadSites();
+                renderAdminSites();
+            });
+        }
+        window.deleteSite = deleteSite;
 
-    // 1) Realtime 订阅：秒级生效
-    var ch = window.sb.channel('sq-ban-watch-' + user.id)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'users',
-        filter: 'id=eq.' + user.id
-      }, function(payload){
-        var n = payload.new || {};
-        applyBanUpdate(n.banned_until || null, n.banned_reason || null);
-      })
-      .subscribe();
+        // ============ 初始化 ============
+        (function init() {
+            var urlParams = new URLSearchParams(window.location.search);
+            var view = urlParams.get('view');
+            if (view === 'messages') {
+                switchView('messagesView'); loadNotifications();
+            } else if (view === 'feedback') {
+                switchView('feedbackView'); initFeedbackView();
+            } else if (view === 'adminfeedback' && isAdmin) {
+                switchView('adminFeedbackView'); loadAdminFeedback();
+            } else if (view === 'sites' && isAdmin) {
+                switchView('manageSitesView'); loadAdminSites();
+            } else if (view === 'about') {
+                switchView('aboutView');
+            } else if (view === 'avatar' || view === 'edit') {
+                switchView('profileEditView');
+            } else {
+                window.location.href = '/liuyanban/user.html';
+            }
 
-    window.__banWatchChannel = ch;
+            if (typeof updateNotificationBadge === 'function') {
+                updateNotificationBadge();
+            }
+        })();
 
-    // 2) 每 8 秒轮询兜底（Realtime 挂了也能生效）
-    if (window.__banPollTimer) clearInterval(window.__banPollTimer);
-    window.__banPollTimer = setInterval(async function(){
-      var u = getSessionUser();
-      if (!u || !u.id) return;
-      try {
-        var res = await window.sb.from('users')
-          .select('banned_until, banned_reason')
-          .eq('id', u.id)
-          .single();
-        if (res.error || !res.data) return;
-        applyBanUpdate(res.data.banned_until || null, res.data.banned_reason || null);
-      } catch(e){}
-    }, 8000);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(startWatch, 500); });
-  } else {
-    setTimeout(startWatch, 500);
-  }
-  window.addEventListener('storage', function(e){
-    if (e.key === 'sq_user_session') setTimeout(startWatch, 300);
-  });
-})();
-
-// ============================================================
-// ★ 通用封号横幅工具
-// 页面只要有一个 id="bannedBanner" 的元素，就会自动控制显隐
-// 更新显示内容的 span id="bannedUntilDisplay"
-// ============================================================
-(function initGlobalBanBanner(){
-  function updateBanner(){
-    var banner = document.getElementById('bannedBanner');
-    if (!banner) return;
-    var user = getSessionUser();
-    var isBanned = !!(user && user.banned_until && new Date(user.banned_until) > new Date());
-
-    if (isBanned) {
-      banner.classList.add('active');
-      banner.style.display = 'block';
-      var display = document.getElementById('bannedUntilDisplay');
-      if (display) {
-        display.textContent = new Date(user.banned_until).toLocaleString('zh-CN', {
-          year: 'numeric', month: 'long', day: 'numeric',
-          hour: '2-digit', minute: '2-digit'
-        });
-      }
-      // 禁用发帖按钮
-      ['newPostBtn','floatingPostBtn'].forEach(function(id){
-        var el = document.getElementById(id);
-        if (el) { el.style.opacity = '0.5'; el.style.pointerEvents = 'none'; }
-      });
-    } else {
-      banner.classList.remove('active');
-      banner.style.display = 'none';
-      ['newPostBtn','floatingPostBtn'].forEach(function(id){
-        var el = document.getElementById(id);
-        if (el) { el.style.opacity = ''; el.style.pointerEvents = ''; }
-      });
-    }
-  }
-
-  // 初次渲染
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(updateBanner, 100); });
-  } else {
-    setTimeout(updateBanner, 100);
-  }
-
-  // 封号变化时刷新
-  window.addEventListener('sq-ban-changed', function(){ setTimeout(updateBanner, 50); });
-
-  // 页面切换可见时刷新一次
-  document.addEventListener('visibilitychange', function(){
-    if (!document.hidden) updateBanner();
-  });
-
-  // 暴露给页面主动调用
-  window.updateGlobalBanBanner = updateBanner;
-})();
+        document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+    </script>
+</body>
+</html>
