@@ -47,7 +47,10 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .hero-stat .lbl{font-size:.72em;opacity:.85}
 .hero-line2{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:.72em;opacity:.85}
 .hero-no{opacity:.9}
-.hero-gender{background:rgba(255,255,255,.25);padding:1px 8px;border-radius:99px;font-size:.92em}
+.hero-gender{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:.92em}
+.hero-gender.male{background:rgba(64,150,255,.9);color:#fff}
+.hero-gender.female{background:rgba(255,105,160,.9);color:#fff}
+.hero-gender svg{display:block}
 .hero-bio{font-size:.84em;opacity:.92;margin-top:14px;line-height:1.6;position:relative;z-index:1;word-break:break-word;padding-top:12px;border-top:1px solid rgba(255,255,255,.2)}
 .hero-actions{display:flex;gap:10px;margin-top:16px;position:relative;z-index:1}
 .btn-follow{flex:1;padding:11px;border:2px solid #fff;border-radius:10px;font-weight:800;font-family:inherit;font-size:.9em;cursor:pointer;background:#fff;color:var(--primary)}
@@ -103,6 +106,10 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .app-header .user-area .avatar{width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;background-size:cover;background-position:center}
 .app-header .user-area .user-name{font-size:.85em;font-weight:600}
 .app-header .user-area .chevron{font-size:.7em;color:var(--text-light)}
+/* 个人页设置齿轮靠右 */
+#header-container .header-settings-btn{margin-left:auto;}
+#header-container .header-settings-btn{margin-left:auto;}
+#header-container .app-header{justify-content:flex-start;}
 #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.82);color:#fff;padding:10px 20px;border-radius:10px;font-size:.85em;opacity:0;pointer-events:none;transition:all .3s;z-index:9999;white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -227,7 +234,11 @@ async function render(){
     '<div class="hero-stat"><span class="num">' + counts.following + '</span><span class="lbl">关注</span></div>' +
     '</div>';
   var line2 = '<span class="hero-no">ID: ' + escapeHtml(viewingUser.user_no || viewingUser.id.slice(0,8)) + '</span>';
-  if (viewingUser.gender) line2 += '<span class="hero-gender">' + escapeHtml(viewingUser.gender) + '</span>';
+  if (viewingUser.gender === '男') {
+    line2 += '<span class="hero-gender male" title="男"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="14" r="5"/><line x1="19" y1="5" x2="13.5" y2="10.5"/><polyline points="15 5 19 5 19 9"/></svg></span>';
+  } else if (viewingUser.gender === '女') {
+    line2 += '<span class="hero-gender female" title="女"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5"/><line x1="12" y1="14" x2="12" y2="22"/><line x1="9" y1="19" x2="15" y2="19"/></svg></span>';
+  }
   hero += '<div class="hero-line2">' + line2 + '</div>';
   hero += '</div></div>';
   hero += '<div class="hero-bio">' + (viewingUser.bio ? escapeHtml(viewingUser.bio) : '这个人很懒，没有写简介') + '</div>';
@@ -241,7 +252,7 @@ async function render(){
   hero += '</div></div>';
 
   // 帖子列表
-  var postsHtml = '<div class="tabs"><button class="tab active">他的帖子 (' + myPosts.length + ')</button></div>';
+  var postsHtml = '<div class="tabs"><button class="tab active">' + (isSelf ? '我的帖子' : '他的帖子') + ' (' + myPosts.length + ')</button></div>';
   if (myPosts.length) {
     postsHtml += myPosts.map(function(p){
       return '<div class="post-card" onclick="goPost(\'' + p.id + '\')">' +
@@ -340,15 +351,17 @@ document.getElementById('editAvatarInput').onchange = async function(e){
   if (typeof renderHeader === "function") renderHeader("用户主页", "profile");
   // 个人页面：把顶部右上角的头像换成"设置"齿轮（仅本页）
   try{
-    var hc = document.getElementById("header-container");
-    var ua = hc ? hc.querySelector(".user-area") : null;
-    if (ua) {
+    var appHeader = document.querySelector("#header-container .app-header");
+    var ua = appHeader ? appHeader.querySelector(".user-area") : null;
+    if (ua) ua.remove();
+    if (appHeader) {
       var btn = document.createElement("button");
       btn.className = "header-settings-btn";
       btn.title = "设置";
       btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
       btn.onclick = function(){ location.href = "/liuyanban/profile.html"; };
-      ua.parentNode.replaceChild(btn, ua);
+      btn.style.marginLeft = "auto";
+      appHeader.appendChild(btn);
     }
   }catch(e){}
 })();
