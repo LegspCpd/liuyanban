@@ -155,11 +155,7 @@ function renderHeader(title, activeTab) {
         } else {
             avatarContent = displayName.charAt(0).toUpperCase();
         }
-        userAreaHtml = '<div class="user-area" onclick="window.location.href=\'/liuyanban/user.html\'">' +
-            '<div class="avatar" style="' + avatarStyle + '">' + avatarContent + '</div>' +
-            '<span class="user-name">' + escapeHtml(displayName) + '</span>' +
-            '<span class="chevron">▾</span>' +
-            '</div>';
+        userAreaHtml = '<button class="header-settings-btn" title="设置" onclick="window.location.href=\'/liuyanban/profile.html\'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>';
     } else {
         userAreaHtml = '<div class="user-area" onclick="window.location.href=\'/liuyanban/index.html\'">登录</div>';
     }
@@ -187,7 +183,10 @@ var FOOTER_ICONS = {
     style.textContent =
         '.tab-btn .tab-icon{display:flex;align-items:center;justify-content:center;width:1.7em;height:1.7em;line-height:1;}' +
         '.tab-btn .tab-icon svg{width:100%;height:100%;display:block;stroke:currentColor;fill:none;}' +
-        '.tab-btn .tab-icon svg path,.tab-btn .tab-icon svg circle{stroke:currentColor;}';
+        '.tab-btn .tab-icon svg path,.tab-btn .tab-icon svg circle{stroke:currentColor;}' +
+        '.header-settings-btn{background:none;border:none;cursor:pointer;padding:6px;color:var(--text,#1e3a2e);display:flex;border-radius:8px;}' +
+        '.header-settings-btn svg{width:24px;height:24px;stroke:currentColor;fill:none;}' +
+        '.header-settings-btn:hover{background:rgba(46,125,50,.1);}';
     document.head.appendChild(style);
 })();
 
@@ -196,7 +195,7 @@ function renderFooterBase(activeTab) {
         { id: 'posts', name: '帖子', href: '/liuyanban/posts.html' },
         { id: 'messages', name: '留言板', href: '/liuyanban/messages.html' },
         { id: 'chats', name: '消息', href: '/liuyanban/chats.html' },
-        { id: 'profile', name: '个人', href: '/liuyanban/profile.html' }
+        { id: 'profile', name: '个人', href: '/liuyanban/user.html' }
     ];
 
     var footerHtml = '<div class="app-tabs">';
