@@ -118,8 +118,17 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .app-header .user-area .chevron{font-size:.7em;color:var(--text-light)}
 /* 个人页设置齿轮靠右 */
 #header-container .header-settings-btn{margin-left:auto;}
-#header-container .header-settings-btn{margin-left:auto;}
-#header-container .app-header{justify-content:flex-start;}
+
+/* 确认弹窗 */
+.custom-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:2000;padding:20px}
+.custom-modal.active{display:flex}
+.modal-box{background:var(--bg-card);padding:24px;border-radius:var(--radius);max-width:400px;width:100%;box-shadow:var(--shadow)}
+.modal-title{font-size:1.2em;font-weight:700;margin-bottom:8px;color:var(--text)}
+.modal-body{font-size:.95em;color:var(--text-muted);line-height:1.6;margin-bottom:16px;white-space:pre-wrap}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+.modal-actions button{padding:9px 20px;border:none;border-radius:8px;font-weight:700;font-family:inherit;font-size:.85em;cursor:pointer}
+.modal-actions .btn-danger{background:var(--danger);color:#fff}
+.modal-actions .btn-secondary{background:var(--bg-input);color:var(--text-muted)}
 #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.82);color:#fff;padding:10px 20px;border-radius:10px;font-size:.85em;opacity:0;pointer-events:none;transition:all .3s;z-index:9999;white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -156,6 +165,16 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   </div>
 </div>
 
+<div class="custom-modal" id="confirmModal">
+  <div class="modal-box">
+    <div class="modal-title" id="confirmTitle"></div>
+    <div class="modal-body" id="confirmBody"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="confirmCancel">取消</button>
+      <button class="btn-danger" id="confirmOk">确定</button>
+    </div>
+  </div>
+</div>
 <div id="toast"></div>
 <script src="/liuyanban/common.js"></script>
 <script>
@@ -347,10 +366,29 @@ async function saveProfile(){
   }catch(e){ showToast('保存失败：' + e.message); }
 }
 window.saveProfile = saveProfile;
+function showConfirm(title, body, onOk) {
+  var m = document.getElementById('confirmModal');
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmBody').textContent = body;
+  m.classList.add('active');
+  var cancel = document.getElementById('confirmCancel');
+  var ok = document.getElementById('confirmOk');
+  var cleanup = function() { m.classList.remove('active'); cancel.onclick = null; ok.onclick = null; };
+  cancel.onclick = cleanup;
+  ok.onclick = function() { if (onOk) onOk(); cleanup(); };
+}
 function doLogout(){
-  if(!confirm('确定要退出登录吗？')) return;
-  try{ localStorage.removeItem('sq_user_session'); }catch(e){}
-  location.href = '/liuyanban/index.html';
+  if (typeof showConfirm === 'function') {
+    showConfirm('退出登录', '确定要退出登录吗？', function(){
+      try{ localStorage.removeItem('sq_user_session'); }catch(e){}
+      location.href = '/liuyanban/index.html';
+    });
+  } else {
+    if(confirm('确定要退出登录吗？')){
+      try{ localStorage.removeItem('sq_user_session'); }catch(e){}
+      location.href = '/liuyanban/index.html';
+    }
+  }
 }
 window.doLogout = doLogout;
 
