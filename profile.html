@@ -689,12 +689,14 @@
         document.getElementById('goToAdminFeedback').onclick = function() { switchView('adminFeedbackView'); loadAdminFeedback(); };
         document.getElementById('goToManageSites').onclick = function() { switchView('manageSitesView'); loadAdminSites(); };
         document.getElementById('goToAbout').onclick = function() { switchView('aboutView'); };
-        document.getElementById('backToSettings').onclick = function() { switchView('settingsView'); };
-        document.getElementById('backToSettingsFromMsg').onclick = function() { switchView('settingsView'); };
-        document.getElementById('backToSettingsFromFb').onclick = function() { switchView('settingsView'); };
-        document.getElementById('backToSettingsFromAdminFb').onclick = function() { switchView('settingsView'); };
-        document.getElementById('backToSettingsFromSites').onclick = function() { switchView('settingsView'); };
-        document.getElementById('backToSettingsFromAbout').onclick = function() { switchView('settingsView'); };
+        function backToUser(){ window.location.href = '/liuyanban/user.html'; }
+        window.backToUser = backToUser;
+        document.getElementById('backToSettings').onclick = backToUser;
+        document.getElementById('backToSettingsFromMsg').onclick = backToUser;
+        document.getElementById('backToSettingsFromFb').onclick = backToUser;
+        document.getElementById('backToSettingsFromAdminFb').onclick = backToUser;
+        document.getElementById('backToSettingsFromSites').onclick = backToUser;
+        document.getElementById('backToSettingsFromAbout').onclick = backToUser;
 
         // ============ 音效开关 ============
         var soundToggle = document.getElementById('soundToggle');
