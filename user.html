@@ -78,6 +78,9 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .post-card .post-body{font-size:.82em;color:var(--text-muted);line-height:1.5;max-height:60px;overflow:hidden}
 .post-card .post-foot{font-size:.7em;color:var(--text-light);margin-top:8px;display:flex;gap:12px}
 .empty{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:.85em}
+.loading-state{text-align:center;padding:40px 20px}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* 编辑弹窗 */
 .edit-modal{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px}
@@ -136,7 +139,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 <div id="mainApp">
   <div id="header-container"></div>
   <div class="page-content" id="pageContent">
-    <div class="empty">加载中…</div>
+    <div class="loading-state"><div class="spinner"></div>加载中...</div>
   </div>
   <div class="footer-container" id="footer-container"></div>
 </div>
