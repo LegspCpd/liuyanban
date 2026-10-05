@@ -298,7 +298,7 @@ async function render(){
     postsHtml += myPosts.map(function(p){
       return '<div class="post-card" onclick="goPost(\'' + p.id + '\')">' +
         (p.title ? '<div class="post-title">' + escapeHtml(p.title) + '</div>' : '') +
-        '<div class="post-body">' + escapeHtml((p.content||'').substring(0,120)) + '</div>' +
+        '<div class="post-body">' + escapeHtml(String(p.content||'').replace(/<[^>]*>/g,'').substring(0,120)) + '</div>' +
         '<div class="post-foot"><span>' + new Date(p.created_at).toLocaleDateString('zh-CN') + '</span></div></div>';
     }).join('');
   } else {
@@ -308,7 +308,7 @@ async function render(){
   $('pageContent').innerHTML = hero + navHtml + postsHtml;
 }
 
-function goPost(id){ location.href = '/liuyanban/posts.html#post-' + id; }
+function goPost(id){ location.href = '/liuyanban/posts.html?post=' + id; }
 window.goPost = goPost;
 async function toggleFollow(){
   if (isSelf) return;

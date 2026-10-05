@@ -1040,7 +1040,13 @@ async function loadAllData() {
 
 (function init() {
     if (!currentUser || !currentUser.id) window.location.href = '/liuyanban/index.html';
-    loadGlobalRoles().then(function(){ loadCategories().then(loadAllData); });
+    loadGlobalRoles().then(function(){ loadCategories().then(function(){
+      loadAllData().then(function(){
+        // 若带 ?post=xxx 参数，自动打开该帖子详情
+        var p = new URLSearchParams(location.search).get('post');
+        if (p) setTimeout(function(){ openPostDetail(p); }, 400);
+      });
+    }); });
 
     window.sb.channel('public-posts')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, function() { loadAllData(); })
