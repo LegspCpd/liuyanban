@@ -678,8 +678,12 @@
             bb.classList.add('visible');
             hs.textContent = (id === 'settingsView') ? '· 个人中心' : '· ' + (viewTitles[id] || '');
         }
+        // 是否通过 URL 参数直达子视图（从 user.html 六宫格进入）
+        var cameFromUrl = !!new URLSearchParams(location.search).get('view');
         function goBack() {
-            // 在子视图 → 回设置中心；在设置中心 → 回用户主页
+            // 从 user.html 直达子视图 → 直接返回 user.html
+            if (cameFromUrl) { window.location.href = '/liuyanban/user.html'; return; }
+            // 页面内自己点进子视图 → 回设置中心；否则回用户主页
             if (currentView !== 'settingsView') { switchView('settingsView'); }
             else { window.location.href = '/liuyanban/user.html'; }
         }
