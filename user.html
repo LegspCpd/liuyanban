@@ -58,6 +58,15 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .btn-edit-profile{flex:1;padding:11px;border:2px solid #fff;border-radius:10px;font-weight:800;font-family:inherit;font-size:.9em;cursor:pointer;background:#fff;color:var(--primary)}
 
 
+/* 六宫格导航 */
+.nav-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 4px}
+.nav-cell{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:all .18s;text-align:center}
+.nav-cell:hover{border-color:var(--primary);background:var(--primary-bg)}
+.nav-cell:active{transform:scale(.97)}
+.nav-cell .ic{width:40px;height:40px;border-radius:50%;background:var(--primary-bg);display:grid;place-items:center;color:var(--primary)}
+.nav-cell .ic svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav-cell .tx{font-size:.78em;font-weight:700;color:var(--text)}
+.nav-cell .sub{font-size:.62em;color:var(--text-light);margin-top:-4px}
 /* Tab */
 .tabs{display:flex;gap:8px;margin:16px 0 12px;border-bottom:1px solid var(--border)}
 .tab{padding:10px 4px;border:none;background:none;font-family:inherit;font-size:.88em;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-right:8px}
@@ -84,6 +93,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .edit-actions button{flex:1;padding:11px;border:none;border-radius:10px;font-weight:700;font-family:inherit;font-size:.88em;cursor:pointer}
 .edit-actions .cancel{background:var(--bg-input);color:var(--text-muted)}
 .edit-actions .ok{background:var(--primary);color:#fff}
+.logout-btn{width:100%;margin-top:10px;padding:11px;border:1px solid var(--danger);border-radius:10px;background:var(--danger-bg);color:var(--danger);font-weight:700;font-family:inherit;font-size:.88em;cursor:pointer}
 
 /* 头像上传 */
 .avatar-edit{display:flex;align-items:center;gap:14px;margin-bottom:14px}
@@ -142,6 +152,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       <button class="cancel" onclick="closeEdit()">取消</button>
       <button class="ok" onclick="saveProfile()">保存</button>
     </div>
+    <button class="logout-btn" onclick="doLogout()">退出登录</button>
   </div>
 </div>
 
@@ -251,6 +262,18 @@ async function render(){
   }
   hero += '</div></div>';
 
+  // 六宫格导航（仅看自己时）
+  var navHtml = '';
+  if (isSelf) {
+    var isAdmin = (currentUser && currentUser.phone === '17355394710');
+    navHtml = '<div class="nav-grid">' +
+      '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=messages\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H5.17L4 17.17V4z"/></svg></div><div class="tx">消息中心</div></div>' +
+      '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=feedback\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="tx">反馈 Bug</div></div>' +
+      '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=about\'"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><div class="tx">关于我们</div></div>' +
+      (isAdmin ? '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=adminfeedback\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 3h18v14H5l-2 2V3z"/><path d="M8 8h8M8 12h5"/></svg></div><div class="tx">反馈管理</div></div>' : '') +
+      (isAdmin ? '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=sites\'"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="tx">网站管理</div></div>' : '') +
+      '</div>';
+  }
   // 帖子列表
   var postsHtml = '<div class="tabs"><button class="tab active">' + (isSelf ? '我的帖子' : '他的帖子') + ' (' + myPosts.length + ')</button></div>';
   if (myPosts.length) {
@@ -264,7 +287,7 @@ async function render(){
     postsHtml += '<div class="empty">还没有发过帖子</div>';
   }
 
-  $('pageContent').innerHTML = hero + postsHtml;
+  $('pageContent').innerHTML = hero + navHtml + postsHtml;
 }
 
 function goPost(id){ location.href = '/liuyanban/posts.html#post-' + id; }
@@ -324,6 +347,12 @@ async function saveProfile(){
   }catch(e){ showToast('保存失败：' + e.message); }
 }
 window.saveProfile = saveProfile;
+function doLogout(){
+  if(!confirm('确定要退出登录吗？')) return;
+  try{ localStorage.removeItem('sq_user_session'); }catch(e){}
+  location.href = '/liuyanban/index.html';
+}
+window.doLogout = doLogout;
 
 // 头像上传
 document.getElementById('editAvatarInput').onchange = async function(e){
@@ -349,21 +378,6 @@ document.getElementById('editAvatarInput').onchange = async function(e){
   if (typeof renderFooter === "function") renderFooter("profile");
   await render();
   if (typeof renderHeader === "function") renderHeader("用户主页", "profile");
-  // 个人页面：把顶部右上角的头像换成"设置"齿轮（仅本页）
-  try{
-    var appHeader = document.querySelector("#header-container .app-header");
-    var ua = appHeader ? appHeader.querySelector(".user-area") : null;
-    if (ua) ua.remove();
-    if (appHeader) {
-      var btn = document.createElement("button");
-      btn.className = "header-settings-btn";
-      btn.title = "设置";
-      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
-      btn.onclick = function(){ location.href = "/liuyanban/profile.html"; };
-      btn.style.marginLeft = "auto";
-      appHeader.appendChild(btn);
-    }
-  }catch(e){}
 })();
 
 </script>

@@ -1379,10 +1379,16 @@
             var urlParams = new URLSearchParams(window.location.search);
             var view = urlParams.get('view');
             if (view === 'messages') {
-                switchView('messagesView');
-                loadNotifications();
+                switchView('messagesView'); loadNotifications();
+            } else if (view === 'feedback') {
+                switchView('feedbackView'); initFeedbackView();
+            } else if (view === 'adminfeedback' && isAdmin) {
+                switchView('adminFeedbackView'); loadAdminFeedback();
+            } else if (view === 'sites' && isAdmin) {
+                switchView('manageSitesView'); loadAdminSites();
+            } else if (view === 'about') {
+                switchView('aboutView');
             } else if (view === 'avatar' || view === 'edit') {
-                // 从头像提醒弹窗直达更新资料页
                 switchView('profileEditView');
             } else {
                 switchView('settingsView');
