@@ -662,26 +662,27 @@
         updateHeader();
 
         // ============ 视图切换 ============
+        var currentView = 'settingsView';
         var viewTitles = {
             settingsView: '个人中心', profileEditView: '更新资料', messagesView: '消息中心',
             feedbackView: '反馈 Bug', adminFeedbackView: '反馈管理',
             manageSitesView: '网站管理', aboutView: '关于我们'
         };
         function switchView(id) {
+            currentView = id;
             document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
             var t = document.getElementById(id);
             if (t) t.classList.add('active');
             var bb = document.getElementById('headerBackBtn');
             var hs = document.getElementById('headerSub');
-            if (id === 'settingsView') {
-                bb.classList.remove('visible');
-                hs.textContent = '· 个人中心';
-            } else {
-                bb.classList.add('visible');
-                hs.textContent = '· ' + (viewTitles[id] || '');
-            }
+            bb.classList.add('visible');
+            hs.textContent = (id === 'settingsView') ? '· 个人中心' : '· ' + (viewTitles[id] || '');
         }
-        function goBack() { switchView('settingsView'); }
+        function goBack() {
+            // 在子视图 → 回设置中心；在设置中心 → 回用户主页
+            if (currentView !== 'settingsView') { switchView('settingsView'); }
+            else { window.location.href = '/liuyanban/user.html'; }
+        }
         window.goBack = goBack;
 
         if (isAdmin) {
