@@ -415,7 +415,10 @@ document.getElementById('editAvatarInput').onchange = async function(e){
 
 // ====== 初始化 ======
 (async function init(){
-  await render();  // 先渲染，确定 isSelf
+  // 先渲染顶部 + 底部导航（加载期间可见，避免导航栏闪烁/消失）
+  if (typeof renderHeader === "function") renderHeader("用户主页", "profile");
+  if (typeof renderFooter === "function") renderFooter("profile");
+  await render();  // 再渲染内容，确定 isSelf
   if (isSelf) {
     // 看自己：保留底部导航 + 顶部头像
     if (typeof renderFooter === "function") renderFooter("profile");
