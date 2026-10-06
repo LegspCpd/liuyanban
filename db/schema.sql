@@ -1,0 +1,351 @@
+-- ============================================================================
+--  Seven戚 · 数据库 Schema
+--  ---------------------------------------------------------------------------
+--  目标平台 : Supabase (PostgreSQL)
+--  特性     : 幂等 —— 可重复执行，不会覆盖已有数据
+--  维护方式 : 本文件由 GitHub Actions 自动执行（见 .github/workflows/database.yml）
+--             也可在 Supabase SQL Editor 中手工粘贴执行
+--
+--  说明     : 默认【不启用 RLS】，与现有线上库保持一致，保证前端 anon key
+--             直连即可读写。需要收紧权限时，请单独执行 db/rls-hardening.sql。
+-- ============================================================================
+
+-- ---------------------------------------------------------------------------
+-- 0. 扩展
+-- ---------------------------------------------------------------------------
+create extension if not exists pgcrypto;
+
+-- ---------------------------------------------------------------------------
+-- 1. 用户
+-- ---------------------------------------------------------------------------
+create table if not exists public.users (
+    id                bigint generated always as identity primary key,
+    auth_id           uuid unique,                       -- Supabase Auth 用户 ID
+    phone             text        not null unique,      -- 登录手机号（登录时映射为 {phone}@sq.local）
+    password          text,                              -- 遗留字段：老用户迁移前的哈希，迁移完可置空
+    nickname          text        not null,
+    avatar_url        text,
+    user_no           text unique,                       -- 对外编号，user.html?u=xxx
+    bio               text,
+    gender            text,
+    birthday          date,
+    last_chat_read_at timestamptz,                       -- 聊天未读红点的时间基准
+    banned_until      timestamptz,                       -- 封禁到期时间，null = 未封禁
+    banned_reason     text,
+    created_at        timestamptz not null default now()
+);
+
+-- ---------------------------------------------------------------------------
+-- 2. 帖子 / 评论 / 分类 / 投票
+-- ---------------------------------------------------------------------------
+create table if not exists public.categories (
+    id         bigint generated always as identity primary key,
+    name       text        not null,
+    sort_order integer     not null default 0,
+    is_public  boolean     not null default true,
+    created_at timestamptz not null default now()
+);
+
+create table if not exists public.posts (
+    id          bigint generated always as identity primary key,
+    title       text        not null,
+    content     text        not null default '',
+    author      text,
+    user_id     bigint references public.users (id) on delete cascade,
+    category_id bigint references public.categories (id) on delete set null,
+    is_official boolean     not null default false,      -- 官方发帖
+    is_pinned   boolean     not null default false,      -- 置顶
+    created_at  timestamptz not null default now()
+);
+
+create table if not exists public.post_comments (
+    id         bigint generated always as identity primary key,
+    post_id    bigint      not null references public.posts (id) on delete cascade,
+    author     text,
+    user_id    bigint references public.users (id) on delete cascade,
+    content    text        not null,
+    created_at timestamptz not null default now()
+);
+
+create table if not exists public.post_polls (
+    id          bigint generated always as identity primary key,
+    post_id     bigint      not null unique references public.posts (id) on delete cascade,
+    title       text        not null,
+    description text,
+    created_at  timestamptz not null default now()
+);
+
+create table if not exists public.poll_options (
+    id           bigint generated always as identity primary key,
+    post_id      bigint      not null references public.posts (id) on delete cascade,
+    poll_id      bigint references public.post_polls (id) on delete cascade,
+    option_text  text        not null,
+    created_at   timestamptz not null default now()
+);
+
+create table if not exists public.poll_votes (
+    id         bigint generated always as identity primary key,
+    option_id  bigint      not null references public.poll_options (id) on delete cascade,
+    user_id    bigint      not null references public.users (id) on delete cascade,
+    created_at timestamptz not null default now(),
+    constraint poll_votes_option_user_uniq unique (option_id, user_id)  -- 前端 upsert 依赖此冲突键
+);
+
+-- ---------------------------------------------------------------------------
+-- 3. 留言板（树形，parent_id 自引用）
+-- ---------------------------------------------------------------------------
+create table if not exists public.messages (
+    id          text primary key default gen_random_uuid()::text,
+    name        text        not null,
+    text        text        not null,
+    color       text,                                    -- 昵称颜色
+    ip          text,                                    -- 提交来源 IP
+    is_official boolean     not null default false,
+    is_pinned   boolean     not null default false,
+    parent_id   text references public.messages (id) on delete cascade,
+    created_at  timestamptz not null default now()
+);
+
+-- ---------------------------------------------------------------------------
+-- 4. 聊天
+-- ---------------------------------------------------------------------------
+create table if not exists public.chats (
+    id          bigint generated always as identity primary key,
+    user_id     bigint references public.users (id) on delete set null,
+    author      text        not null,
+    content     text        not null,
+    is_official boolean     not null default false,
+    is_deleted  boolean     not null default false,      -- 撤回（软删，保留行以便后续清理）
+    deleted_by  bigint references public.users (id) on delete set null,
+    created_at  timestamptz not null default now()
+);
+
+-- ---------------------------------------------------------------------------
+-- 5. 举报
+-- ---------------------------------------------------------------------------
+create table if not exists public.reports (
+    id                bigint generated always as identity primary key,
+    reporter_id       bigint references public.users (id) on delete set null,
+    reported_user_id  bigint references public.users (id) on delete set null,
+    content_type      text        not null,              -- post / comment / message / chat
+    content_id        text,                              -- 被举报内容 ID（跨类型，故用 text）
+    content_snapshot  text,                              -- 举报时的内容快照
+    reason            text        not null,              -- 色情低俗/骚扰辱骂/垃圾广告/虚假信息/政治敏感/其他
+    description       text,
+    status            text        not null default 'pending',
+    created_at        timestamptz not null default now()
+);
+
+-- ---------------------------------------------------------------------------
+-- 6. 站内通知
+--  payload 随通知类型变化，用可空列承载；source_id/extra_text 为通用载体
+-- ---------------------------------------------------------------------------
+create table if not exists public.notifications (
+    id                bigint generated always as identity primary key,
+    user_id           bigint      not null references public.users (id) on delete cascade,
+    type              text        not null,              -- report / feedback / comment
+    notification_type text,
+    is_read           boolean     not null default false,
+    report_id         bigint references public.reports (id) on delete cascade,
+    feedback_id       bigint,
+    source_id         bigint,                            -- 触发源记录 ID（如评论 ID）
+    post_id           bigint,
+    comment_author_id bigint,
+    comment_content   text,
+    report_reason     text,
+    extra_text        text,
+    created_at        timestamptz not null default now()
+);
+
+-- ---------------------------------------------------------------------------
+-- 7. 角色 / 关注
+-- ---------------------------------------------------------------------------
+create table if not exists public.user_roles (
+    id         bigint generated always as identity primary key,
+    user_id    bigint      not null references public.users (id) on delete cascade,
+    role_name  text        not null,
+    role_color text,
+    created_at timestamptz not null default now(),
+    constraint user_roles_user_role_uniq unique (user_id, role_name)
+);
+
+create table if not exists public.follows (
+    id           bigint generated always as identity primary key,
+    follower_id  bigint      not null references public.users (id) on delete cascade,
+    following_id bigint      not null references public.users (id) on delete cascade,
+    created_at   timestamptz not null default now(),
+    constraint follows_pair_uniq unique (follower_id, following_id)  -- 防止重复关注
+);
+
+-- ---------------------------------------------------------------------------
+-- 8. 反馈
+-- ---------------------------------------------------------------------------
+create table if not exists public.feedback_sites (
+    id         bigint generated always as identity primary key,
+    name       text        not null,
+    sort_order integer     not null default 0,
+    created_at timestamptz not null default now()
+);
+
+create table if not exists public.feedback (
+    id            bigint generated always as identity primary key,
+    user_id       bigint references public.users (id) on delete set null,
+    user_nickname text,
+    site_id       bigint references public.feedback_sites (id) on delete set null,
+    site_name     text,                                 -- 冗余快照，站点被删仍可读
+    content       text        not null,
+    contact       text,
+    admin_reply   text,
+    status        text        not null default 'pending',  -- pending / replied
+    created_at    timestamptz not null default now()
+);
+
+-- ---------------------------------------------------------------------------
+-- 9. 设备注册（限制单机注册账号数）
+-- ---------------------------------------------------------------------------
+create table if not exists public.device_registrations (
+    id         bigint generated always as identity primary key,
+    device_id  text        not null,
+    user_id    bigint references public.users (id) on delete set null,
+    phone      text,
+    created_at timestamptz not null default now()
+);
+
+-- ---------------------------------------------------------------------------
+-- 10. 房间（语音房 + 游戏容器）
+--  游戏对局整体以 current_game JSONB 存放，五子棋另有独立表
+-- ---------------------------------------------------------------------------
+create table if not exists public.rooms (
+    id                  bigint generated always as identity primary key,
+    name                text        not null,
+    creator_id          bigint references public.users (id) on delete set null,
+    co_admin_ids        jsonb       not null default '[]'::jsonb,
+    co_admin_permissions jsonb      not null default '{}'::jsonb,
+    muted_user_ids      jsonb       not null default '[]'::jsonb,
+    mic_enabled         boolean     not null default true,
+    mic_mode            text        not null default 'free',    -- free=自由上麦 / host=主持人审核
+    mic_speaking        jsonb       not null default '[]'::jsonb,
+    mic_requests        jsonb       not null default '[]'::jsonb,
+    game_disabled       boolean     not null default false,
+    current_game        jsonb,                                -- 当前对局快照
+    created_at          timestamptz not null default now()
+);
+
+create table if not exists public.room_messages (
+    id         bigint generated always as identity primary key,
+    room_id    bigint      not null references public.rooms (id) on delete cascade,
+    user_id    bigint references public.users (id) on delete set null,
+    author     text        not null,
+    avatar_url text,
+    content    text        not null,
+    created_at timestamptz not null default now()
+);
+
+create table if not exists public.gomoku_games (
+    id         bigint generated always as identity primary key,
+    room_id    bigint references public.rooms (id) on delete cascade,
+    board      jsonb       not null default '[[null]]'::jsonb,
+    black_id   bigint references public.users (id) on delete set null,
+    black_name text,
+    white_id   bigint references public.users (id) on delete set null,
+    white_name text,
+    turn       text        not null default 'black',
+    status     text        not null default 'waiting',  -- waiting / playing / finished
+    winner     text,
+    created_at timestamptz not null default now()
+);
+
+-- ===========================================================================
+--  索引
+-- ===========================================================================
+create index if not exists idx_posts_created        on public.posts (created_at desc);
+create index if not exists idx_posts_user           on public.posts (user_id);
+create index if not exists idx_posts_category        on public.posts (category_id);
+create index if not exists idx_comments_post        on public.post_comments (post_id, created_at);
+create index if not exists idx_poll_options_post     on public.poll_options (post_id);
+create index if not exists idx_poll_votes_option     on public.poll_votes (option_id);
+create index if not exists idx_messages_parent      on public.messages (parent_id);
+create index if not exists idx_messages_created     on public.messages (created_at desc);
+create index if not exists idx_chats_created        on public.chats (created_at);
+create index if not exists idx_notif_user_unread    on public.notifications (user_id, is_read);
+create index if not exists idx_notif_created        on public.notifications (created_at desc);
+create index if not exists idx_reports_created      on public.reports (created_at desc);
+create index if not exists idx_follows_following    on public.follows (following_id);
+create index if not exists idx_room_msgs_room       on public.room_messages (room_id, created_at);
+create index if not exists idx_gomoku_room          on public.gomoku_games (room_id);
+create index if not exists idx_device_device        on public.device_registrations (device_id);
+create index if not exists idx_categories_sort      on public.categories (sort_order);
+
+-- ===========================================================================
+--  Realtime 发布（前端 postgres_changes 订阅所依赖）
+--  幂等：逐表判断后再加入 publication
+-- ===========================================================================
+do $$
+declare
+    t text;
+    realtime_tables text[] := array[
+        'users', 'posts', 'post_comments', 'poll_votes',
+        'messages', 'chats', 'rooms', 'room_messages', 'gomoku_games'
+    ];
+begin
+    if not exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+        create publication supabase_realtime;
+    end if;
+
+    foreach t in array realtime_tables loop
+        if not exists (
+            select 1 from pg_publication_tables
+            where pubname = 'supabase_realtime'
+              and schemaname = 'public'
+              and tablename = t
+        ) then
+            execute format('alter publication supabase_realtime add table public.%I', t);
+        end if;
+    end loop;
+end $$;
+
+-- ===========================================================================
+--  存储桶（头像上传依赖；幂等：已存在则不改动）
+--  前端通过 window.sb.storage.from('avatars') 上传，缺该桶会导致头像上传失败
+-- ===========================================================================
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+-- ===========================================================================
+--  种子数据（幂等：已存在则跳过，不覆盖用户改动）
+-- ===========================================================================
+insert into public.categories (name, sort_order, is_public)
+select * from (values
+    ('综合',   1, true),
+    ('闲聊',   2, true),
+    ('求助',   3, true),
+    ('分享',   4, true),
+    ('游戏',   5, true)
+) as v(name, sort_order, is_public)
+where not exists (select 1 from public.categories);
+
+insert into public.feedback_sites (name, sort_order)
+select * from (values
+    ('帖子广场', 1),
+    ('留言板',   2),
+    ('聊天群',   3),
+    ('房间',     4),
+    ('其他',     5)
+) as v(name, sort_order)
+where not exists (select 1 from public.feedback_sites);
+
+-- ===========================================================================
+--  执行结果回执
+-- ===========================================================================
+do $$
+declare
+    t_count int;
+begin
+    select count(*) into t_count
+    from information_schema.tables
+    where table_schema = 'public'
+      and table_type = 'BASE TABLE';
+
+    raise notice 'Seven戚 schema 应用完成，public schema 当前共 % 张业务表', t_count;
+end $$;

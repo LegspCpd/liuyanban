@@ -1,0 +1,185 @@
+#!/usr/bin/env node
+/**
+ * ============================================================================
+ *  静态站点构建脚本（零依赖，Node >= 18）
+ * ============================================================================
+ *
+ *  职责：
+ *    1. 清空并重建 dist/
+ *    2. 把 app/ 下的站点文件原样复制到 dist/（UI 一个字节都不改）
+ *    3. 把硬编码的部署路径 /liuyanban/ 改写为相对路径 ./
+ *    4. 按需注入 Supabase 凭据（构建期覆盖，缺省保留源码默认值）
+ *    5. 产出 .nojekyll 与 404.html，使其成为可发布的 GitHub Pages 站点
+ *    6. 构建自检：文件齐全 + 无残留绝对路径
+ *
+ *  用法：node scripts/build.mjs
+ *
+ *  可选环境变量（GitHub Actions 中来自仓库 Variables / Secrets）：
+ *    SUPABASE_URL       https://xxxxxxxxxxxx.supabase.co
+ *    SUPABASE_ANON_KEY  sb_publishable_xxx 或旧版 eyJ... JWT
+ *    BASE_PATH          留空 = 相对路径（推荐，任意前缀都能跑）
+ *                       /liuyanban/   = 改写为该绝对前缀
+ * ============================================================================
+ */
+
+import { readdir, readFile, writeFile, mkdir, rm } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, '..');
+const SRC = path.join(ROOT, 'app');
+const OUT = path.join(ROOT, 'dist');
+
+/** 构建产物必须包含的文件，缺一即构建失败 */
+const REQUIRED = [
+  'index.html', 'posts.html', 'profile.html', 'room.html', 'messages.html',
+  'new-post.html', 'user.html', 'chats.html', 'common.js', 'gomoku.js'
+];
+
+/** 源码里遗留的部署路径前缀 */
+const LEGACY_BASE = '/liuyanban/';
+
+/** Supabase 项目地址的字面量形态 */
+const RE_SUPABASE_URL = /https:\/\/[a-z0-9]{8,}\.supabase\.co/gi;
+/** 新版 publishable / secret key，以及旧版 anon JWT */
+const RE_SUPABASE_KEY = /\bsb_(?:publishable|secret)_[A-Za-z0-9_-]+\b|\beyJ[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{8,}/g;
+
+const log = (...a) => console.log('[build]', ...a);
+const mask = (s) => (s ? '***' + s.slice(-6) : '(未提供)');
+
+async function main() {
+  const startedAt = Date.now();
+  log('项目根目录:', ROOT);
+
+  // ------------------------------------------------------------ 1. 源文件校验
+  const available = new Set(await readdir(SRC));
+  const missing = REQUIRED.filter((f) => !available.has(f));
+  if (missing.length) {
+    console.error('[build] 致命错误：app/ 下缺少以下文件 ->', missing.join(', '));
+    process.exit(1);
+  }
+  log('源文件校验通过，共 ' + REQUIRED.length + ' 个文件');
+
+  // ------------------------------------------------------------ 2. 清空输出目录
+  await rm(OUT, { recursive: true, force: true });
+  await mkdir(OUT, { recursive: true });
+  log('已清空并重建 dist/');
+
+  // ------------------------------------------------------------ 3. 读取构建配置
+  const basePath = normalizeBase(process.env.BASE_PATH);
+  const sbUrl = (process.env.SUPABASE_URL || '').trim();
+  const sbKey = (process.env.SUPABASE_ANON_KEY || '').trim();
+  log('路径改写目标: ' + (basePath || '(相对路径 ./)'));
+  log('Supabase URL : ' + (sbUrl || '未提供，沿用源码默认值'));
+  log('Supabase KEY : ' + mask(sbKey));
+
+  // ------------------------------------------------------------ 4. 逐文件处理
+  const stats = { pathHits: 0, urlHits: 0, keyHits: 0, bytes: 0 };
+
+  for (const name of REQUIRED) {
+    const raw = await readFile(path.join(SRC, name), 'utf8');
+
+    // 4a. 路径改写：/liuyanban/x.html -> ./x.html
+    const pathHits = count(raw, LEGACY_BASE);
+    let out = raw.replaceAll(LEGACY_BASE, basePath);
+
+    // 4b. 凭据注入（仅当提供了环境变量时才替换）
+    let urlHits = 0;
+    let keyHits = 0;
+    if (sbUrl) {
+      const url = sbUrl.replace(/\/+$/, '');
+      out = out.replace(RE_SUPABASE_URL, () => { urlHits++; return url; });
+    }
+    if (sbKey) {
+      out = out.replace(RE_SUPABASE_KEY, () => { keyHits++; return sbKey; });
+    }
+
+    await writeFile(path.join(OUT, name), out, 'utf8');
+    stats.pathHits += pathHits;
+    stats.urlHits += urlHits;
+    stats.keyHits += keyHits;
+    stats.bytes += Buffer.byteLength(out, 'utf8');
+  }
+
+  log('处理完成：' + REQUIRED.length + ' 个文件 / ' + (stats.bytes / 1024).toFixed(1) + ' KB');
+  log('  路径改写 ' + stats.pathHits + ' 处 | URL 注入 ' + stats.urlHits + ' 处 | KEY 注入 ' + stats.keyHits + ' 处');
+
+  // ------------------------------------------------------------ 5. Pages 辅助文件
+  await writeFile(path.join(OUT, '.nojekyll'), '', 'utf8');
+  log('已写入 .nojekyll');
+
+  await writeFile(path.join(OUT, '404.html'), build404(), 'utf8');
+  log('已写入 404.html');
+
+  // ------------------------------------------------------------ 6. 构建自检
+  const leftovers = await audit();
+  if (leftovers.length) {
+    console.error('[build] 自检失败：产物中仍存在遗留绝对路径 ->');
+    leftovers.forEach((l) => console.error('    ' + l));
+    process.exit(1);
+  }
+  log('自检通过：产物中无遗留 ' + LEGACY_BASE + ' 绝对路径');
+
+  log('构建成功，用时 ' + (Date.now() - startedAt) + 'ms，产物目录：dist/');
+}
+
+function normalizeBase(raw) {
+  const v = (raw || '').trim();
+  // 未指定 BASE_PATH 时使用相对路径 './'：
+  // 这样产物放在任意域名/子路径/本地目录都能直接双击打开，无需二次构建。
+  if (!v) return './';
+  const lead = v.startsWith('/') ? v : '/' + v;
+  return lead.endsWith('/') ? lead : lead + '/';
+}
+
+function count(hay, needle) {
+  let n = 0;
+  let i = 0;
+  while ((i = hay.indexOf(needle, i)) !== -1) { n++; i += needle.length; }
+  return n;
+}
+
+async function audit() {
+  const bad = [];
+  for (const name of REQUIRED) {
+    const text = await readFile(path.join(OUT, name), 'utf8');
+    const idx = text.indexOf(LEGACY_BASE);
+    if (idx !== -1) bad.push(name + ':' + text.slice(0, idx).split('\n').length);
+  }
+  return bad;
+}
+
+function build404() {
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seven戚 · 页面不存在</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+       background:#f5faf5;color:#1e3a2e;
+       font-family:"Space Grotesk","PingFang SC","Segoe UI",system-ui,sans-serif;
+       text-align:center;padding:24px}
+  h1{margin:0;font-size:2.2em;letter-spacing:.04em}
+  p{margin:0;color:#5a7a6a;font-size:.95em}
+  a{display:inline-block;margin-top:6px;padding:12px 30px;border-radius:99px;background:#2e7d32;color:#fff;
+    text-decoration:none;font-weight:600;box-shadow:0 8px 20px rgba(46,125,50,.25)}
+  a:hover{background:#276c2b}
+</style>
+</head>
+<body>
+  <h1>404</h1>
+  <p>你访问的页面不存在或已被移除</p>
+  <a href="./index.html">返回首页</a>
+</body>
+</html>
+`;
+}
+
+main().catch((err) => {
+  console.error('[build] 构建异常终止:', err);
+  process.exit(1);
+});

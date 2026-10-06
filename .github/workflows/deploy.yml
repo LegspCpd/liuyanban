@@ -1,0 +1,100 @@
+# ============================================================================
+#  构建静态站点 → 自动建表 → 部署到 GitHub Pages
+# ============================================================================
+#  触发: 推送到 main（相关文件变更时）或手动触发
+#  产物: https://SevenSeven712.github.io/liuyanban/
+#
+#  前置: 仓库 Settings -> Pages -> Build and deployment -> Source 选 "GitHub Actions"
+# ============================================================================
+
+name: 构建并部署
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'scripts/build.mjs'
+      - 'db/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------------- 构建
+  build:
+    name: 构建站点
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 执行构建
+        env:
+          # 未配置时沿用源码默认值，构建照样成功
+          SUPABASE_URL: ${ vars.SUPABASE_URL }
+          SUPABASE_ANON_KEY: ${ vars.SUPABASE_ANON_KEY }
+          BASE_PATH: ${ vars.BASE_PATH }
+        run: node scripts/build.mjs
+
+      - name: 配置 Pages
+        uses: actions/configure-pages@v5
+
+      - name: 上传构建产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  # ---------------------------------------------------------------- 建表
+  database:
+    name: 自动建表
+    runs-on: ubuntu-latest
+    # 建表失败只标记告警，不阻塞站点部署
+    continue-on-error: true
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 应用数据库 Schema
+        env:
+          # 通道 A（推荐）：Management API
+          SUPABASE_ACCESS_TOKEN: ${ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${ vars.SUPABASE_PROJECT_REF }}
+          # 通道 B（备选）：psql 直连
+          DATABASE_URL: ${ secrets.DATABASE_URL }}
+        run: node scripts/apply-schema.mjs
+
+      - name: 汇总
+        if: always()
+        run: echo "::notice::建表任务结束。若显示跳过，说明尚未配置 SUPABASE_ACCESS_TOKEN + SUPABASE_PROJECT_REF 或 DATABASE_URL。"
+
+  # ---------------------------------------------------------------- 部署
+  deploy:
+    name: 部署到 Pages
+    needs: build          # 只依赖构建；建表失败不阻塞站点发布
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 发布
+        id: deployment
+        uses: actions/deploy-pages@v4
