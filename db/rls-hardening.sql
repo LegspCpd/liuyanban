@@ -1,112 +1,22 @@
 -- ============================================================================
---  【可选】行级安全策略（RLS）加固
+--  Seven戚 · RLS 加固 —— B档（手动，勿自动执行）
 -- ============================================================================
---  ⚠️  请勿通过自动流水线执行本文件，需手工在 Supabase SQL Editor 中评估后运行。
---
---  现状说明：
---    db/schema.sql 默认【不启用 RLS】，前端用 anon key 直连读写，这与当前线上库
---    的行为一致，也是站点能立即跑通的前提。本文件用于后续收紧权限。
---
---  启用前请务必确认：
---    1. 已按 README 配置好 Supabase Auth 的站点登录（邮箱 = 手机号@sq.local）
---    2. 已用测试账号验证「注册 / 登录 / 发帖 / 聊天 / 房间」全链路
---    3. 知道一旦策略写错，前端会全站 403
---
---  管理员判定沿用现有逻辑：手机号等于下方常量即视为管理员。
+--  A档（公开表 using(true)，行为透明）已由流水线自动执行，见 db/rls-auto.sql。
+--  本文件只剩私有表收紧，需满足前置条件后手工在 SQL Editor 执行。
+--  前置条件：
+--    1. 全站请求带 JWT（不再用裸 anon key 直连），auth.uid() 非空
+--    2. 注册流程在邮箱确认后才 insert users（或关掉邮箱确认）
+--    3. 头像上传路径改 user_id 开头（现路径首段是 'avatars'，foldername 策略会 403）
+--  前置检查（全 true 才执行）：
+--    select count(*) = 0 from public.users where auth_id is null;
 -- ============================================================================
 
--- ---------------------------------------------------------------------------
--- 1. 辅助函数（SECURITY DEFINER，避免策略内递归触发 RLS）
--- ---------------------------------------------------------------------------
-create or replace function public.current_user_id()
-returns bigint
-language sql stable security definer set search_path = public
-as $$
-  select u.id from public.users u where u.auth_id = auth.uid() limit 1;
-$$;
+-- ============================================================================
+--  B档（手动，勿自动执行）—— 私有表收紧
+--  前置检查（在 SQL Editor 逐条确认，全是 true 才能执行 B档）：
+--    select count(*) = 0 from public.users where auth_id is null;  -- 无游离业务用户
+-- ============================================================================
 
-create or replace function public.is_admin()
-returns boolean
-language sql stable security definer set search_path = public
-as $$
-  select exists (
-    select 1 from public.users u
-    where u.auth_id = auth.uid() and u.phone = '17355394710'
-  );
-$$;
-
--- ---------------------------------------------------------------------------
--- 2. users
---    读：公开（帖子、房间、留言需要展示昵称头像）
---    写：仅本人；封禁字段仅管理员
--- ---------------------------------------------------------------------------
-alter table public.users enable row level security;
-
-drop policy if exists users_select on public.users;
-create policy users_select on public.users for select using (true);
-
-drop policy if exists users_update_own on public.users;
-create policy users_update_own on public.users for update
-  using (public.current_user_id() = id or public.is_admin())
-  with check (public.current_user_id() = id or public.is_admin());
-
-drop policy if exists users_insert on public.users;
-create policy users_insert on public.users for insert
-  with check (auth.role() = 'authenticated' or public.is_admin());
-
--- ---------------------------------------------------------------------------
--- 3. 内容类：帖子 / 评论 / 分类 / 投票 / 留言 / 聊天 —— 保持公开读写
--- ---------------------------------------------------------------------------
-alter table public.posts enable row level security;
-drop policy if exists posts_all on public.posts;
-create policy posts_all on public.posts for all using (true) with check (true);
-
-alter table public.post_comments enable row level security;
-drop policy if exists post_comments_all on public.post_comments;
-create policy post_comments_all on public.post_comments for all using (true) with check (true);
-
-alter table public.categories enable row level security;
-drop policy if exists categories_all on public.categories;
-create policy categories_all on public.categories for all using (true) with check (true);
-
-alter table public.post_polls enable row level security;
-drop policy if exists post_polls_all on public.post_polls;
-create policy post_polls_all on public.post_polls for all using (true) with check (true);
-
-alter table public.poll_options enable row level security;
-drop policy if exists poll_options_all on public.poll_options;
-create policy poll_options_all on public.poll_options for all using (true) with check (true);
-
-alter table public.poll_votes enable row level security;
-drop policy if exists poll_votes_all on public.poll_votes;
-create policy poll_votes_all on public.poll_votes for all
-  using (public.current_user_id() = user_id)
-  with check (public.current_user_id() = user_id);
-
-alter table public.messages enable row level security;
-drop policy if exists messages_all on public.messages;
-create policy messages_all on public.messages for all using (true) with check (true);
-
-alter table public.chats enable row level security;
-drop policy if exists chats_all on public.chats;
-create policy chats_all on public.chats for all using (true) with check (true);
-
--- ---------------------------------------------------------------------------
--- 4. 房间
--- ---------------------------------------------------------------------------
-alter table public.rooms enable row level security;
-drop policy if exists rooms_all on public.rooms;
-create policy rooms_all on public.rooms for all using (true) with check (true);
-
-alter table public.room_messages enable row level security;
-drop policy if exists room_messages_all on public.room_messages;
-create policy room_messages_all on public.room_messages for all using (true) with check (true);
-
-alter table public.gomoku_games enable row level security;
-drop policy if exists gomoku_games_all on public.gomoku_games;
-create policy gomoku_games_all on public.gomoku_games for all using (true) with check (true);
-
--- ---------------------------------------------------------------------------
 -- 5. 私有数据：通知 / 举报 / 反馈 / 设备 —— 仅本人或管理员
 -- ---------------------------------------------------------------------------
 alter table public.notifications enable row level security;

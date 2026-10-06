@@ -47,9 +47,10 @@ const bad = (m) => console.error('[schema]  ✗ ' + m);
 /** 各供应商需要执行的 SQL 文件（按顺序） */
 const PLAN = {
   // compat 永远垫后：新库跑它无影响（全是 if not exists），老库靠它补齐错位
-  supabase: ['schema.core.sql', 'schema.supabase.sql', 'schema.compat.sql'],
-  neon: ['schema.core.sql', 'schema.neon.sql', 'schema.compat.sql'],
-  postgres: ['schema.core.sql', 'schema.compat.sql']
+  // rls-auto 收尾：公开表 RLS enable + using(true)，行为透明，可安全自动执行
+  supabase: ['schema.core.sql', 'schema.supabase.sql', 'schema.compat.sql', 'rls-auto.sql'],
+  neon: ['schema.core.sql', 'schema.neon.sql', 'schema.compat.sql', 'rls-auto.sql'],
+  postgres: ['schema.core.sql', 'schema.compat.sql', 'rls-auto.sql']
 };
 
 async function main() {

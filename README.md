@@ -12,36 +12,41 @@
 
 ```
 .
-├── app/                        站点源码（UI 源码，勿直接改动路径）
-│   ├── index.html              登录 / 注册
-│   ├── posts.html              帖子广场（含管理员面板）
-│   ├── profile.html            个人中心（消息中心 / 反馈 / 网站管理）
-│   ├── room.html               语音房 + 5 款游戏
-│   ├── messages.html           留言板
-│   ├── new-post.html           发帖
-│   ├── user.html               用户主页
-│   ├── chats.html              聊天群
-│   ├── gomoku.js               五子棋模块
+├── app/                        站点源码（HTML 只剩 DOM + <script src>，零内联脚本）
+│   ├── index.html              登录 / 注册 → index/index.js
+│   ├── posts.html              帖子广场（含管理员面板）→ posts/（4 模块）
+│   ├── profile.html            个人中心 → profile/（5 模块）
+│   ├── room.html               语音房 + 5 款游戏 → room/（9 模块）
+│   ├── messages.html           留言板 → messages/messages.js
+│   ├── new-post.html           发帖 → new-post/new-post.js
+│   ├── user.html               用户主页 → user/user.js
+│   ├── chats.html              聊天群 → chats/chats.js
 │   │
-│   └── core/                   分层核心层（按依赖顺序加载）
-│       ├── config.js           L0 配置：凭据、管理员、路径（构建期可注入）
-│       ├── util.js             L1 纯工具：转义、头像、JSON 安全解析
-│       ├── ui.js               L2 UI：Toast、确认框、输入框、图标、横幅、提示音
-│       ├── session.js          L3 会话与认证：本地缓存 + Supabase Auth
-│       ├── data.js             L4 数据访问：后端客户端唯一持有者
-│       ├── mods.js             L5 业务：举报、通知、未读、封禁监听与横幅
-│       ├── shell.js            L6 外壳：顶部品牌栏、底部导航栏
-│       └── boot.js             L7 启动：加载动画、会话校验、Presence、封号监听
+│   ├── core/                   分层核心层（按依赖顺序加载）
+│   │   ├── config.js           L0 配置：凭据、管理员、路径（构建期可注入）
+│   │   ├── util.js             L1 纯工具：转义、头像、JSON 安全解析、sha256
+│   │   ├── ui.js               L2 UI：Toast、确认框、输入框、图标、横幅、提示音
+│   │   ├── session.js          L3 会话与认证：本地缓存 + Supabase Auth
+│   │   ├── data.js             L4 数据访问：后端客户端唯一持有者
+│   │   ├── mods.js             L5 业务：举报、通知、未读、封禁监听与横幅
+│   │   ├── shell.js            L6 外壳：顶部品牌栏、底部导航栏
+│   │   └── boot.js             L7 启动：加载动画、会话校验、Presence、封号监听
+│   ├── room/                   房间页（room-core/game-shell/game-render/5 游戏/room-rt）
+│   ├── posts/                  帖子页（data/social/render/admin）
+│   ├── profile/                个人中心（core/notify/report/feedback/init）
+│   └── messages/ chats/ index/ new-post/ user/  各单模块页
 │
 ├── scripts/
-│   ├── build.mjs               构建脚本（零依赖；同时输出 dist/core/ 与合并版 dist/core.js）
+│   ├── build.mjs               构建脚本（零依赖；输出 dist/各页目录；core.js 需 BUILD_CORE_BUNDLE=1）
 │   └── apply-schema.mjs        自动建表执行器（零依赖，支持 Supabase / Neon）
 │
 ├── db/
-│   ├── schema.core.sql         通用 Postgres：19 表 + 索引 + 种子数据（幂等）
+│   ├── schema.core.sql         通用 Postgres：表 + 索引 + 种子数据（幂等，含 mute_all 与 reports 审核字段）
 │   ├── schema.supabase.sql     Supabase 专属：Realtime 发布 + avatars 存储桶
 │   ├── schema.neon.sql         Neon 专属：逻辑复制校准 + Auth 对接说明
-│   └── rls-hardening.sql       可选：行级安全加固（不参与自动化）
+│   ├── schema.compat.sql       老库兼容补丁（幂等垫后：补列/补发布/清无策略 RLS/补桶）
+│   ├── rls-auto.sql            RLS-A档（自动：公开表 enable + using(true)，行为透明）
+│   └── rls-hardening.sql       RLS-B档（手动：私有表收紧，需先满足前置条件）
 │
 └── .github/workflows/
     ├── deploy.yml              构建 → 自动建表 → 部署 Pages
@@ -150,6 +155,7 @@ Realtime / Storage），这部分在 Neon 上没有对等实现，因此：
 | `SUPABASE_URL` | 覆盖前端连接的项目地址；留空沿用源码默认值 |
 | `SUPABASE_ANON_KEY` | 覆盖 anon key；留空沿用源码默认值 |
 | `BASE_PATH` | 资源路径前缀；**留空 = 相对路径，推荐** |
+| `BUILD_CORE_BUNDLE` | 设为 `1` 才产出 `dist/core.js` 合并产物；默认不产（8 页无一引用，省 66KB） |
 
 > anon key 本就是公开密钥，放 Variables 而非 Secrets 是有意为之。
 > 留空时构建依然成功，沿用 `app/` 中的默认值。
@@ -163,7 +169,7 @@ push 到 main
       │
       ├─ build ──────── node scripts/build.mjs → dist/
       │
-      ├─ database ──── db/schema.*.sql   （continue-on-error，不阻塞部署）
+      ├─ database ──── db/schema.core/supabase/neon + compat + rls-auto.sql（continue-on-error，不阻塞部署）
       │
       └─ deploy ←───── needs: build
 ```

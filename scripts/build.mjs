@@ -167,15 +167,21 @@ async function main() {
     log(`${dir}页输出：${list.length} 个模块 -> dist/${dir}/`);
   }
 
-  // 合并为单文件 core.js（供只需一次请求的场景备用）
-  const parts = [];
-  for (const name of CORE_MODULES) {
-    const rawCore = await readFile(path.join(SRC, 'core', name), 'utf8');
-    parts.push('/* ---- ' + name + ' ---- */\n' + injectCredentials(rawCore, sbUrl, sbKey));
+  // 合并为单文件 core.js（opt-in：仅 BUILD_CORE_BUNDLE=1 时产出）。
+  // 现状：8 个页面无一引用它，默认不产，省 66KB 部署体积；
+  // 若有外部嵌入/旧书签依赖它，Actions 加个 env 即可恢复。
+  if ((process.env.BUILD_CORE_BUNDLE || '').trim() === '1') {
+    const parts = [];
+    for (const name of CORE_MODULES) {
+      const rawCore = await readFile(path.join(SRC, 'core', name), 'utf8');
+      parts.push('/* ---- ' + name + ' ---- */\n' + injectCredentials(rawCore, sbUrl, sbKey));
+    }
+    const merged = parts.join('\n\n');
+    await writeFile(path.join(OUT, 'core.js'), merged, 'utf8');
+    log(`已合并单文件 core.js（${merged.length} 字符）`);
+  } else {
+    log('跳过 core.js 合并产物（无人引用；BUILD_CORE_BUNDLE=1 可恢复）');
   }
-  const merged = parts.join('\n\n');
-  await writeFile(path.join(OUT, 'core.js'), merged, 'utf8');
-  log(`已合并单文件 core.js（${merged.length} 字符）`);
 
   // ------------------------------------------------------------ 5. Pages 辅助文件
   await writeFile(path.join(OUT, '.nojekyll'), '', 'utf8');
