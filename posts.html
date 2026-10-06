@@ -42,6 +42,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .post-card .post-author .name{font-weight:600;font-size:.9em}
 .post-card .post-author .official-tag{background:var(--official-blue);color:#fff;font-size:.55em;padding:0 6px;border-radius:99px}
 .post-card .post-author .role-tag{color:#fff;font-size:.55em;padding:0 6px;border-radius:99px}
+.post-card .post-author .category-tag{background:var(--primary-bg);color:var(--primary);font-size:.55em;font-weight:700;padding:0 8px;border-radius:99px;border:1px solid var(--border)}
 /* 迷你资料卡 */
 .mini-card{position:fixed;z-index:8000;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:14px;width:230px;display:none;animation:miniIn .16s ease}
 .mini-card.show{display:block}
@@ -341,7 +342,7 @@ window.closeReportDialog = window.closeReportDialog || function() {
 renderHeader('帖子广场', 'posts');
 renderFooter('posts');
 var SUPABASE_URL = "https://ulvhuqtpdafspbdvkogs.supabase.co";
-var SUPABASE_ANON_KEY = "sb_publishable_Ew8kKf2z05kmYIK2XNu00g_dzAirtIM";
+var SUPABASE_ANON_KEY = "sb_publishable_b3zSRFSj9k73_tIxO1yJYw_IEK9tPLg";
 window.sb = window.sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function showToast(msg) {
@@ -639,6 +640,11 @@ async function renderPosts() {
         var name = user ? user.nickname : p.author;
         var avatar = user ? (user.avatar_url || getUserAvatar(user)) : getUserAvatar({ nickname: p.author });
         var time = new Date(p.created_at).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        var catName = '';
+        if (p.category_id) {
+            var _cat = categories.find(function(c) { return c.id === p.category_id; });
+            if (_cat && _cat.name && _cat.name !== '未分类') catName = _cat.name;
+        }
         var content = renderPostContent(p);
         var raw = p.content ? p.content.replace(/<[^>]*>/g, '') : '';
         var clamped = raw.length > 150 || (p.content && p.content.split('\n').length > 5);
@@ -660,6 +666,7 @@ async function renderPosts() {
         html += '<span class="name" style="cursor:pointer;" onclick="goUser(\'' + p.user_id + '\')">' + escapeHtml(name) + '</span>';
         if (p.is_official) html += '<span class="official-tag">官方</span>';
         html += roleTagHTML(p.user_id);
+        if (catName) html += '<span class="category-tag">' + escapeHtml(catName) + '</span>';
         html += '<span class="time">' + time + '</span>';
         html += '</div>';
         if (p.title) html += '<div class="post-title">' + escapeHtml(p.title) + '</div>';

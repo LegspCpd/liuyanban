@@ -3,7 +3,7 @@
 // ============================================================
 if (!window.sb) {
     var SUPABASE_URL = "https://ulvhuqtpdafspbdvkogs.supabase.co";
-    var SUPABASE_ANON_KEY = "sb_publishable_Ew8kKf2z05kmYIK2XNu00g_dzAirtIM";
+    var SUPABASE_ANON_KEY = "sb_publishable_b3zSRFSj9k73_tIxO1yJYw_IEK9tPLg";
     window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 

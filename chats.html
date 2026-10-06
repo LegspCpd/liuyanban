@@ -122,7 +122,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   <div class="app-content">
     <div class="chat-messages" id="chatMessages"></div>
     <div class="pill-bar">
-      <button class="pill-btn" id="roomPillBtn" type="button">
+      <button class="pill-btn" id="roomPillBtn" type="button" onclick="location.href='/liuyanban/room.html'">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>
         </svg>
@@ -177,7 +177,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
    基础
 ============================================================ */
 var SUPABASE_URL="https://ulvhuqtpdafspbdvkogs.supabase.co";
-var SUPABASE_ANON_KEY="sb_publishable_Ew8kKf2z05kmYIK2XNu00g_dzAirtIM";
+var SUPABASE_ANON_KEY="sb_publishable_b3zSRFSj9k73_tIxO1yJYw_IEK9tPLg";
 window.sb=window.sb||window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
 function showToast(m){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(function(){t.classList.remove('show')},2600)}
@@ -533,9 +533,6 @@ async function loadAllChats(){
 /* ============================================================
    事件绑定
 ============================================================ */
-document.getElementById('roomPillBtn').addEventListener('click',function(){
-  window.location.href='/liuyanban/room.html';
-});
 document.getElementById('sendChatBtn').addEventListener('click',sendChat);
 document.getElementById('chatInput').addEventListener('keydown',function(e){
   if(e.key==='Enter')sendChat();
