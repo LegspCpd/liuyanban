@@ -22,7 +22,7 @@
  * ============================================================================
  */
 
-import { readdir, readFile, writeFile, mkdir, rm } from 'node:fs/promises';
+import { readdir, readFile, writeFile, mkdir, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -98,6 +98,13 @@ const PAGE_BUNDLES = {
 };
 const CORE_RELS = CORE_MODULES.map((n) => 'core/' + n);
 
+/**
+ * 后端 SDK 自托管路径（相对 dist 根）。
+ * 境外 cdn.jsdelivr.net 在国内常被干扰，首屏最坏要等十几秒，
+ * 因此把 UMD 产物随仓库提交，构建时原样拷进 dist，全站零第三方依赖。
+ */
+const VENDOR_SDK = 'vendor/supabase.min.js';
+
 /** bundle 文件名：bundle.index.js / bundle.posts.js ... */
 const bundleNameOf = (htmlName) => 'bundle.' + htmlName.replace(/\.html$/, '') + '.js';
 
@@ -125,6 +132,15 @@ async function main() {
   }
   log('源文件校验通过，共 ' + REQUIRED.length + ' 个文件');
 
+  // 后端 SDK 必须随仓库存在：缺失时构建直接失败，避免线上因 CDN 不可达而全站白屏
+  try {
+    const sdkStat = await stat(path.join(SRC, VENDOR_SDK));
+    log('自托管 SDK: ' + VENDOR_SDK + '（' + (sdkStat.size / 1024).toFixed(0) + ' KB）');
+  } catch {
+    console.error('[build] 致命错误：缺少 ' + VENDOR_SDK + '（后端 SDK 未自托管）');
+    process.exit(1);
+  }
+
   // ------------------------------------------------------------ 2. 清空输出目录
   await rm(OUT, { recursive: true, force: true });
   await mkdir(OUT, { recursive: true });
@@ -148,23 +164,31 @@ async function main() {
     const pathHits = count(raw, LEGACY_BASE);
     let out = raw.replaceAll(LEGACY_BASE, basePath);
 
-    // 4b. 加载链收敛：每页 9~17 个串行 script -> 1 个 bundle
+    // 4b. 加载链收敛：每页 9~17 个串行 script -> 2 个（同域并行）
     if (PAGE_BUNDLES[name]) {
       const before = count(out, '<script src=');
-      // CDN 标签加 defer：head 不再被 218KB SDK 阻塞首屏渲染
+      // SDK 自托管：境外 CDN(cdn.jsdelivr)在国内被干扰/屏蔽，是首屏极慢的根因。
+      // 改为同域 ./vendor/supabase.min.js，与 bundle 并行下载、共用连接、可被 CDN 缓存。
       out = out.replace(
         '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>',
-        '<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>'
+        '<script defer src="' + basePath + VENDOR_SDK + '"></script>'
       );
       // 移除全部本地 script 标签（内容并入该页 bundle）
       out = out.replace(/[ \t]*<script src="\.\/[^">]+\.js"><\/script>\r?\n?/g, '');
-      // </body> 前插入唯一 bundle 标签；defer 按文档序在 CDN 之后执行
+      // </body> 前插入唯一 bundle 标签；defer 按文档序在 SDK 之后执行
       const bname = bundleNameOf(name);
       out = out.replace(
         '</body>',
         '    <script defer src="' + basePath + bname + '"></script>\n</body>'
       );
-      log(name + ' script 标签 ' + before + ' -> 2（CDN defer + bundle defer）');
+      // 预连接后端域名：把 TLS/DNS 握手与静态资源下载重叠，省掉首个 API 请求的额外往返
+      out = out.replace(
+        '</head>',
+        '    <link rel="preconnect" href="https://ulvhuqtpdafspbdvkogs.supabase.co" crossorigin>\n' +
+        '    <link rel="dns-prefetch" href="https://ulvhuqtpdafspbdvkogs.supabase.co">\n' +
+        '</head>'
+      );
+      log(name + ' script 标签 ' + before + ' -> 2（同域 SDK defer + bundle defer）');
     }
 
     // 4c. 凭据注入（仅当提供了环境变量时才替换）
@@ -188,6 +212,13 @@ async function main() {
     stats.bytes += Buffer.byteLength(merged, 'utf8');
     log(bname + ' <- ' + (CORE_RELS.length + pageRels.length) + ' 模块 / ' + (Buffer.byteLength(merged) / 1024).toFixed(1) + ' KB');
   }
+
+  // 4d2. 自托管 SDK 拷入 dist（与页面同域，去掉第三方 CDN 依赖）
+  await mkdir(path.join(OUT, 'vendor'), { recursive: true });
+  const sdkBytes = await readFile(path.join(SRC, VENDOR_SDK));
+  await writeFile(path.join(OUT, VENDOR_SDK), sdkBytes);
+  stats.bytes += sdkBytes.length;
+  log('自托管 SDK 输出: dist/' + VENDOR_SDK + '（' + (sdkBytes.length / 1024).toFixed(0) + ' KB）');
 
   log('处理完成：' + REQUIRED.length + ' 个文件 + ' + Object.keys(PAGE_BUNDLES).length + ' 个 bundle / ' + (stats.bytes / 1024).toFixed(1) + ' KB');
   log('  路径改写 ' + stats.pathHits + ' 处 | 核心模块 ' + CORE_MODULES.length + ' 个');

@@ -12,8 +12,11 @@
 (function (global) {
     'use strict';
 
-    var FALLBACK_CDNS = [
-        'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js',
+    // 正常路径是构建期注入的同域 ./vendor/supabase.min.js（HTML 里已同步加载）。
+    // 仅当 SDK 标签被拦截/404 时才兜底：先试同域 vendor，再试 jsdelivr 固定 UMD 路径。
+    // （早先写的 unpkg 路径实测 404，已移除；jsdelivr 仅作最后手段，国内可能被干扰。）
+    var FALLBACK_SDKS = [
+        './vendor/supabase.min.js',
         'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js'
     ];
     var FETCH_TIMEOUT_MS = 15000;
@@ -108,28 +111,39 @@
         return global.sb || null;
     }
 
-    // CDN 主源失败时，自动从备用源补载 supabase-js（只试一次，避免循环）
+    // SDK 主标签缺失/失败时，按 FALLBACK_SDKS 依次补载（每个源只试一次）
     function ensureSupabaseLoaded(cb) {
         if (global.supabase && global.supabase.createClient) { cb(true); return; }
         if (global.__sq_supabase_loading) { cb(false); return; }
         global.__sq_supabase_loading = true;
-        var src = FALLBACK_CDNS[0];
-        try {
-            var s = document.createElement('script');
-            s.src = src;
-            s.async = true;
-            s.onload = function () {
+
+        var idx = 0;
+        function tryNext() {
+            if (idx >= FALLBACK_SDKS.length) {
                 global.__sq_supabase_loading = false;
-                ensureClient();
-                cb(!!(global.supabase && global.supabase.createClient));
-            };
-            s.onerror = function () {
-                global.__sq_supabase_loading = false;
-                noteError('supabase-sdk-load', new Error('SDK 加载失败: ' + src));
+                noteError('supabase-sdk-load', new Error('所有 SDK 源均加载失败'));
                 cb(false);
-            };
-            document.head.appendChild(s);
-        } catch (e) { cb(false); }
+                return;
+            }
+            var src = FALLBACK_SDKS[idx++];
+            try {
+                var s = document.createElement('script');
+                s.src = src;
+                s.async = true;
+                s.onload = function () {
+                    ensureClient();
+                    if (global.supabase && global.supabase.createClient) {
+                        global.__sq_supabase_loading = false;
+                        cb(true);
+                    } else {
+                        tryNext();
+                    }
+                };
+                s.onerror = function () { tryNext(); };
+                document.head.appendChild(s);
+            } catch (e) { tryNext(); }
+        }
+        tryNext();
     }
 
     ensureClient();
