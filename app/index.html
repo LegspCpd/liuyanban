@@ -586,13 +586,15 @@
         </div>
     </div>
 
+    <script src="/liuyanban/core/config.js"></script>
+<script src="/liuyanban/core/util.js"></script>
+<script src="/liuyanban/core/ui.js"></script>
+<script src="/liuyanban/core/data.js"></script>
     <script>
         // ============================================================
         // Supabase 配置
         // ============================================================
-        var SUPABASE_URL = "https://ulvhuqtpdafspbdvkogs.supabase.co";
-        var SUPABASE_ANON_KEY = "sb_publishable_b3zSRFSj9k73_tIxO1yJYw_IEK9tPLg";
-        window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Supabase 客户端已由 core/data.js 统一创建（凭据来源：core/config.js）
 
         // ============================================================
         // 设备 ID 相关

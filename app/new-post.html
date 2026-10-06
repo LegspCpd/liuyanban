@@ -327,7 +327,14 @@
 
     <div id="toast"></div>
 
-    <script src="/liuyanban/common.js"></script>
+    <script src="/liuyanban/core/config.js"></script>
+<script src="/liuyanban/core/util.js"></script>
+<script src="/liuyanban/core/ui.js"></script>
+<script src="/liuyanban/core/session.js"></script>
+<script src="/liuyanban/core/data.js"></script>
+<script src="/liuyanban/core/mods.js"></script>
+<script src="/liuyanban/core/shell.js"></script>
+<script src="/liuyanban/core/boot.js"></script>
     <script>
         renderHeader('发帖', 'posts');
 
@@ -335,21 +342,6 @@
         var SUPABASE_URL = "https://ulvhuqtpdafspbdvkogs.supabase.co";
         var SUPABASE_ANON_KEY = "sb_publishable_b3zSRFSj9k73_tIxO1yJYw_IEK9tPLg";
         window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.classList.add('show');
-            clearTimeout(window.toastTimer);
-            window.toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-
-        function escapeHtml(s) {
-            if (!s) return '';
-            return String(s).replace(/[&<>"']/g, function(c) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } [c];
-            });
-        }
 
         var currentUser = getSessionUser();
         if (!currentUser || !currentUser.id) {

@@ -178,7 +178,14 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   </div>
 </div>
 <div id="toast"></div>
-<script src="/liuyanban/common.js"></script>
+<script src="/liuyanban/core/config.js"></script>
+<script src="/liuyanban/core/util.js"></script>
+<script src="/liuyanban/core/ui.js"></script>
+<script src="/liuyanban/core/session.js"></script>
+<script src="/liuyanban/core/data.js"></script>
+<script src="/liuyanban/core/mods.js"></script>
+<script src="/liuyanban/core/shell.js"></script>
+<script src="/liuyanban/core/boot.js"></script>
 <script>
 
 // ============================================================
@@ -193,9 +200,6 @@ var iFollowed = false;
 var myPosts = [];
 
 function $(id){ return document.getElementById(id); }
-function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
-function showToast(msg){ var t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); clearTimeout(window.__tt); window.__tt=setTimeout(function(){t.classList.remove('show');},2200); }
-
 // 从 URL 取目标用户（?u=user_no 或 ?id=uuid）
 function getTargetParam(){
   var p = new URLSearchParams(location.search);
@@ -368,17 +372,6 @@ async function saveProfile(){
   }catch(e){ showToast('保存失败：' + e.message); }
 }
 window.saveProfile = saveProfile;
-function showConfirm(title, body, onOk) {
-  var m = document.getElementById('confirmModal');
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmBody').textContent = body;
-  m.classList.add('active');
-  var cancel = document.getElementById('confirmCancel');
-  var ok = document.getElementById('confirmOk');
-  var cleanup = function() { m.classList.remove('active'); cancel.onclick = null; ok.onclick = null; };
-  cancel.onclick = cleanup;
-  ok.onclick = function() { if (onOk) onOk(); cleanup(); };
-}
 function doLogout(){
   if (typeof showConfirm === 'function') {
     showConfirm('退出登录', '确定要退出登录吗？', function(){

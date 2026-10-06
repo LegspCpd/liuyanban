@@ -251,154 +251,22 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 <div class="mini-card" id="miniCard"></div>
 <div id="toast"></div>
 
-<script src="/liuyanban/common.js"></script>
+<script src="/liuyanban/core/config.js"></script>
+<script src="/liuyanban/core/util.js"></script>
+<script src="/liuyanban/core/ui.js"></script>
+<script src="/liuyanban/core/session.js"></script>
+<script src="/liuyanban/core/data.js"></script>
+<script src="/liuyanban/core/mods.js"></script>
+<script src="/liuyanban/core/shell.js"></script>
+<script src="/liuyanban/core/boot.js"></script>
 <script>
-// ============ 兜底：举报弹窗 + 通知 ============
-window.pushNotification = window.pushNotification || async function(userId, payload) {
-    if (!window.sb || !userId) return;
-    try {
-        await window.sb.from('notifications').insert([Object.assign({ user_id: userId, is_read: false }, payload)]);
-        if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
-    } catch (e) { console.warn('通知发送失败', e); }
-};
 
-window.openReportDialog = window.openReportDialog || function(reportedUserId, contentType, contentId, contentSnapshot) {
-    var old = document.getElementById('reportOverlay');
-    if (old) old.remove();
-    var overlay = document.createElement('div');
-    overlay.className = 'report-overlay';
-    overlay.id = 'reportOverlay';
-    var typeText = { post: '帖子', comment: '评论', message: '留言', chat: '聊天消息' }[contentType] || '内容';
-    overlay.innerHTML =
-        '<div class="report-panel">' +
-        '<div class="report-header"><h3><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#e57373" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>举报' + typeText + '</h3><button class="report-close" onclick="closeReportDialog()">✕</button></div>' +
-        '<div class="report-body">' +
-        '<div class="report-field"><label>举报原因（必选）</label><div class="report-reasons">' +
-        '<label class="report-reason-option"><input type="radio" name="reportReason" value="色情低俗"> 色情低俗</label>' +
-        '<label class="report-reason-option"><input type="radio" name="reportReason" value="骚扰辱骂"> 骚扰辱骂</label>' +
-        '<label class="report-reason-option"><input type="radio" name="reportReason" value="垃圾广告"> 垃圾广告</label>' +
-        '<label class="report-reason-option"><input type="radio" name="reportReason" value="虚假信息"> 虚假信息</label>' +
-        '<label class="report-reason-option"><input type="radio" name="reportReason" value="政治敏感"> 政治敏感</label>' +
-        '<label class="report-reason-option"><input type="radio" name="reportReason" value="其他"> 其他</label>' +
-        '</div></div>' +
-        '<div class="report-field"><label>补充说明（选填）</label><textarea id="reportDescription" placeholder="请描述具体情况..." maxlength="500"></textarea></div>' +
-        '<div class="report-field"><label>被举报内容预览</label><div class="report-preview">' + (contentSnapshot ? String(contentSnapshot).replace(/</g,'&lt;') : '(无内容)') + '</div></div>' +
-        '</div>' +
-        '<div class="report-footer"><button class="report-cancel" onclick="closeReportDialog()">取消</button>' +
-        '<button class="report-submit" id="reportSubmitBtn">提交举报</button></div>' +
-        '</div>';
-    document.body.appendChild(overlay);
-    document.getElementById('reportSubmitBtn').onclick = async function() {
-        var r = document.querySelector('input[name="reportReason"]:checked');
-        if (!r) { alert('请选择举报原因'); return; }
-        var d = document.getElementById('reportDescription');
-        var desc = d ? d.value.trim() : '';
-        try {
-            var cu = JSON.parse(localStorage.getItem('sq_user_session') || '{}');
-            if (!cu.id) { alert('请先登录'); return; }
-            var ins = await window.sb.from('reports').insert([{
-                reporter_id: cu.id, reported_user_id: reportedUserId,
-                content_type: contentType, content_id: contentId,
-                content_snapshot: contentSnapshot, reason: r.value, description: desc
-            }]).select();
-            if (ins.error) throw ins.error;
-            var adm = await window.sb.from('users').select('id').eq('phone','17355394710').single();
-            if (adm.data) {
-                await window.pushNotification(adm.data.id, {
-                    type: 'report', notification_type: 'report',
-                    report_id: ins.data[0].id, report_reason: r.value,
-                    extra_text: contentSnapshot ? String(contentSnapshot).substring(0,100) : ''
-                });
-            }
-            closeReportDialog();
-            alert('举报已提交，管理员会尽快处理');
-        } catch (err) { alert('举报失败：' + err.message); }
-    };
-    if (!document.getElementById('report-dialog-styles')) {
-        var s = document.createElement('style');
-        s.id = 'report-dialog-styles';
-        s.textContent = '.report-overlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px}' +
-        '.report-panel{background:#fff;border-radius:16px;max-width:460px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden}' +
-        '.report-header{display:flex;justify-content:space-between;align-items:center;padding:18px 20px 12px;border-bottom:1px solid #e8f0e8}' +
-        '.report-header h3{font-size:1.05em;margin:0;display:flex;align-items:center;gap:8px}.report-close{background:none;border:none;font-size:1.3em;cursor:pointer;color:#8aaa9a}' +
-        '.report-body{padding:16px 20px;overflow-y:auto;flex:1}.report-field{margin-bottom:14px}' +
-        '.report-field label{display:block;font-size:.75em;font-weight:600;color:#5a7a6a;margin-bottom:6px}' +
-        '.report-reasons{display:grid;grid-template-columns:1fr 1fr;gap:6px}' +
-        '.report-reason-option{display:flex;align-items:center;gap:6px;padding:8px 10px;border:1.5px solid #c8e0c8;border-radius:8px;font-size:.85em;cursor:pointer}' +
-        '.report-field textarea{width:100%;padding:10px;border:2px solid #c8e0c8;border-radius:10px;font-family:inherit;font-size:.85em;outline:none;min-height:70px;box-sizing:border-box}' +
-        '.report-preview{background:#f5faf5;border:1px solid #e0e0e0;border-radius:8px;padding:10px;font-size:.8em;color:#5a7a6a;max-height:80px;overflow:hidden}' +
-        '.report-footer{display:flex;gap:8px;padding:12px 20px 18px;border-top:1px solid #e8f0e8}' +
-        '.report-footer button{flex:1;padding:10px;border-radius:10px;border:none;font-weight:700;font-size:.9em;cursor:pointer}' +
-        '.report-cancel{background:#eaf3ea;color:#5a7a6a}.report-submit{background:#e57373;color:#fff}';
-        document.head.appendChild(s);
-    }
-};
-window.closeReportDialog = window.closeReportDialog || function() {
-    var el = document.getElementById('reportOverlay');
-    if (el) el.remove();
-};
 
 // ============ 初始化 ============
 renderHeader('帖子广场', 'posts');
 renderFooter('posts');
 var SUPABASE_URL = "https://ulvhuqtpdafspbdvkogs.supabase.co";
 var SUPABASE_ANON_KEY = "sb_publishable_b3zSRFSj9k73_tIxO1yJYw_IEK9tPLg";
-window.sb = window.sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-function showToast(msg) {
-    var t = document.getElementById('toast');
-    t.textContent = msg; t.classList.add('show');
-    clearTimeout(window.toastTimer);
-    window.toastTimer = setTimeout(function() { t.classList.remove('show'); }, 3000);
-}
-function escapeHtml(s) {
-    if (!s) return '';
-    return String(s).replace(/[&<>"']/g, function(c) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-}
-function showConfirm(title, body, onOk) {
-    var m = document.getElementById('confirmModal');
-    document.getElementById('confirmTitle').textContent = title;
-    document.getElementById('confirmBody').textContent = body;
-    m.classList.add('active');
-    var cancel = document.getElementById('confirmCancel');
-    var ok = document.getElementById('confirmOk');
-    var cleanup = function() { m.classList.remove('active'); cancel.onclick = null; ok.onclick = null; };
-    cancel.onclick = cleanup;
-    ok.onclick = function() { if (onOk) onOk(); cleanup(); };
-}
-function showPrompt(title, msg, placeholder, onOk, inputType) {
-    inputType = inputType || 'text';
-    var m = document.getElementById('promptModal');
-    document.getElementById('promptTitle').textContent = title;
-    document.getElementById('promptMessage').textContent = msg;
-    var input = document.getElementById('promptInput');
-    input.type = inputType; input.value = ''; input.placeholder = placeholder || '';
-    m.classList.add('active'); input.focus();
-    var cancel = document.getElementById('promptCancel');
-    var ok = document.getElementById('promptOk');
-    var cleanup = function() { m.classList.remove('active'); cancel.onclick = null; ok.onclick = null; input.onkeydown = null; };
-    cancel.onclick = cleanup;
-    ok.onclick = function() { var val = input.value.trim(); if (onOk) onOk(val); cleanup(); };
-    input.onkeydown = function(e) { if (e.key === 'Enter') ok.click(); };
-}
-function getUserAvatar(user) {
-    if (user && user.avatar_url) return user.avatar_url;
-    var name = user ? user.nickname : 'U';
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="#2e7d32" rx="50"/><text x="50" y="58" font-size="40" text-anchor="middle" fill="white" font-family="sans-serif">' + name.charAt(0).toUpperCase() + '</text></svg>';
-    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-}
-
-var currentUser = getSessionUser();
-if (!currentUser || !currentUser.id) window.location.href = '/liuyanban/index.html';
-var isAdmin = (currentUser.phone === '17355394710');
-if (isAdmin) document.getElementById('adminPanelBtn').style.display = 'inline-flex';
-
-var categories = [];
-var posts = [];
-var currentCategory = '全部';
-var commentCountMap = {};
 
 async function fetchCategories() {
     var res = await window.sb.from('categories').select('*').order('sort_order');

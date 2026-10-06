@@ -171,7 +171,14 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 
 <div id="toast"></div>
 
-<script src="/liuyanban/common.js"></script>
+<script src="/liuyanban/core/config.js"></script>
+<script src="/liuyanban/core/util.js"></script>
+<script src="/liuyanban/core/ui.js"></script>
+<script src="/liuyanban/core/session.js"></script>
+<script src="/liuyanban/core/data.js"></script>
+<script src="/liuyanban/core/mods.js"></script>
+<script src="/liuyanban/core/shell.js"></script>
+<script src="/liuyanban/core/boot.js"></script>
 <script>
 /* ============================================================
    基础
@@ -179,10 +186,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 var SUPABASE_URL="https://ulvhuqtpdafspbdvkogs.supabase.co";
 var SUPABASE_ANON_KEY="sb_publishable_b3zSRFSj9k73_tIxO1yJYw_IEK9tPLg";
 window.sb=window.sb||window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-
-function showToast(m){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(function(){t.classList.remove('show')},2600)}
-function escapeHtml(s){if(!s)return '';return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-function showConfirm(title,body,onOk){var m=document.getElementById('confirmModal');document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmBody').textContent=body;m.classList.add('active');var c=document.getElementById('confirmCancel'),o=document.getElementById('confirmOk');var cleanup=function(){m.classList.remove('active');c.onclick=null;o.onclick=null};c.onclick=cleanup;o.onclick=function(){if(onOk)onOk();cleanup()}}
 
 var currentUser=getSessionUser();
 if(!currentUser||!currentUser.id)window.location.href='/liuyanban/index.html';

@@ -31,10 +31,26 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'app');
 const OUT = path.join(ROOT, 'dist');
 
-/** 构建产物必须包含的文件，缺一即构建失败 */
+/** 构建产物必须包含的页面文件，缺一即构建失败 */
 const REQUIRED = [
   'index.html', 'posts.html', 'profile.html', 'room.html', 'messages.html',
-  'new-post.html', 'user.html', 'chats.html', 'common.js', 'gomoku.js'
+  'new-post.html', 'user.html', 'chats.html', 'gomoku.js'
+];
+
+/**
+ * 核心层模块。加载顺序即依赖顺序，不可随意调整：
+ *   config  提供 SQ_CONFIG，其余模块都依赖它
+ *   util    提供 SQUtil（转义/头像等纯函数）
+ *   ui      依赖 util
+ *   session 依赖 util + config
+ *   data    依赖 config，负责创建后端客户端
+ *   mods    依赖 ui + session
+ *   shell   依赖 util + ui
+ *   boot    依赖以上全部，且含页面加载时的自动执行逻辑
+ */
+const CORE_MODULES = [
+  'config.js', 'util.js', 'ui.js', 'session.js',
+  'data.js', 'mods.js', 'shell.js', 'boot.js'
 ];
 
 /** 源码里遗留的部署路径前缀 */
@@ -75,7 +91,7 @@ async function main() {
   log('Supabase KEY : ' + mask(sbKey));
 
   // ------------------------------------------------------------ 4. 逐文件处理
-  const stats = { pathHits: 0, urlHits: 0, keyHits: 0, bytes: 0 };
+  const stats = { pathHits: 0, bytes: 0 };
 
   for (const name of REQUIRED) {
     const raw = await readFile(path.join(SRC, name), 'utf8');
@@ -85,25 +101,33 @@ async function main() {
     let out = raw.replaceAll(LEGACY_BASE, basePath);
 
     // 4b. 凭据注入（仅当提供了环境变量时才替换）
-    let urlHits = 0;
-    let keyHits = 0;
-    if (sbUrl) {
-      const url = sbUrl.replace(/\/+$/, '');
-      out = out.replace(RE_SUPABASE_URL, () => { urlHits++; return url; });
-    }
-    if (sbKey) {
-      out = out.replace(RE_SUPABASE_KEY, () => { keyHits++; return sbKey; });
-    }
+    out = injectCredentials(out, sbUrl, sbKey);
 
     await writeFile(path.join(OUT, name), out, 'utf8');
     stats.pathHits += pathHits;
-    stats.urlHits += urlHits;
-    stats.keyHits += keyHits;
     stats.bytes += Buffer.byteLength(out, 'utf8');
   }
 
   log('处理完成：' + REQUIRED.length + ' 个文件 / ' + (stats.bytes / 1024).toFixed(1) + ' KB');
-  log('  路径改写 ' + stats.pathHits + ' 处 | URL 注入 ' + stats.urlHits + ' 处 | KEY 注入 ' + stats.keyHits + ' 处');
+  log('  路径改写 ' + stats.pathHits + ' 处 | 核心模块 ' + CORE_MODULES.length + ' 个');
+
+  // ------------------------------------------------------------ 4b. 核心层
+  for (const name of CORE_MODULES) {
+    const raw = await readFile(path.join(SRC, 'core', name), 'utf8');
+    await mkdir(path.join(OUT, 'core'), { recursive: true });
+    await writeFile(path.join(OUT, 'core', name), injectCredentials(raw, sbUrl, sbKey), 'utf8');
+  }
+  log(`核心层输出：${CORE_MODULES.length} 个模块 -> dist/core/`);
+
+  // 合并为单文件 core.js（供只需一次请求的场景备用）
+  const parts = [];
+  for (const name of CORE_MODULES) {
+    const rawCore = await readFile(path.join(SRC, 'core', name), 'utf8');
+    parts.push('/* ---- ' + name + ' ---- */\n' + injectCredentials(rawCore, sbUrl, sbKey));
+  }
+  const merged = parts.join('\n\n');
+  await writeFile(path.join(OUT, 'core.js'), merged, 'utf8');
+  log(`已合并单文件 core.js（${merged.length} 字符）`);
 
   // ------------------------------------------------------------ 5. Pages 辅助文件
   await writeFile(path.join(OUT, '.nojekyll'), '', 'utf8');
@@ -122,6 +146,17 @@ async function main() {
   log('自检通过：产物中无遗留 ' + LEGACY_BASE + ' 绝对路径');
 
   log('构建成功，用时 ' + (Date.now() - startedAt) + 'ms，产物目录：dist/');
+}
+
+/** 按需替换 Supabase 凭据字面量；未提供环境变量时原样返回 */
+function injectCredentials(src, sbUrl, sbKey) {
+  let out = src;
+  if (sbUrl) {
+    const url = sbUrl.replace(/\/+$/, '');
+    out = out.replace(RE_SUPABASE_URL, () => url);
+  }
+  if (sbKey) out = out.replace(RE_SUPABASE_KEY, () => sbKey);
+  return out;
 }
 
 function normalizeBase(raw) {

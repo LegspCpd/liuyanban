@@ -12,7 +12,7 @@
 
 ```
 .
-├── app/                        站点源码（10 个文件，UI 源码，勿直接改动路径）
+├── app/                        站点源码（UI 源码，勿直接改动路径）
 │   ├── index.html              登录 / 注册
 │   ├── posts.html              帖子广场（含管理员面板）
 │   ├── profile.html            个人中心（消息中心 / 反馈 / 网站管理）
@@ -21,11 +21,20 @@
 │   ├── new-post.html           发帖
 │   ├── user.html               用户主页
 │   ├── chats.html              聊天群
-│   ├── common.js               全局运行时
-│   └── gomoku.js               五子棋模块
+│   ├── gomoku.js               五子棋模块
+│   │
+│   └── core/                   分层核心层（按依赖顺序加载）
+│       ├── config.js           L0 配置：凭据、管理员、路径（构建期可注入）
+│       ├── util.js             L1 纯工具：转义、头像、JSON 安全解析
+│       ├── ui.js               L2 UI：Toast、确认框、输入框、图标、横幅、提示音
+│       ├── session.js          L3 会话与认证：本地缓存 + Supabase Auth
+│       ├── data.js             L4 数据访问：后端客户端唯一持有者
+│       ├── mods.js             L5 业务：举报、通知、未读、封禁监听与横幅
+│       ├── shell.js            L6 外壳：顶部品牌栏、底部导航栏
+│       └── boot.js             L7 启动：加载动画、会话校验、Presence、封号监听
 │
 ├── scripts/
-│   ├── build.mjs               构建脚本（零依赖）
+│   ├── build.mjs               构建脚本（零依赖；同时输出 dist/core/ 与合并版 dist/core.js）
 │   └── apply-schema.mjs        自动建表执行器（零依赖，支持 Supabase / Neon）
 │
 ├── db/
