@@ -6,7 +6,7 @@
 var currentUser=getSessionUser();
 if(!currentUser||!currentUser.id)window.location.href='/liuyanban/index.html';
 var isAdmin=window.isAdmin(currentUser);
-var isAuthorMode=false,AUTHOR_PASSWORD="7592";
+var isAuthorMode=false;
 
 /* ============================================================
    头部
@@ -41,8 +41,7 @@ var isAuthorMode=false,AUTHOR_PASSWORD="7592";
       if(!isAuthorMode){
         var p=prompt('请输入作者密码：');
         if(p===null)return;
-        var h1=await sha256(p),h2=await sha256(AUTHOR_PASSWORD);
-        if(h1===h2){isAuthorMode=true;showToast('作者模式已激活')}
+        if(await window.verifyAuthorPassword(p)){isAuthorMode=true;showToast('作者模式已激活')}
         else showToast('密码错误');
       }else{isAuthorMode=false;showToast('已退出作者模式')}
     }

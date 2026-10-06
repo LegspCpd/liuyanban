@@ -13,7 +13,6 @@
         // 作者模式
         // ============================================================
         var isAuthorMode = false;
-        var AUTHOR_PASSWORD = "7592";
 
         // ============================================================
         // 会话与权限
@@ -483,9 +482,7 @@
                     if (!isAuthorMode) {
                         var pwd = prompt('请输入作者密码：');
                         if (pwd === null) return;
-                        var hash = await sha256(pwd);
-                        var correctHash = await sha256(AUTHOR_PASSWORD);
-                        if (hash === correctHash) {
+                        if (await window.verifyAuthorPassword(pwd)) {
                             isAuthorMode = true;
                             document.getElementById('msgAuthorOptions').classList.add('active');
                             showToast('作者模式已激活');

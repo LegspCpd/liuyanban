@@ -17,6 +17,10 @@
         // 管理员手机号：原先硬编码于 10 个源文件共 17 处，现收敛为一处
         adminPhone: '17355394710',
 
+        // 作者模式密码：原先硬编码于 messages/chats 两页（明文 "7592"），现收敛为一处；
+        // 校验走 sha256 比对（见 verifyAuthorPassword），页面不再存明文
+        authorPassword: '7592',
+
         // 后端平台：supabase | neon（仅用于展示与后续数据层切换，当前默认 supabase）
         platform: 'supabase',
 
@@ -72,6 +76,15 @@
     // 构造登录用的伪邮箱
     global.phoneToEmail = function (phone) {
         return String(phone) + cfg.authEmailSuffix;
+    };
+
+    // 作者密码校验（sha256 比对，避免页面散落明文）
+    global.verifyAuthorPassword = async function (input) {
+        var h = global.sha256Hex || global.sha256;
+        if (typeof h !== 'function') return String(input) === String(cfg.authorPassword);
+        var a = await h(String(input || ''));
+        var b = await h(String(cfg.authorPassword));
+        return a === b;
     };
 
     // 解析站内地址（统一走 basePath）
