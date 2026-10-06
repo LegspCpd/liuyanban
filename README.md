@@ -116,7 +116,20 @@ Supabase 与 Neon 的变量互不冲突，可以**同时填好**，用 `DB_PROVI
 不改前端也能对 Neon 建表；已建好的 Neon 库可直接用 Neon 的 `psql` /
 `neon` CLI 连接使用。
 
-### 4.5 前端说明（重要）
+### 4.5 老库直接复用（原作者免重装）
+
+如果手里已经有一个跑着的老库（比如原作者的库），**不用导数据、不用重装**，按下面三步接上即可：
+
+1. 把老库的连接信息填进 Actions Secrets（Supabase 用 `DATABASE_URL`，Neon 用 `NEON_DATABASE_URL`）
+2. 跑一次流水线（自动）或手动触发「数据库维护」——`schema.core.sql` 全是 `if not exists`，**不会覆盖已有数据**；垫后的 `db/schema.compat.sql` 会自动补齐：
+   - `rooms.mute_all` 列（全员禁言功能依赖，缺则 500）
+   - `reports` 审核字段（`reviewed_by/at`、`measure`、`ban_days`、`admin_note`）
+   - Realtime 发布里缺失的表（含新增的 `reports` / `notifications` / `feedback`）
+   - 关掉「开了 RLS 却没有配套策略」的表（这种表 anon key 会被静默挡掉，页面看起来就是数据过不来）
+   - 补 `avatars` 存储桶
+3. 前端自带降级：老库还没跑补丁时，全员禁言切本地态、举报审核只改状态，**页面不炸**
+
+### 4.6 前端说明（重要）
 
 当前前端的 **登录、实时通信、文件上传仍然使用 Supabase**（`sb.auth` /
 Realtime / Storage），这部分在 Neon 上没有对等实现，因此：

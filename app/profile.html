@@ -894,11 +894,16 @@
             } else {
                 showConfirm('驳回举报', '确定驳回此举报吗？举报人会收到通知。', async function() {
                     try {
-                        await window.sb.from('reports').update({
+                        var rejRes = await window.sb.from('reports').update({
                             status: 'rejected',
                             reviewed_by: currentUser.id,
                             reviewed_at: new Date().toISOString()
                         }).eq('id', reportId);
+                        if (rejRes.error && /reviewed_|column|schema cache/i.test(rejRes.error.message || '')) {
+                            // 老库缺审核列：降级为只改状态
+                            rejRes = await window.sb.from('reports').update({ status: 'rejected' }).eq('id', reportId);
+                        }
+                        if (rejRes.error) throw rejRes.error;
 
                         var rRes = await window.sb.from('reports').select('*').eq('id', reportId).single();
                         if (rRes.error) throw rRes.error;
@@ -1032,7 +1037,7 @@
                 var typeText = { post: '帖子', comment: '评论', message: '留言', chat: '聊天消息' }[report.content_type] || '内容';
                 var snippet = await getFullSnippet(report);
 
-                await window.sb.from('reports').update({
+                var apRes = await window.sb.from('reports').update({
                     status: 'approved',
                     reviewed_by: currentUser.id,
                     reviewed_at: new Date().toISOString(),
@@ -1040,6 +1045,11 @@
                     ban_days: measure === 'ban' ? banDays : null,
                     admin_note: measure + (measure === 'ban' ? '（' + banDays + '天）' : '')
                 }).eq('id', reportId);
+                if (apRes.error && /reviewed_|measure|ban_days|admin_note|column|schema cache/i.test(apRes.error.message || '')) {
+                    // 老库缺审核列：降级为只改状态，措施照常执行（封禁/删帖/警告不受影响）
+                    apRes = await window.sb.from('reports').update({ status: 'approved' }).eq('id', reportId);
+                }
+                if (apRes.error) throw apRes.error;
 
                 var measureText = '';
                 if (measure === 'ban') {

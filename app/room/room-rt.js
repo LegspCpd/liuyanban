@@ -54,7 +54,7 @@ window.clearCurrentGame=clearCurrentGame;
 async function toggleMuteAll(on){
   if(!isAdmin){showToast("只有管理员能操作");return}
   if(!state.room)return;
-  try{ await window.sb.from("rooms").update({mute_all:on}).eq("id",state.room.id); state.room.mute_all=on; showToast(on?"已开启全员禁言":"已关闭全员禁言"); }catch(e){showToast("操作失败："+e.message)}
+  try{ await window.sb.from("rooms").update({mute_all:on}).eq("id",state.room.id); state.room.mute_all=on; showToast(on?"已开启全员禁言":"已关闭全员禁言"); }catch(e){ if(/mute_all|column|schema cache/i.test(e.message||"")){ state.room.mute_all=on; showToast("已切换（本地生效，数据库需跑 compat 补丁持久化）"); } else showToast("操作失败："+e.message) }
 }
 window.toggleMuteAll=toggleMuteAll;
 async function setRoomHost(uid){

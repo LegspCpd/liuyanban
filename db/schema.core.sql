@@ -129,6 +129,11 @@ create table if not exists public.reports (
     content_snapshot  text,                              -- 举报时的内容快照
     reason            text        not null,              -- 色情低俗/骚扰辱骂/垃圾广告/虚假信息/政治敏感/其他
     description       text,
+    reviewed_by       bigint references public.users (id) on delete set null,
+    reviewed_at       timestamptz,
+    measure           text,                                  -- warn / delete / ban
+    ban_days          integer,
+    admin_note        text,
     status            text        not null default 'pending',
     created_at        timestamptz not null default now()
 );
@@ -224,6 +229,7 @@ create table if not exists public.rooms (
     mic_speaking        jsonb       not null default '[]'::jsonb,
     mic_requests        jsonb       not null default '[]'::jsonb,
     game_disabled       boolean     not null default false,
+    mute_all            boolean     not null default false,  -- 全员禁言（room-rt.js 依赖）
     current_game        jsonb,                                -- 当前对局快照
     created_at          timestamptz not null default now()
 );
