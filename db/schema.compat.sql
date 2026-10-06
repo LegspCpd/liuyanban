@@ -84,14 +84,14 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
--- 5. 头像存储桶（前端 storage.from('avatars') 依赖）
---    与 schema.supabase.sql 同逻辑，此处再守一次，老库直连可复用
+-- 5. 存储桶（avatars 头像 + posts 发帖图片，与 supabase.sql 同逻辑再守一次）
 -- ---------------------------------------------------------------------------
 do $$
 begin
     if exists (select 1 from pg_namespace where nspname = 'storage') then
         insert into storage.buckets (id, name, public)
-        values ('avatars', 'avatars', true)
+        values ('avatars', 'avatars', true),
+               ('posts', 'posts', true)
         on conflict (id) do nothing;
     end if;
 end $$;

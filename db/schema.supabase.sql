@@ -15,10 +15,13 @@ begin
     end if;
 
     -- -----------------------------------------------------------------------
-    -- 头像存储桶（前端 window.sb.storage.from('avatars') 依赖，缺则上传失败）
+    -- 存储桶（前端依赖，缺则上传失败）：
+    --   avatars  头像（profile/user 页）
+    --   posts    发帖图片（new-post 页 uploadImage，缺桶则发帖插图 400）
     -- -----------------------------------------------------------------------
     insert into storage.buckets (id, name, public)
-    values ('avatars', 'avatars', true)
+    values ('avatars', 'avatars', true),
+           ('posts', 'posts', true)
     on conflict (id) do nothing;
 end $$;
 
