@@ -64,6 +64,54 @@ if (!window.sb) {
 })();
 
 // ============================================================
+// 页面加载转圈（所有页面通用）
+// ============================================================
+(function pageLoading() {
+    // 注入样式
+    if (!document.getElementById('page-loading-styles')) {
+        var st = document.createElement('style');
+        st.id = 'page-loading-styles';
+        st.textContent =
+            '.page-loading-mask{position:fixed;inset:0;z-index:999999;background:var(--bg,#f5faf5);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;transition:opacity .35s ease;}' +
+            '.page-loading-mask.fade-out{opacity:0;pointer-events:none;}' +
+            '.page-loading-spinner{width:40px;height:40px;border:3px solid var(--border,#c8e0c8);border-top-color:var(--primary,#2e7d32);border-radius:50%;animation:pageLoadSpin .8s linear infinite;}' +
+            '@keyframes pageLoadSpin{to{transform:rotate(360deg);}}' +
+            '.page-loading-text{font-size:.8em;color:var(--text-muted,#5a7a6a);font-family:var(--font,system-ui,sans-serif);}';
+        document.head.appendChild(st);
+    }
+
+    function show() {
+        if (document.getElementById('pageLoadingMask')) return;
+        var mask = document.createElement('div');
+        mask.className = 'page-loading-mask';
+        mask.id = 'pageLoadingMask';
+        mask.innerHTML = '<div class="page-loading-spinner"></div><div class="page-loading-text">加载中…</div>';
+        document.body.appendChild(mask);
+    }
+
+    function hide() {
+        var m = document.getElementById('pageLoadingMask');
+        if (!m) return;
+        m.classList.add('fade-out');
+        setTimeout(function() { m.remove(); }, 400);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', show);
+    } else {
+        show();
+    }
+    window.addEventListener('load', function() {
+        // 延迟一点，避免闪一下就消失
+        setTimeout(hide, 200);
+    });
+    // 兜底：最多 8 秒后强制隐藏（防卡死）
+    setTimeout(hide, 8000);
+    // 暴露给页面，数据加载完后可主动调用（更精准）
+    window.hidePageLoading = hide;
+})();
+
+// ============================================================
 // SVG 图标库
 // ============================================================
 var SVG_ICONS = {
@@ -105,7 +153,50 @@ function getSessionUser() {
     return null;
 }
 function setSessionUser(user) { localStorage.setItem('sq_user_session', JSON.stringify(user)); }
-function clearSession() { localStorage.removeItem('sq_user_session'); }
+function clearSession() {
+    localStorage.removeItem('sq_user_session');
+    try { if (window.sb) window.sb.auth.signOut(); } catch (e) {}
+}
+
+// 用 Supabase Auth 的真实会话校验并刷新本地缓存
+// （防止用户篡改 localStorage 里的 user 冒充他人/管理员）
+async function syncSessionFromAuth() {
+    if (!window.sb) return null;
+    try {
+        var r = await window.sb.auth.getSession();
+        var session = r.data && r.data.session;
+        if (!session || !session.user) {
+            // Auth 无会话 -> 本地缓存无效，清除
+            if (localStorage.getItem('sq_user_session')) {
+                localStorage.removeItem('sq_user_session');
+            }
+            return null;
+        }
+        var authId = session.user.id;
+        var q = await window.sb.from('users').select('*').eq('auth_id', authId).limit(1);
+        var user = q.data && q.data[0];
+        if (user) {
+            localStorage.setItem('sq_user_session', JSON.stringify(user));
+            return user;
+        }
+        return null;
+    } catch (e) {
+        return null;
+    }
+}
+window.syncSessionFromAuth = syncSessionFromAuth;
+
+// 页面加载时后台校验一次；若会话失效则跳登录（仅在已登录页面）
+(function bootstrapSession() {
+    function run() {
+        syncSessionFromAuth();
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { setTimeout(run, 300); });
+    } else {
+        setTimeout(run, 300);
+    }
+})();
 
 // ============================================================
 // 通用工具

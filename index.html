@@ -821,6 +821,10 @@
             if (e.target === this) this.classList.remove('active');
         });
 
+        // 手机号 -> 虚拟邮箱（Supabase Auth 用邮箱登录，前端对用户仍显示手机号）
+        function phoneToEmail(phone) { return phone + '@sq.local'; }
+
+        // 旧版密码哈希，仅用于老用户首次登录时的兼容校验
         async function hashPassword(password) {
             var encoder = new TextEncoder();
             var data = encoder.encode(password);
@@ -872,10 +876,19 @@
             return ts + r;
         }
         async function registerUser(phone, password, nickname) {
-            var hashed = await hashPassword(password);
+            var email = phoneToEmail(phone);
+            // 1. 用 Supabase Auth 注册（邮箱=手机号@sq.local）
+            var signRes = await window.sb.auth.signUp({ email: email, password: password });
+            if (signRes.error) {
+                if ((signRes.error.message || '').toLowerCase().indexOf('already') >= 0)
+                    throw new Error(T().phoneExists);
+                throw signRes.error;
+            }
+            var authId = signRes.data && signRes.data.user ? signRes.data.user.id : null;
+            // 2. 写入业务资料表
             var avatar = generateDefaultAvatar(nickname);
             var res = await window.sb.from('users')
-                .insert([{ phone: phone, password: hashed, nickname: nickname, avatar_url: avatar, user_no: genUserNo() }])
+                .insert([{ phone: phone, nickname: nickname, avatar_url: avatar, user_no: genUserNo(), auth_id: authId }])
                 .select();
             if (res.error) {
                 if (res.error.code === '23505') throw new Error(T().phoneExists);
@@ -885,11 +898,46 @@
         }
 
         async function loginUser(phone, password) {
-            var hashed = await hashPassword(password);
-            var res = await window.sb.from('users').select('*').eq('phone', phone).eq('password', hashed);
-            if (res.error) throw res.error;
-            if (!res.data || res.data.length === 0) throw new Error(T().loginFail);
-            return res.data[0];
+            var email = phoneToEmail(phone);
+            // 1. 先用 Supabase Auth 登录
+            var signRes = await window.sb.auth.signInWithPassword({ email: email, password: password });
+
+            if (signRes.error) {
+                // 2. 老用户兼容：Auth 登录失败时，尝试用旧哈希匹配
+                var hashed = await hashPassword(password);
+                var oldRes = await window.sb.from('users').select('*').eq('phone', phone).eq('password', hashed);
+                var oldUser = oldRes.data && oldRes.data[0];
+                if (oldUser) {
+                    // 老用户密码正确 -> 在 Auth 里补建账号并绑定
+                    var su = await window.sb.auth.signUp({ email: email, password: password });
+                    if (su.error && (su.error.message || '').toLowerCase().indexOf('already') < 0) throw su.error;
+                    var newAuthId = su.data && su.data.user ? su.data.user.id : null;
+                    if (newAuthId) {
+                        await window.sb.from('users').update({ auth_id: newAuthId }).eq('id', oldUser.id);
+                        oldUser.auth_id = newAuthId;
+                    }
+                    // 重新登录建立会话
+                    await window.sb.auth.signInWithPassword({ email: email, password: password });
+                    return oldUser;
+                }
+                throw new Error(T().loginFail);
+            }
+
+            // 3. Auth 登录成功 -> 读业务资料
+            var authUser = signRes.data.user;
+            var q = await window.sb.from('users').select('*').eq('auth_id', authUser.id).limit(1);
+            var user = q.data && q.data[0];
+            if (!user) {
+                // 兜底：按手机号找，并补写 auth_id
+                var q2 = await window.sb.from('users').select('*').eq('phone', phone).limit(1);
+                user = q2.data && q2.data[0];
+                if (user) {
+                    await window.sb.from('users').update({ auth_id: authUser.id }).eq('id', user.id);
+                    user.auth_id = authUser.id;
+                }
+            }
+            if (!user) throw new Error(T().loginFail);
+            return user;
         }
 
         function handleLogin() {
@@ -1026,7 +1074,25 @@
         // ============================================================
         // 已登录自动跳转
         // ============================================================
-        (function checkSession() {
+        (async function checkSession() {
+            // 优先用 Supabase Auth 会话判断是否已登录
+            try {
+                if (window.sb) {
+                    var r = await window.sb.auth.getSession();
+                    var authSession = r.data && r.data.session;
+                    if (authSession && authSession.user) {
+                        // Auth 已登录：补全本地缓存后跳转
+                        var q = await window.sb.from('users').select('*').eq('auth_id', authSession.user.id).limit(1);
+                        var u = q.data && q.data[0];
+                        if (u) {
+                            localStorage.setItem('sq_user_session', JSON.stringify(u));
+                            window.location.href = '/liuyanban/posts.html';
+                            return;
+                        }
+                    }
+                }
+            } catch (e) {}
+            // 兜底：本地缓存
             var session = localStorage.getItem('sq_user_session');
             if (session) {
                 try {
