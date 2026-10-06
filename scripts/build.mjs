@@ -156,8 +156,8 @@ async function main() {
   }
   log(`房间页输出：${ROOM_MODULES.length} 个模块 -> dist/room/`);
 
-  // ------------------------------------------------------------ 4d. 帖子页 / 个人中心模块
-  for (const [dir, list] of [['posts', POSTS_MODULES], ['profile', PROFILE_MODULES]]) {
+  // ------------------------------------------------------------ 4d. 各页模块（posts/profile/room 外的单模块页）
+  for (const [dir, list] of [['posts', POSTS_MODULES], ['profile', PROFILE_MODULES], ['messages', ['messages.js']], ['chats', ['chats.js']], ['index', ['index.js']], ['new-post', ['new-post.js']], ['user', ['user.js']]]) {
     for (const name of list) {
       const raw = await readFile(path.join(SRC, dir, name), 'utf8');
       await mkdir(path.join(OUT, dir), { recursive: true });
