@@ -71,6 +71,15 @@ const ROOM_MODULES = [
   'room-rt.js'
 ];
 
+/** 帖子页模块（app/posts/）与个人中心模块（app/profile/），加载顺序即依赖顺序 */
+const POSTS_MODULES = [
+  'posts-data.js', 'posts-social.js', 'posts-render.js', 'posts-admin.js'
+];
+const PROFILE_MODULES = [
+  'profile-core.js', 'profile-notify.js', 'profile-report.js',
+  'profile-feedback.js', 'profile-init.js'
+];
+
 /** 源码里遗留的部署路径前缀 */
 const LEGACY_BASE = '/liuyanban/';
 
@@ -146,6 +155,17 @@ async function main() {
     await writeFile(path.join(OUT, 'room', name), injectCredentials(rewritten, sbUrl, sbKey), 'utf8');
   }
   log(`房间页输出：${ROOM_MODULES.length} 个模块 -> dist/room/`);
+
+  // ------------------------------------------------------------ 4d. 帖子页 / 个人中心模块
+  for (const [dir, list] of [['posts', POSTS_MODULES], ['profile', PROFILE_MODULES]]) {
+    for (const name of list) {
+      const raw = await readFile(path.join(SRC, dir, name), 'utf8');
+      await mkdir(path.join(OUT, dir), { recursive: true });
+      const rewritten = raw.replaceAll(LEGACY_BASE, basePath);
+      await writeFile(path.join(OUT, dir, name), injectCredentials(rewritten, sbUrl, sbKey), 'utf8');
+    }
+    log(`${dir}页输出：${list.length} 个模块 -> dist/${dir}/`);
+  }
 
   // 合并为单文件 core.js（供只需一次请求的场景备用）
   const parts = [];
