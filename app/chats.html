@@ -183,15 +183,11 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 /* ============================================================
    基础
 ============================================================ */
-var SUPABASE_URL="https://ulvhuqtpdafspbdvkogs.supabase.co";
-var SUPABASE_ANON_KEY="sb_publishable_b3zSRFSj9k73_tIxO1yJYw_IEK9tPLg";
-window.sb=window.sb||window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
 var currentUser=getSessionUser();
 if(!currentUser||!currentUser.id)window.location.href='/liuyanban/index.html';
 var isAdmin=window.isAdmin(currentUser);
 var isAuthorMode=false,AUTHOR_PASSWORD="7592";
-async function sha256(msg){var buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(msg));return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('')}
 
 /* ============================================================
    头部
@@ -380,7 +376,6 @@ function initPresence(){
 ============================================================ */
 var chats=[],chatsLoading=false,usersCache={};
 
-function isUserBanned(){if(!currentUser||!currentUser.banned_until)return false;return new Date(currentUser.banned_until)>new Date()}
 function updateBannedBanner(){
   var b=document.getElementById('bannedBanner'),d=document.getElementById('bannedUntilDisplay'),i=document.getElementById('chatInput'),s=document.getElementById('sendChatBtn');
   if(isUserBanned()){

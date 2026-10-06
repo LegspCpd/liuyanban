@@ -339,12 +339,6 @@
 
 </script>
     <script>
-        // ============================================================
-        // Supabase 配置
-        // ============================================================
-        var SUPABASE_URL = "https://ulvhuqtpdafspbdvkogs.supabase.co";
-        var SUPABASE_ANON_KEY = "sb_publishable_b3zSRFSj9k73_tIxO1yJYw_IEK9tPLg";
-        window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // ============================================================
         // 工具函数
@@ -360,12 +354,6 @@
         // ============================================================
         var isAuthorMode = false;
         var AUTHOR_PASSWORD = "7592";
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
 
         // ============================================================
         // 会话与权限
@@ -373,11 +361,6 @@
         var currentUser = null;
         var isAdmin = false;
 
-        function isUserBanned() {
-            if (!currentUser) return false;
-            const bannedUntil = currentUser.banned_until ? new Date(currentUser.banned_until) : null;
-            return bannedUntil && bannedUntil > new Date();
-        }
 
         function getBannedUntil() {
             if (!currentUser || !currentUser.banned_until) return null;

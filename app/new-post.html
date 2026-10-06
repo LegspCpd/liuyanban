@@ -338,11 +338,6 @@
     <script>
         renderHeader('发帖', 'posts');
 
-        // 强制初始化 Supabase 客户端
-        var SUPABASE_URL = "https://ulvhuqtpdafspbdvkogs.supabase.co";
-        var SUPABASE_ANON_KEY = "sb_publishable_b3zSRFSj9k73_tIxO1yJYw_IEK9tPLg";
-        window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         var currentUser = getSessionUser();
         if (!currentUser || !currentUser.id) {
             window.location.href = '/liuyanban/index.html';

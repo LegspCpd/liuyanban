@@ -41,14 +41,24 @@
         return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
     }
 
+    /** SHA-256 十六进制摘要（作者模式密码校验用） */
+    async function sha256Hex(message) {
+        var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(message));
+        return Array.from(new Uint8Array(buf))
+            .map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    }
+
     global.SQUtil = {
         escapeHtml: escapeHtml,
         safeParse: safeParse,
         initialOf: initialOf,
         isRemoteAvatar: isRemoteAvatar,
-        avatarDataUri: avatarDataUri
+        avatarDataUri: avatarDataUri,
+        sha256Hex: sha256Hex
     };
 
     // 兼容既有调用方式
     global.escapeHtml = escapeHtml;
+    global.sha256Hex = sha256Hex;
+    global.sha256 = sha256Hex;
 })(window);

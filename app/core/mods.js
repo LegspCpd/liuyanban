@@ -161,8 +161,11 @@
             if (res.error) throw res.error;
             var footerContainer = document.getElementById('footer-container');
             if (!footerContainer) return;
-            var profileTab = footerContainer.querySelector('a[href="./profile.html"]') ||
-                             footerContainer.querySelector('a[href="' + cfg.basePath + 'profile.html"]');
+            // 「个人」tab 实际指向 user.html（见 shell.js），历史查询 profile.html 永远命中不了
+            var profileTab = footerContainer.querySelector('a[href="' + cfg.basePath + 'user.html"]') ||
+                             footerContainer.querySelector('a[href="./user.html"]') ||
+                             footerContainer.querySelector('a[href="' + cfg.basePath + 'profile.html"]') ||
+                             footerContainer.querySelector('a[href="./profile.html"]');
             if (!profileTab) return;
             var old = profileTab.querySelector('.badge');
             if (old) old.remove();

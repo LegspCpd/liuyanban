@@ -34,7 +34,7 @@ const OUT = path.join(ROOT, 'dist');
 /** 构建产物必须包含的页面文件，缺一即构建失败 */
 const REQUIRED = [
   'index.html', 'posts.html', 'profile.html', 'room.html', 'messages.html',
-  'new-post.html', 'user.html', 'chats.html', 'gomoku.js'
+  'new-post.html', 'user.html', 'chats.html'
 ];
 
 /**
@@ -51,6 +51,24 @@ const REQUIRED = [
 const CORE_MODULES = [
   'config.js', 'util.js', 'ui.js', 'session.js',
   'data.js', 'mods.js', 'shell.js', 'boot.js'
+];
+
+/**
+ * 房间页模块（app/room/）。加载顺序即依赖顺序，不可随意调整：
+ *   room-core      守卫/状态/视图/列表/进入离开/Presence/麦位
+ *   game-shell     GAMES/词库/游戏状态机/draw-tick
+ *   game-render    renderGame 调度/全屏
+ *   game-gomoku    五子棋
+ *   game-draw      你画我猜
+ *   game-spy       谁是卧底
+ *   game-werewolf  狼人杀
+ *   game-doudizhu  斗地主
+ *   room-rt        房间消息/实时订阅/房间设置/事件/初始化
+ */
+const ROOM_MODULES = [
+  'room-core.js', 'game-shell.js', 'game-render.js', 'game-gomoku.js',
+  'game-draw.js', 'game-spy.js', 'game-werewolf.js', 'game-doudizhu.js',
+  'room-rt.js'
 ];
 
 /** 源码里遗留的部署路径前缀 */
@@ -118,6 +136,16 @@ async function main() {
     await writeFile(path.join(OUT, 'core', name), injectCredentials(raw, sbUrl, sbKey), 'utf8');
   }
   log(`核心层输出：${CORE_MODULES.length} 个模块 -> dist/core/`);
+
+  // ------------------------------------------------------------ 4c. 房间页模块
+  for (const name of ROOM_MODULES) {
+    const raw = await readFile(path.join(SRC, 'room', name), 'utf8');
+    await mkdir(path.join(OUT, 'room'), { recursive: true });
+    // 与页面文件同规则：路径改写 + 凭据注入
+    const rewritten = raw.replaceAll(LEGACY_BASE, basePath);
+    await writeFile(path.join(OUT, 'room', name), injectCredentials(rewritten, sbUrl, sbKey), 'utf8');
+  }
+  log(`房间页输出：${ROOM_MODULES.length} 个模块 -> dist/room/`);
 
   // 合并为单文件 core.js（供只需一次请求的场景备用）
   const parts = [];

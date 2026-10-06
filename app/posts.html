@@ -265,8 +265,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 // ============ 初始化 ============
 renderHeader('帖子广场', 'posts');
 renderFooter('posts');
-var SUPABASE_URL = "https://ulvhuqtpdafspbdvkogs.supabase.co";
-var SUPABASE_ANON_KEY = "sb_publishable_b3zSRFSj9k73_tIxO1yJYw_IEK9tPLg";
 
 async function fetchCategories() {
     var res = await window.sb.from('categories').select('*').order('sort_order');
