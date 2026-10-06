@@ -1,14 +1,11 @@
 -- ============================================================================
---  Seven戚 · 数据库 Schema
---  ---------------------------------------------------------------------------
---  目标平台 : Supabase (PostgreSQL)
---  特性     : 幂等 —— 可重复执行，不会覆盖已有数据
---  维护方式 : 本文件由 GitHub Actions 自动执行（见 .github/workflows/database.yml）
---             也可在 Supabase SQL Editor 中手工粘贴执行
---
---  说明     : 默认【不启用 RLS】，与现有线上库保持一致，保证前端 anon key
---             直连即可读写。需要收紧权限时，请单独执行 db/rls-hardening.sql。
+--  Seven戚 · 通用 Postgres Schema（core）
+-- 目标平台 : Supabase / Neon / 任意标准 PostgreSQL 14+
+  特性     : 幂等，可重复执行，不覆盖已有数据
+  执行方式 : 由 scripts/apply-schema.mjs 自动组合执行
+  说明     : 本文件只含标准 SQL，不含任何云厂商专属对象
 -- ============================================================================
+
 
 -- ---------------------------------------------------------------------------
 -- 0. 扩展
@@ -276,41 +273,7 @@ create index if not exists idx_gomoku_room          on public.gomoku_games (room
 create index if not exists idx_device_device        on public.device_registrations (device_id);
 create index if not exists idx_categories_sort      on public.categories (sort_order);
 
--- ===========================================================================
---  Realtime 发布（前端 postgres_changes 订阅所依赖）
---  幂等：逐表判断后再加入 publication
--- ===========================================================================
-do $$
-declare
-    t text;
-    realtime_tables text[] := array[
-        'users', 'posts', 'post_comments', 'poll_votes',
-        'messages', 'chats', 'rooms', 'room_messages', 'gomoku_games'
-    ];
-begin
-    if not exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
-        create publication supabase_realtime;
-    end if;
 
-    foreach t in array realtime_tables loop
-        if not exists (
-            select 1 from pg_publication_tables
-            where pubname = 'supabase_realtime'
-              and schemaname = 'public'
-              and tablename = t
-        ) then
-            execute format('alter publication supabase_realtime add table public.%I', t);
-        end if;
-    end loop;
-end $$;
-
--- ===========================================================================
---  存储桶（头像上传依赖；幂等：已存在则不改动）
---  前端通过 window.sb.storage.from('avatars') 上传，缺该桶会导致头像上传失败
--- ===========================================================================
-insert into storage.buckets (id, name, public)
-values ('avatars', 'avatars', true)
-on conflict (id) do nothing;
 
 -- ===========================================================================
 --  种子数据（幂等：已存在则跳过，不覆盖用户改动）
