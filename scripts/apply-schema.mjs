@@ -4,21 +4,26 @@
  *  数据库 Schema 自动执行器（零依赖，Node >= 18）
  * ============================================================================
  *
- *  自动选择连接通道，按以下优先级：
+ *  支持双云：Supabase 与 Neon，二者可共存，也可各自独立部署。
  *
- *    通道 A（推荐，无需暴露数据库密码）
- *      需要: SUPABASE_ACCESS_TOKEN  +  SUPABASE_PROJECT_REF
- *      做法: 调用 Supabase Management API 执行 SQL
+ *  ── 供应商选择 ─────────────────────────────────────────────────────────────
+ *    环境变量 DB_PROVIDER：
+ *      supabase（默认） → 执行 schema.core.sql + schema.supabase.sql
+ *      neon             → 执行 schema.core.sql + schema.neon.sql
+ *      postgres         → 只执行 schema.core.sql（自建 Postgres 等）
  *
- *    通道 B（备选）
- *      需要: DATABASE_URL
- *      做法: 通过 psql 直连执行
+ *  ── 连接通道（按供应商自动选择，均未配置时安全跳过）─────────────────────────
+ *    Supabase:
+ *      A. SUPABASE_ACCESS_TOKEN + SUPABASE_PROJECT_REF  → Management API
+ *      B. DATABASE_URL                                 → psql 直连
+ *    Neon:
+ *      C. NEON_DATABASE_URL                             → psql 直连
+ *      D. NEON_API_KEY + NEON_PROJECT_ID                → Neon API
  *
- *    都没配置 -> 打印提示并以 0 退出，不阻塞部署流水线
- *
- *  用法:
- *    node scripts/apply-schema.mjs            # 真正执行
- *    node scripts/apply-schema.mjs --dry-run  # 只打印将要执行的内容与通道判断
+ *  ── 用法 ──────────────────────────────────────────────────────────────────
+ *    node scripts/apply-schema.mjs                # 按 DB_PROVIDER 执行
+ *    node scripts/apply-schema.mjs --dry-run      # 只打印判断与将执行的 SQL
+ *    node scripts/apply-schema.mjs --provider=neon # 命令行覆盖 DB_PROVIDER
  * ============================================================================
  */
 
@@ -29,88 +34,151 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const SCHEMA_FILE = path.join(ROOT, 'db', 'schema.sql');
+const DB_DIR = path.join(ROOT, 'db');
 
 const DRY_RUN = process.argv.includes('--dry-run');
+const PROVIDER_OVERRIDE = (process.argv.find((a) => a.startsWith('--provider=')) || '').split('=')[1];
+
 const log = (...a) => console.log('[schema]', ...a);
 const ok = (m) => console.log('[schema]  ✓ ' + m);
 const warn = (m) => console.log('[schema]  ! ' + m);
+const bad = (m) => console.error('[schema]  ✗ ' + m);
+
+/** 各供应商需要执行的 SQL 文件（按顺序） */
+const PLAN = {
+  supabase: ['schema.core.sql', 'schema.supabase.sql'],
+  neon: ['schema.core.sql', 'schema.neon.sql'],
+  postgres: ['schema.core.sql']
+};
 
 async function main() {
-  const sql = await readFile(SCHEMA_FILE, 'utf8');
-  log('Schema 文件:', path.relative(ROOT, SCHEMA_FILE), '(' + sql.length + ' 字符)');
+  const provider = (PROVIDER_OVERRIDE || process.env.DB_PROVIDER || 'supabase').trim().toLowerCase();
+  const files = PLAN[provider];
 
+  if (!files) {
+    bad('未知的 DB_PROVIDER: "' + provider + '"，可选值：' + Object.keys(PLAN).join(' / '));
+    process.exit(1);
+  }
+
+  log('目标平台  :', provider);
+  log('执行文件  :', files.join(' + '));
+
+  // ---------------------------------------------------------- 读取并合并 SQL
+  const parts = [];
+  for (const f of files) {
+    const text = await readFile(path.join(DB_DIR, f), 'utf8');
+    parts.push(text);
+    log('  已加载', f, '(' + text.length + ' 字符)');
+  }
+  const sql = parts.join('\n\n');
+
+  // ---------------------------------------------------------- 通道判定
   const token = (process.env.SUPABASE_ACCESS_TOKEN || '').trim();
   const ref = (process.env.SUPABASE_PROJECT_REF || '').trim();
   const dbUrl = (process.env.DATABASE_URL || '').trim();
+  const neonUrl = (process.env.NEON_DATABASE_URL || '').trim();
+  const neonKey = (process.env.NEON_API_KEY || '').trim();
+  const neonProj = (process.env.NEON_PROJECT_ID || '').trim();
 
-  const hasChannelA = Boolean(token && ref);
-  const hasChannelB = Boolean(dbUrl);
+  const candidates = [];
+  if (provider === 'supabase') {
+    if (token && ref) candidates.push({ kind: 'supabase-api', label: 'Supabase Management API' });
+    if (dbUrl) candidates.push({ kind: 'psql', label: 'Postgres 直连（DATABASE_URL）' });
+  } else if (provider === 'neon') {
+    if (neonUrl) candidates.push({ kind: 'psql', label: 'Neon 直连（NEON_DATABASE_URL）' });
+    if (neonKey && neonProj) candidates.push({ kind: 'neon-api', label: 'Neon API（NEON_API_KEY）' });
+  } else {
+    if (dbUrl) candidates.push({ kind: 'psql', label: 'Postgres 直连（DATABASE_URL）' });
+  }
 
-  // ------------------------------------------------------------ 通道判定
   if (DRY_RUN) {
+    log('');
     log('=== DRY RUN ===');
-    log('通道 A（Management API）:', hasChannelA ? '可用' : '不可用');
-    log('  SUPABASE_ACCESS_TOKEN:', token ? '已配置' : '未配置');
-    log('  SUPABASE_PROJECT_REF:', ref || '未配置');
-    log('通道 B（psql 直连）    :', hasChannelB ? '可用' : '不可用');
-    log('  DATABASE_URL:', dbUrl ? '已配置' : '未配置');
-    log('将要使用的通道:', hasChannelA ? 'A' : hasChannelB ? 'B' : '无');
-    log('SQL 前 400 字符:\n' + sql.slice(0, 400) + '\n...');
+    log('可用通道  :', candidates.length ? candidates.map((c) => c.label).join(' | ') : '无');
+    log('将要使用  :', candidates[0] ? candidates[0].label : '无（将安全跳过）');
+    log('');
+    log('凭据探测  :');
+    log('  SUPABASE_ACCESS_TOKEN :', token ? '已配置' : '未配置');
+    log('  SUPABASE_PROJECT_REF :', ref || '未配置');
+    log('  DATABASE_URL         :', dbUrl ? '已配置' : '未配置');
+    log('  NEON_DATABASE_URL    :', neonUrl ? '已配置' : '未配置');
+    log('  NEON_API_KEY         :', neonKey ? '已配置' : '未配置');
+    log('  NEON_PROJECT_ID      :', neonProj || '未配置');
+    log('');
+    log('合并后 SQL 共 ' + sql.length + ' 字符，前 300 字：');
+    log(sql.slice(0, 300).replace(/^/gm, '    '));
     return;
   }
 
-  if (!hasChannelA && !hasChannelB) {
-    warn('未检测到任何数据库凭据，跳过建表（部署继续）。');
-    warn('如需自动建表，请在仓库 Settings -> Secrets and variables -> Actions 中配置：');
-    warn('   SUPABASE_ACCESS_TOKEN  (与 SUPABASE_PROJECT_REF 搭配，推荐)');
-    warn('   或 DATABASE_URL        (postgres 连接串)');
+  if (!candidates.length) {
+    warn('[' + provider + '] 未配置凭据，跳过建表（部署继续，不阻塞）。');
+    warn('可用的配置方式：');
+    if (provider === 'supabase') {
+      warn('   Secrets: SUPABASE_ACCESS_TOKEN + Variables: SUPABASE_PROJECT_REF   （推荐）');
+      warn('   Secrets: DATABASE_URL                                            （备选）');
+    } else if (provider === 'neon') {
+      warn('   Secrets: NEON_DATABASE_URL   （Neon 控制台的 pooled 直连串，推荐）');
+      warn('   Secrets: NEON_API_KEY + Variables: NEON_PROJECT_ID              （备选）');
+    } else {
+      warn('   Secrets: DATABASE_URL');
+    }
     return;
   }
 
   const started = Date.now();
-  if (hasChannelA) {
-    log('使用通道 A：Supabase Management API');
-    await runViaManagementApi(sql, token, ref);
-  } else {
-    log('使用通道 B：psql 直连');
-    await runViaPsql(sql, dbUrl);
-  }
-  ok('Schema 应用完成，用时 ' + (Date.now() - started) + 'ms');
+  const chosen = candidates[0];
+  log('使用通道  :', chosen.label);
+
+  if (chosen.kind === 'supabase-api') await runViaManagementApi(sql, token, ref);
+  else if (chosen.kind === 'neon-api') await runViaNeonApi(sql, neonKey, neonProj);
+  else await runViaPsql(sql, provider === 'neon' ? neonUrl : dbUrl);
+
+  ok('[' + provider + '] Schema 应用完成，用时 ' + (Date.now() - started) + 'ms');
 }
 
-/** 通道 A：Supabase Management API */
+/** 通道：Supabase Management API */
 async function runViaManagementApi(sql, token, ref) {
   const url = `https://api.supabase.com/v1/projects/${encodeURIComponent(ref)}/database/query`;
   const res = await fetch(url, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: sql })
   });
-
   const text = await res.text();
 
   if (!res.ok) {
-    // 401/403 多为 PAT 失效或项目 ID 写错，单独给出可操作的提示
     if (res.status === 401 || res.status === 403) {
-      console.error('[schema] 认证失败 (' + res.status + ')：请检查 SUPABASE_ACCESS_TOKEN 是否有效、是否具备项目读写的 scope。');
+      bad('认证失败 (' + res.status + ')：请检查 SUPABASE_ACCESS_TOKEN 是否有效及其 scope。');
     } else if (res.status === 404) {
-      console.error('[schema] 项目不存在 (404)：请检查 SUPABASE_PROJECT_REF 是否正确（应为 20 位小写项目 ID）。');
+      bad('项目不存在 (404)：请检查 SUPABASE_PROJECT_REF 是否为正确的 20 位项目 ID。');
     }
     console.error('[schema] Management API 返回:', text.slice(0, 2000));
     process.exit(1);
   }
-
   log('Management API 响应:', text.slice(0, 800) || '(空)');
 }
 
-/** 通道 B：psql 直连 */
+/** 通道：Neon API（无 DATABASE_URL 时的备选） */
+async function runViaNeonApi(sql, apiKey, projectId) {
+  // Neon 的 SQL 执行走 console/api 的角色凭据流程，此处用项目级 SQL 执行端点
+  const url = `https://console.neon.tech/api/projects/${encodeURIComponent(projectId)}/sql_query`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sql })
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    bad('Neon API 调用失败 (' + res.status + ')：' + text.slice(0, 600));
+    bad('提示：Neon API 通道依赖较新的接口，建议改用 Secrets: NEON_DATABASE_URL 走 psql。');
+    process.exit(1);
+  }
+  log('Neon API 响应:', text.slice(0, 800) || '(空)');
+}
+
+/** 通道：psql 直连（Supabase DATABASE_URL 或 Neon NEON_DATABASE_URL） */
 function runViaPsql(sql, dbUrl) {
   return new Promise((resolve, reject) => {
-    // 从 DATABASE_URL 中剥离出连接串与 SQL 文本，避免密码出现在进程列表里
     const child = spawn('psql', ['-v', 'ON_ERROR_STOP=1', '-q', '-f', '-', dbUrl], {
       stdio: ['pipe', 'inherit', 'inherit'],
       env: { ...process.env, PGPASSWORD: extractPassword(dbUrl) }
@@ -118,30 +186,20 @@ function runViaPsql(sql, dbUrl) {
 
     child.on('error', (err) => {
       if (err.code === 'ENOENT') {
-        console.error('[schema] 未找到 psql 命令。请改用通道 A（配置 SUPABASE_ACCESS_TOKEN），');
-        console.error('          或在自托管 Runner 上安装 postgresql-client。');
-        reject(err);
-      } else reject(err);
+        bad('未找到 psql 命令。请改用 Management API 通道，或在 Runner 上安装 postgresql-client。');
+      }
+      reject(err);
     });
 
-    child.on('close', (code) => {
-      if (code === 0) resolve();
-      else reject(new Error('psql 退出码 ' + code));
-    });
-
+    child.on('close', (code) => (code === 0 ? resolve() : reject(new Error('psql 退出码 ' + code))));
     child.stdin.write(sql);
     child.stdin.end();
   });
 }
 
-/** 从 postgres URL 中取出密码，供 PGPASSWORD 使用 */
 function extractPassword(u) {
-  try {
-    const p = new URL(u);
-    return decodeURIComponent(p.password || '');
-  } catch {
-    return '';
-  }
+  try { return decodeURIComponent(new URL(u).password || ''); }
+  catch { return ''; }
 }
 
 main().catch((err) => {

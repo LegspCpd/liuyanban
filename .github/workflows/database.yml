@@ -1,15 +1,17 @@
-# ============================================================================
-#  数据库 Schema 手动维护（幂等，可反复执行）
-# ============================================================================
-#  用途：修改 db/schema.sql 后手动触发，或 dry_run 预览将要执行的 SQL
-#  日常发布请用 deploy.yml，它已串联建表步骤
-# ============================================================================
-
 name: 数据库维护
 
 on:
   workflow_dispatch:
     inputs:
+      provider:
+        description: '目标平台：supabase / neon / postgres'
+        type: choice
+        required: false
+        default: supabase
+        options:
+          - supabase
+          - neon
+          - postgres
       dry_run:
         description: '仅检查通道并打印 SQL，不实际执行'
         type: boolean
@@ -30,21 +32,17 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
-
       - name: 安装 Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - name: 执行
         env:
-          SUPABASE_ACCESS_TOKEN: ${ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_PROJECT_REF: ${ vars.SUPABASE_PROJECT_REF }}
-          DATABASE_URL: ${ secrets.DATABASE_URL }}
-          DRY_RUN: ${ inputs.dry_run }}
-        run: |
-          if [ "$DRY_RUN" = "true" ]; then
-            node scripts/apply-schema.mjs --dry-run
-          else
-            node scripts/apply-schema.mjs
-          fi
+          DB_PROVIDER: ${{ inputs.provider }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: node scripts/apply-schema.mjs --provider=${{ inputs.provider }} ${{ inputs.dry_run && '--dry-run' || '' }}

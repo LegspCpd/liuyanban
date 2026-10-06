@@ -1,9 +1,10 @@
 # Seven戚 · 社区
 
-纯静态多页应用（MPA）。前端零框架、零构建依赖，后端使用 Supabase（Postgres + Auth + Realtime）。
+纯静态多页应用（MPA）。前端零框架、零构建依赖，后端使用 Supabase（Postgres + Auth + Realtime），
+**数据库层同时兼容 Neon**，两者可独立部署也可共存。
 
-仓库：<https://github.com/SevenSeven712/liuyanban>
-线上：<https://sevenseven712.github.io/liuyanban/>
+仓库：<https://github.com/LegspCpd/liuyanban>
+线上：<https://legspcpd.github.io/liuyanban/>
 
 ---
 
@@ -25,17 +26,17 @@
 │
 ├── scripts/
 │   ├── build.mjs               构建脚本（零依赖）
-│   └── apply-schema.mjs        自动建表执行器（零依赖）
+│   └── apply-schema.mjs        自动建表执行器（零依赖，支持 Supabase / Neon）
 │
 ├── db/
-│   ├── schema.sql              完整建表脚本（幂等）
+│   ├── schema.core.sql         通用 Postgres：19 表 + 索引 + 种子数据（幂等）
+│   ├── schema.supabase.sql     Supabase 专属：Realtime 发布 + avatars 存储桶
+│   ├── schema.neon.sql         Neon 专属：逻辑复制校准 + Auth 对接说明
 │   └── rls-hardening.sql       可选：行级安全加固（不参与自动化）
 │
-├── .github/workflows/
-│   ├── deploy.yml              构建 → 自动建表 → 部署 Pages
-│   └── database.yml            手动触发的建表维护
-│
-└── dist/                       构建产物（不入库，由 Actions 生成）
+└── .github/workflows/
+    ├── deploy.yml              构建 → 自动建表 → 部署 Pages
+    └── database.yml            手动触发的建表维护（可选平台 / dry_run）
 ```
 
 ---
@@ -45,116 +46,128 @@
 无需安装任何依赖，Node 18+ 即可：
 
 ```bash
-# 构建
-node scripts/build.mjs
-
-# 用任意静态服务器预览 dist/
-npx serve dist
-# 或直接双击 dist/index.html（构建产物使用相对路径，可离线打开）
+node scripts/build.mjs          # 构建到 dist/
+npx serve dist                  # 本地预览
+# 或直接双击 dist/index.html（产物使用相对路径，可离线打开）
 ```
-
-修改了 `app/` 下的文件后重新执行构建即可。**`app/` 内的 UI 源码保持原样**，路径改写只在构建期发生。
 
 ---
 
 ## 三、GitHub Pages 上线（一次性设置）
 
-1. 打开仓库 **Settings → Pages**
+1. 仓库 **Settings → Pages**
 2. **Build and deployment → Source** 选择 **GitHub Actions**
-3. 推送到 `main` 分支，流水线会自动运行
+3. 推送到 `main` 分支，流水线自动运行
 
 ---
 
-## 四、配置 Actions 变量（自动建表）
+## 四、数据库：Supabase 与 Neon 双兼容
 
-进入仓库 **Settings → Secrets and variables → Actions**。
+### 4.1 为什么能共用一套 SQL
 
-### 4.1 Secrets（机密）
+Neon 是标准 PostgreSQL，`schema.core.sql` 里的建表语句两边都能直接跑。
+差异只集中在两处 **Supabase 专属对象**，因此被单独拆出并加了存在性守卫：
 
-| 名称 | 必填 | 说明 |
-|---|:---:|---|
-| `SUPABASE_ACCESS_TOKEN` | 二选一 | Supabase 个人访问令牌，**推荐方式** |
-| `DATABASE_URL` | 二选一 | Postgres 直连串，备用通道 |
+| 段 | 文件 | Supabase | Neon |
+|---|---|:---:|:---:|
+| 19 张表 + 17 个索引 + 种子数据 | `schema.core.sql` | ✅ | ✅ |
+| `supabase_realtime` 发布表 | `schema.supabase.sql` | ✅ | 跳过 |
+| `storage.buckets`（头像） | `schema.supabase.sql` | ✅ | 跳过（无 storage schema） |
+| `wal_level = logical` 校准 | `schema.neon.sql` | 跳过 | ✅ |
 
-**获取 `SUPABASE_ACCESS_TOKEN`：**
-1. 打开 <https://supabase.com/dashboard/account/tokens>
-2. 点 **Generate new token**，输入名称后生成
-3. 复制生成的 `sbp_xxx` 字符串
+### 4.2 选择目标平台
 
-**获取 `DATABASE_URL`（备用）：**
-项目 → **Connect** → 选择 **Session pooler** → 复制 URI，把 `[YOUR-PASSWORD]` 换成数据库密码。
+仓库 **Settings → Secrets and variables → Actions → Variables**：
 
-### 4.2 Variables（非机密）
+| 名称 | 值 | 说明 |
+|---|---|---|
+| `DB_PROVIDER` | `supabase` 或 `neon` | 决定自动建表连哪个库。**留空默认 supabase** |
 
-| 名称 | 必填 | 说明 | 示例 |
-|---|:---:|---|---|
-| `SUPABASE_PROJECT_REF` | 是 | 项目 ID，即项目地址中 `https://____.supabase.co` 的下划线部分 | `ulvhuqtpdafspbdvkogs` |
-| `SUPABASE_URL` | 否 | 覆盖前端连接的项目地址；留空则沿用源码默认值 | `https://ulvhuqtpdafspbdvkogs.supabase.co` |
-| `SUPABASE_ANON_KEY` | 否 | 覆盖前端 anon key；留空则沿用源码默认值 | `sb_publishable_xxx` |
-| `BASE_PATH` | 否 | 资源路径前缀；**留空 = 相对路径，推荐** | 留空或 `/liuyanban/` |
+### 4.3 Secrets
 
-> 说明：anon key 本就是公开密钥，放在 Variables 而非 Secrets 是有意为之。
-> 若暂时不想接新项目，`SUPABASE_URL` / `SUPABASE_ANON_KEY` 留空即可，
-> 构建会沿用 `app/` 中的默认值，流水线照常成功。
+**Supabase**（`DB_PROVIDER=supabase` 时使用，二选一即可）：
 
-### 4.3 建表行为
-
-| 情况 | 行为 |
+| 名称 | 说明 |
 |---|---|
-| 配了 `SUPABASE_ACCESS_TOKEN` + `SUPABASE_PROJECT_REF` | 走 Management API 执行 `db/schema.sql` |
-| 只配了 `DATABASE_URL` | 走 psql 直连执行 |
-| 都没配 | **打印提示并跳过，不阻塞站点部署** |
+| `SUPABASE_ACCESS_TOKEN` | 个人访问令牌，<https://supabase.com/dashboard/account/tokens> 生成，**推荐** |
+| `SUPABASE_PROJECT_REF` | 放进 Variables：项目地址中 `https://____.supabase.co` 的那串 ID |
+| `DATABASE_URL` | 备选，项目 → Connect → Session pooler 复制的 URI |
 
-建表脚本是**幂等**的，重复执行不会覆盖已有数据，也不会破坏线上表。
-建表 job 设有 `continue-on-error`，即便建表失败，站点依然会正常发布。
+**Neon**（`DB_PROVIDER=neon` 时使用）：
 
-修改表结构后想立即生效：**Actions → 数据库维护 → Run workflow**（可勾选 dry_run 先预览）。
+| 名称 | 说明 |
+|---|---|
+| `NEON_DATABASE_URL` | Neon 控制台 → Connect 里的 **pooled connection string**，**推荐** |
+| `NEON_PROJECT_ID` | 放进 Variables：形如 `ep-cool-name-123456` |
+| `NEON_API_KEY` | 备选，Neon API key |
+
+### 4.4 两个平台同时配置
+
+Supabase 与 Neon 的变量互不冲突，可以**同时填好**，用 `DB_PROVIDER` 切换。
+不改前端也能对 Neon 建表；已建好的 Neon 库可直接用 Neon 的 `psql` /
+`neon` CLI 连接使用。
+
+### 4.5 前端说明（重要）
+
+当前前端的 **登录、实时通信、文件上传仍然使用 Supabase**（`sb.auth` /
+Realtime / Storage），这部分在 Neon 上没有对等实现，因此：
+
+- ✅ 建表、部署、数据库运维：Supabase 与 Neon 都支持
+- ⚠️ 若要让 **业务数据真正跑在 Neon**，需另做一轮改造：
+  Neon [Data API](https://neon.com/docs/data-api/overview) 完全兼容 PostgREST，
+  查询层只需换连接串；但 Auth 需接 Neon Managed Better Auth 或自建，
+  Realtime 需降级为轮询（房间页已有 1 秒 gameTick 心跳可复用），
+  文件需换 Neon Object Storage 的签名 URL。
 
 ---
 
-## 五、流水线说明
+## 五、构建期可覆盖的前端配置
+
+| 名称（Variables） | 说明 |
+|---|---|
+| `SUPABASE_URL` | 覆盖前端连接的项目地址；留空沿用源码默认值 |
+| `SUPABASE_ANON_KEY` | 覆盖 anon key；留空沿用源码默认值 |
+| `BASE_PATH` | 资源路径前缀；**留空 = 相对路径，推荐** |
+
+> anon key 本就是公开密钥，放 Variables 而非 Secrets 是有意为之。
+> 留空时构建依然成功，沿用 `app/` 中的默认值。
+
+---
+
+## 六、流水线结构
 
 ```
 push 到 main
       │
-      ├─ job: build ──────── node scripts/build.mjs → dist/
-      │                          ↓
-      ├─ job: database ───── db/schema.sql  （失败仅告警，不阻塞）
+      ├─ build ──────── node scripts/build.mjs → dist/
       │
-      └─ job: deploy ←────── 等待 build（continue-on-error 不传递失败）
+      ├─ database ──── db/schema.*.sql   （continue-on-error，不阻塞部署）
+      │
+      └─ deploy ←───── needs: build
 ```
 
-- **build**：路径改写 + 凭据注入 + 自检，任何残留 `/liuyanban/` 绝对路径都会让构建失败
-- **deploy** 只依赖 **build**，所以建表失败不影响站点发布
+- **build**：路径改写 + 凭据注入 + 自检，产物中残留 `/liuyanban/` 会直接失败
+- **database**：未配置凭据时打印提示并以 0 退出，**不会卡住部署**
+- **deploy**：只依赖 build，建表失败也能正常发布站点
+
+手动维护数据库：**Actions → 数据库维护 → Run workflow**，可选平台并支持 dry_run。
 
 ---
 
-## 六、技术要点
+## 七、技术要点
 
-### 6.1 路径改写
+### 7.1 路径改写
 
 源码沿用旧部署路径 `/liuyanban/`，构建期统一改写为 `./`。
-产物因此可以放在任意域名、任意子路径，甚至直接本地双击打开，无需二次构建。
-
+产物因此可放在任意域名、任意子路径，甚至本地双击打开。
 生成侧与查询侧同步改写，页脚高亮匹配不会失效：
 
 ```js
-// 生成
-{ id: 'chats', href: './chats.html' }
-// 查询
-footerContainer.querySelector('a[href="./chats.html"]')
+{ id: 'chats', href: './chats.html' }          // 生成
+footerContainer.querySelector('a[href="./chats.html"]')  // 查询
 ```
 
-### 6.2 数据库
-
-19 张业务表，覆盖用户、帖子、评论、分类、投票、留言、聊天、通知、举报、角色、关注、反馈、设备注册、房间、房间消息、五子棋对局。
-
-- 所有建表语句均为 `create table if not exists`，可反复执行
-- Realtime 发布表在脚本中按表逐个判断后加入，幂等
-- 默认**不启用 RLS**，与现有线上库行为一致
-- 收紧权限见 `db/rls-hardening.sql`（需手工评估后执行，不参与自动化）
-
-### 6.3 管理员
+### 7.2 管理员
 
 沿用原有逻辑：手机号等于 `17355394710` 即为管理员，散落在 10 个源文件中。
-若要改为角色表驱动，需要同步改造前端判定与 RLS 策略，属独立改造项。
+改为角色表驱动需同步改造前端判定与 RLS 策略，属独立改造项。
