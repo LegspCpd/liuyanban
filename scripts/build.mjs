@@ -80,6 +80,27 @@ const PROFILE_MODULES = [
   'profile-feedback.js', 'profile-init.js'
 ];
 
+/**
+ * 每页单文件打包清单：core 8 模块 + 该页模块，顺序即依赖顺序。
+ * 页面从 9~17 个串行请求收敛为 1 个 bundle；构建期同步改写 HTML：
+ * CDN 标签加 defer（不阻塞首屏），本地 script 全部移除，
+ * </body> 前只留一个 defer 的 bundle 标签（文档序保证 CDN 先于 bundle 执行）。
+ */
+const PAGE_BUNDLES = {
+  'index.html': ['index/index.js'],
+  'posts.html': POSTS_MODULES.map((n) => 'posts/' + n),
+  'profile.html': PROFILE_MODULES.map((n) => 'profile/' + n),
+  'room.html': ROOM_MODULES.map((n) => 'room/' + n),
+  'messages.html': ['messages/messages.js'],
+  'chats.html': ['chats/chats.js'],
+  'new-post.html': ['new-post/new-post.js'],
+  'user.html': ['user/user.js']
+};
+const CORE_RELS = CORE_MODULES.map((n) => 'core/' + n);
+
+/** bundle 文件名：bundle.index.js / bundle.posts.js ... */
+const bundleNameOf = (htmlName) => 'bundle.' + htmlName.replace(/\.html$/, '') + '.js';
+
 /** 源码里遗留的部署路径前缀 */
 const LEGACY_BASE = '/liuyanban/';
 
@@ -127,7 +148,26 @@ async function main() {
     const pathHits = count(raw, LEGACY_BASE);
     let out = raw.replaceAll(LEGACY_BASE, basePath);
 
-    // 4b. 凭据注入（仅当提供了环境变量时才替换）
+    // 4b. 加载链收敛：每页 9~17 个串行 script -> 1 个 bundle
+    if (PAGE_BUNDLES[name]) {
+      const before = count(out, '<script src=');
+      // CDN 标签加 defer：head 不再被 218KB SDK 阻塞首屏渲染
+      out = out.replace(
+        '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>',
+        '<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>'
+      );
+      // 移除全部本地 script 标签（内容并入该页 bundle）
+      out = out.replace(/[ \t]*<script src="\.\/[^">]+\.js"><\/script>\r?\n?/g, '');
+      // </body> 前插入唯一 bundle 标签；defer 按文档序在 CDN 之后执行
+      const bname = bundleNameOf(name);
+      out = out.replace(
+        '</body>',
+        '    <script defer src="' + basePath + bname + '"></script>\n</body>'
+      );
+      log(name + ' script 标签 ' + before + ' -> 2（CDN defer + bundle defer）');
+    }
+
+    // 4c. 凭据注入（仅当提供了环境变量时才替换）
     out = injectCredentials(out, sbUrl, sbKey);
 
     await writeFile(path.join(OUT, name), out, 'utf8');
@@ -135,7 +175,21 @@ async function main() {
     stats.bytes += Buffer.byteLength(out, 'utf8');
   }
 
-  log('处理完成：' + REQUIRED.length + ' 个文件 / ' + (stats.bytes / 1024).toFixed(1) + ' KB');
+  // 4d. 逐页产出 bundle：core + 页面模块按依赖序拼接（含路径改写与凭据注入）
+  for (const [name, pageRels] of Object.entries(PAGE_BUNDLES)) {
+    const parts = [];
+    for (const rel of CORE_RELS.concat(pageRels)) {
+      const src = await readFile(path.join(SRC, rel), 'utf8');
+      parts.push('/* ==== ' + rel + ' ==== */\n' + src.replaceAll(LEGACY_BASE, basePath));
+    }
+    const merged = injectCredentials(parts.join('\n\n'), sbUrl, sbKey);
+    const bname = bundleNameOf(name);
+    await writeFile(path.join(OUT, bname), merged, 'utf8');
+    stats.bytes += Buffer.byteLength(merged, 'utf8');
+    log(bname + ' <- ' + (CORE_RELS.length + pageRels.length) + ' 模块 / ' + (Buffer.byteLength(merged) / 1024).toFixed(1) + ' KB');
+  }
+
+  log('处理完成：' + REQUIRED.length + ' 个文件 + ' + Object.keys(PAGE_BUNDLES).length + ' 个 bundle / ' + (stats.bytes / 1024).toFixed(1) + ' KB');
   log('  路径改写 ' + stats.pathHits + ' 处 | 核心模块 ' + CORE_MODULES.length + ' 个');
 
   // ------------------------------------------------------------ 4b. 核心层
