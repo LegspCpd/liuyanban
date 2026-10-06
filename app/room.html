@@ -558,7 +558,7 @@ window.sb=window.sb||window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY
 
 var currentUser=getSessionUser();
 if(!currentUser||!currentUser.id)window.location.href='/liuyanban/index.html';
-var isAdmin=!!(currentUser&&currentUser.phone==='17355394710');
+var isAdmin=window.isAdmin(currentUser);
 if(isAdmin)document.getElementById('createRoomBtn').style.display='inline-flex';
 function isUserBanned(){if(!currentUser||!currentUser.banned_until)return false;return new Date(currentUser.banned_until)>new Date()}
 
@@ -1651,7 +1651,7 @@ function renderDoudizhu(game,el){
   var st=game.state||{},players=game.players||[];
   var order=st.order||[];
   var myHand=st.hands?st.hands[currentUser.id]:null;
-  var isAdminNow=!!(currentUser&&currentUser.phone==="17355394710");
+  var isAdminNow=window.isAdmin(currentUser);
   if(st.phase==="finished"){
     var msg=st.aborted?"游戏已中止":(st.winnerSide==="landlord"?"地主获胜":"农民获胜");
     var h1='<div class="ddz-result"><div class="big">'+msg+"</div>";
@@ -1704,7 +1704,7 @@ function renderDoudizhu(game,el){
   if(handEl){handEl.querySelectorAll(".ddz-card").forEach(function(c){c.onclick=function(){this.classList.toggle("sel");};});}
 }
 function ddzPeek(uid){
-  if(!currentUser||currentUser.phone!=="17355394710"){showToast("无权查看");return;}
+  if(!currentUser||!window.isAdmin(currentUser)){showToast("无权查看");return;}
   var game=state.room&&state.room.current_game;
   if(!game||game.type!=="doudizhu")return;
   var st=game.state||{};var hand=(st.hands&&st.hands[uid])||[];

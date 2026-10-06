@@ -870,7 +870,7 @@
                 return;
             }
             currentUser = session;
-            isAdmin = (currentUser.phone === '17355394710');
+            isAdmin = window.isAdmin(currentUser);
 
             renderHeader('留言板', 'messages');
             renderFooter('messages');
@@ -894,7 +894,7 @@
                         currentUser.avatar_url !== s.avatar_url ||
                         currentUser.nickname !== s.nickname) {
                         currentUser = s;
-                        isAdmin = (currentUser.phone === '17355394710');
+                        isAdmin = window.isAdmin(currentUser);
                         updateBannedBanner();
                         renderMessages();
                     }

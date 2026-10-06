@@ -837,7 +837,7 @@ window.loginAsUser = async function(userId) {
         var user = res.data;
         setSessionUser(user);
         currentUser = user;
-        isAdmin = (user.phone === '17355394710');
+        isAdmin = window.isAdmin(user);
         renderHeader('帖子广场', 'posts');
         renderFooter('posts');
         await loadCategories();
@@ -949,7 +949,7 @@ async function loadAllData() {
         if (session && session.id) {
             if (!currentUser || currentUser.id !== session.id || currentUser.avatar_url !== session.avatar_url || currentUser.nickname !== session.nickname) {
                 currentUser = session;
-                isAdmin = (currentUser.phone === '17355394710');
+                isAdmin = window.isAdmin(currentUser);
                 renderHeader('帖子广场', 'posts');
                 renderFooter('posts');
                 if (isAdmin) document.getElementById('adminPanelBtn').style.display = 'inline-flex';

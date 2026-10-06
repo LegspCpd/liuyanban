@@ -596,7 +596,7 @@
         // ============ 会话 ============
         var currentUser = getSessionUser();
         if (!currentUser || !currentUser.id) window.location.href = '/liuyanban/index.html';
-        var isAdmin = currentUser.phone === '17355394710';
+        var isAdmin = window.isAdmin(currentUser);
 
 
 
@@ -725,7 +725,7 @@
         document.getElementById('saveProfileBtn').onclick = async function() {
             var n = document.getElementById('profileNameInput').value.trim();
             if (!n) return showToast('请输入昵称');
-            if (n.toLowerCase() === 'seven戚' && currentUser.phone !== '17355394710') return showToast('该昵称不可用');
+            if (n.toLowerCase() === 'seven戚' && !window.isAdmin(currentUser)) return showToast('该昵称不可用');
             try {
                 await updateUser(currentUser.id, { nickname: n });
                 currentUser.nickname = n;
@@ -1190,7 +1190,7 @@
                 }]).select();
                 if (ins.error) throw ins.error;
 
-                var adminRes = await window.sb.from('users').select('id').eq('phone', '17355394710').single();
+                var adminRes = await window.sb.from('users').select('id').eq('phone', SQ_CONFIG.adminPhone).single();
                 if (adminRes.data) {
                     await window.pushNotification(adminRes.data.id, {
                         type: 'feedback', notification_type: 'feedback',

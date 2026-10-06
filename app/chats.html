@@ -189,7 +189,7 @@ window.sb=window.sb||window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY
 
 var currentUser=getSessionUser();
 if(!currentUser||!currentUser.id)window.location.href='/liuyanban/index.html';
-var isAdmin=!!(currentUser&&currentUser.phone==='17355394710');
+var isAdmin=window.isAdmin(currentUser);
 var isAuthorMode=false,AUTHOR_PASSWORD="7592";
 async function sha256(msg){var buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(msg));return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('')}
 

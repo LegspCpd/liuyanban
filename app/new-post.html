@@ -347,7 +347,7 @@
         if (!currentUser || !currentUser.id) {
             window.location.href = '/liuyanban/index.html';
         }
-        var isAdmin = (currentUser.phone === '17355394710');
+        var isAdmin = window.isAdmin(currentUser);
 
         var categories = [];
         var pollOptions = [];
@@ -536,7 +536,7 @@
             btn.textContent = '发布中...';
 
             try {
-                const isOfficial = isAdmin || currentUser.phone === '17355394710';
+                const isOfficial = window.isAdmin(currentUser);
                 const { data: postData, error: postError } = await window.sb
                     .from('posts')
                     .insert([{

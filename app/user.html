@@ -290,7 +290,7 @@ async function render(){
   // 六宫格导航（仅看自己时）
   var navHtml = '';
   if (isSelf) {
-    var isAdmin = (currentUser && currentUser.phone === '17355394710');
+    var isAdmin = window.isAdmin(currentUser);
     navHtml = '<div class="nav-grid">' +
       '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=messages\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H5.17L4 17.17V4z"/></svg></div><div class="tx">消息中心</div></div>' +
       '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=feedback\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="tx">反馈 Bug</div></div>' +
