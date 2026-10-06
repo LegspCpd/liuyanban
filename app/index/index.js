@@ -231,27 +231,7 @@
             if (e.target === this) this.classList.remove('active');
         });
 
-        // 手机号 -> 虚拟邮箱（Supabase Auth 用邮箱登录，前端对用户仍显示手机号）
-        function phoneToEmail(phone) { return phone + '@sq.local'; }
-
-        // 旧版密码哈希，仅用于老用户首次登录时的兼容校验
-        async function hashPassword(password) {
-            var encoder = new TextEncoder();
-            var data = encoder.encode(password);
-            var hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            var hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
-        }
-
-        function generateDefaultAvatar(nickname) {
-            var colors = ["#6ee7b7", "#fbbf24", "#f87171", "#a78bfa", "#f472b6", "#38bdf8", "#2e7d32", "#e67e22"];
-            var color = colors[Math.floor(Math.random() * colors.length)];
-            var initial = nickname.charAt(0).toUpperCase();
-            var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
-                '<rect width="100" height="100" fill="' + color + '" rx="50"/>' +
-                '<text x="50" y="58" font-size="40" text-anchor="middle" fill="white" font-family="sans-serif">' + initial + '</text></svg>';
-            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+        // 手机号/哈希/头像/编号工具已收敛到 core（SQ_CONFIG.phoneToEmail / SQSession），此处不再重复定义。
 
         // ============================================================
         // 卡片切换
@@ -276,78 +256,23 @@
         // ============================================================
         // 登录/注册
         // ============================================================
-        function genUserNo() {
-            var d = new Date();
-            var p = function(n){ return (n<10?'0':'')+n; };
-            var ts = '' + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
-            var letters = 'abcdefghijklmnopqrstuvwxyz';
-            var r = '';
-            for (var i=0;i<3;i++) r += letters.charAt(Math.floor(Math.random()*26));
-            return ts + r;
-        }
+        // 注册/登录数据层已收敛到 SQSession（core/session.js），此处只做错误文案适配。
         async function registerUser(phone, password, nickname) {
-            var email = phoneToEmail(phone);
-            // 1. 用 Supabase Auth 注册（邮箱=手机号@sq.local）
-            var signRes = await window.sb.auth.signUp({ email: email, password: password });
-            if (signRes.error) {
-                if ((signRes.error.message || '').toLowerCase().indexOf('already') >= 0)
-                    throw new Error(T().phoneExists);
-                throw signRes.error;
+            var r = await window.SQSession.registerUser(phone, password, nickname);
+            if (r.error) {
+                if (r.error === 'phoneExists') throw new Error(T().phoneExists);
+                throw r.error;
             }
-            var authId = signRes.data && signRes.data.user ? signRes.data.user.id : null;
-            // 2. 写入业务资料表
-            var avatar = generateDefaultAvatar(nickname);
-            var res = await window.sb.from('users')
-                .insert([{ phone: phone, nickname: nickname, avatar_url: avatar, user_no: genUserNo(), auth_id: authId }])
-                .select();
-            if (res.error) {
-                if (res.error.code === '23505') throw new Error(T().phoneExists);
-                throw res.error;
-            }
-            return res.data && res.data[0];
+            return r.user;
         }
 
         async function loginUser(phone, password) {
-            var email = phoneToEmail(phone);
-            // 1. 先用 Supabase Auth 登录
-            var signRes = await window.sb.auth.signInWithPassword({ email: email, password: password });
-
-            if (signRes.error) {
-                // 2. 老用户兼容：Auth 登录失败时，尝试用旧哈希匹配
-                var hashed = await hashPassword(password);
-                var oldRes = await window.sb.from('users').select('*').eq('phone', phone).eq('password', hashed);
-                var oldUser = oldRes.data && oldRes.data[0];
-                if (oldUser) {
-                    // 老用户密码正确 -> 在 Auth 里补建账号并绑定
-                    var su = await window.sb.auth.signUp({ email: email, password: password });
-                    if (su.error && (su.error.message || '').toLowerCase().indexOf('already') < 0) throw su.error;
-                    var newAuthId = su.data && su.data.user ? su.data.user.id : null;
-                    if (newAuthId) {
-                        await window.sb.from('users').update({ auth_id: newAuthId }).eq('id', oldUser.id);
-                        oldUser.auth_id = newAuthId;
-                    }
-                    // 重新登录建立会话
-                    await window.sb.auth.signInWithPassword({ email: email, password: password });
-                    return oldUser;
-                }
-                throw new Error(T().loginFail);
+            var r = await window.SQSession.loginUser(phone, password);
+            if (r.error) {
+                if (r.error === 'loginFail') throw new Error(T().loginFail);
+                throw r.error;
             }
-
-            // 3. Auth 登录成功 -> 读业务资料
-            var authUser = signRes.data.user;
-            var q = await window.sb.from('users').select('*').eq('auth_id', authUser.id).limit(1);
-            var user = q.data && q.data[0];
-            if (!user) {
-                // 兜底：按手机号找，并补写 auth_id
-                var q2 = await window.sb.from('users').select('*').eq('phone', phone).limit(1);
-                user = q2.data && q2.data[0];
-                if (user) {
-                    await window.sb.from('users').update({ auth_id: authUser.id }).eq('id', user.id);
-                    user.auth_id = authUser.id;
-                }
-            }
-            if (!user) throw new Error(T().loginFail);
-            return user;
+            return r.user;
         }
 
         function handleLogin() {
