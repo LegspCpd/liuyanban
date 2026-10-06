@@ -5,7 +5,7 @@
         if (!currentUser || !currentUser.id) {
             window.location.href = '/liuyanban/index.html';
         }
-        var isAdmin = window.isAdmin(currentUser);
+        var isAdminFlag = window.isAdmin(currentUser);
 
         var categories = [];
         var pollOptions = [];
@@ -20,7 +20,7 @@
                 if (error) throw error;
                 categories = data || [];
                 const select = document.getElementById('postCategorySelect');
-                const available = categories.filter(c => c.name !== '未分类' && (isAdmin || c.is_public !== false));
+                const available = categories.filter(c => c.name !== '未分类' && (isAdminFlag || c.is_public !== false));
                 select.innerHTML = available.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
             } catch (err) {
                 showToast('分类加载失败：' + err.message);

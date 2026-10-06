@@ -18,7 +18,7 @@
         // 会话与权限
         // ============================================================
         var currentUser = null;
-        var isAdmin = false;
+        var isAdminFlag = false;
 
 
         function getBannedUntil() {
@@ -167,7 +167,7 @@
 
                 // 删除按钮
                 let delBtn = '';
-                if (isAdmin || isAuthorMode) {
+                if (isAdminFlag || isAuthorMode) {
                     delBtn = '<button class="del-btn" onclick="deleteMessageById(\'' + m.id + '\')">' +
                         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
                         '<polyline points="3 6 5 6 21 6"/>' +
@@ -233,7 +233,7 @@
         // 删除留言（主+子）
         // ============================================================
         async function deleteMessageById(id) {
-            if (!isAdmin && !isAuthorMode) { showToast('权限不足'); return; }
+            if (!isAdminFlag && !isAuthorMode) { showToast('权限不足'); return; }
             showConfirm('删除留言', '确定要删除此留言及其所有评论吗？', async () => {
                 try {
                     await deleteMessage(id);
@@ -248,7 +248,7 @@
         }
 
         async function deleteCommentOnlyById(id) {
-            if (!isAdmin && !isAuthorMode) { showToast('权限不足'); return; }
+            if (!isAdminFlag && !isAuthorMode) { showToast('权限不足'); return; }
             showConfirm('删除评论', '确定要删除此评论吗？', async () => {
                 try {
                     await deleteCommentOnly(id);
@@ -360,7 +360,7 @@
                 const timeStr = new Date(c.created_at).toLocaleString('zh-CN', { hour: '2-digit', minute: '2-digit' });
                 const officialTag = isOfficial ? '<span class="official-tag">官方</span>' : '';
                 let delBtn = '';
-                if (isAdmin || isAuthorMode) {
+                if (isAdminFlag || isAuthorMode) {
                     delBtn = '<button class="del-comment-btn" onclick="deleteCommentOnlyById(\'' + c.id + '\')" title="删除">' +
                         '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
                         '<polyline points="3 6 5 6 21 6"/>' +
@@ -510,7 +510,7 @@
                 return;
             }
             currentUser = session;
-            isAdmin = window.isAdmin(currentUser);
+            isAdminFlag = window.isAdmin(currentUser);
 
             renderHeader('留言板', 'messages');
             renderFooter('messages');
@@ -534,7 +534,7 @@
                         currentUser.avatar_url !== s.avatar_url ||
                         currentUser.nickname !== s.nickname) {
                         currentUser = s;
-                        isAdmin = window.isAdmin(currentUser);
+                        isAdminFlag = window.isAdmin(currentUser);
                         updateBannedBanner();
                         renderMessages();
                     }

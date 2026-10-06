@@ -284,6 +284,17 @@ async function main() {
   }
   log('自检通过：产物中无遗留 ' + LEGACY_BASE + ' 绝对路径');
 
+  // 全局符号覆盖自检：页面模块顶层 var 覆盖 core 全局函数会导致运行期
+  // "window.isAdmin is not a function"（发帖失败等），必须在构建期拦死
+  const shadowing = await auditGlobalShadowing();
+  if (shadowing.length) {
+    console.error('[build] 自检失败：页面模块顶层声明覆盖了 core 全局函数 ->');
+    shadowing.forEach((l) => console.error('    ' + l));
+    console.error('    修法：给页面模块的该变量改名（如 isAdmin -> isAdminFlag），不要用 core 同名全局。');
+    process.exit(1);
+  }
+  log('自检通过：无全局符号覆盖风险');
+
   log('构建成功，用时 ' + (Date.now() - startedAt) + 'ms，产物目录：dist/');
 }
 
@@ -320,6 +331,48 @@ async function audit() {
     const text = await readFile(path.join(OUT, name), 'utf8');
     const idx = text.indexOf(LEGACY_BASE);
     if (idx !== -1) bad.push(name + ':' + text.slice(0, idx).split('\n').length);
+  }
+  return bad;
+}
+
+/**
+ * 全局符号覆盖自检（防回归）。
+ *
+ * 背景：core 层把 isAdmin/showToast 等挂在 window 上；页面模块若在全局作用域
+ * 用 `var isAdmin = ...` 声明同名变量，会把函数覆盖成布尔值，之后任何
+ * `window.isAdmin(x)` 调用都会抛 "window.isAdmin is not a function"。
+ * 该故障真实发生过（发帖页发布失败），故在构建期硬拦。
+ *
+ * 豁免：index/index.js 的 showToast 是登录页刻意差异化实现（2500ms vs
+ * core 3000ms），属既有 UI 行为，不在此拦截。
+ */
+const GLOBAL_COVER_EXEMPT = new Set(['showToast']);
+
+async function auditGlobalShadowing() {
+  const coreGlobals = new Set();
+  for (const name of CORE_MODULES) {
+    const t = await readFile(path.join(SRC, 'core', name), 'utf8');
+    for (const m of t.matchAll(/\b(?:global|window)\.([A-Za-z_$][\w$]*)\s*=/g)) coreGlobals.add(m[1]);
+  }
+
+  const bad = [];
+  const seen = new Set();
+  for (const rels of Object.values(PAGE_BUNDLES)) {
+    for (const rel of rels) {
+      if (seen.has(rel)) continue;
+      seen.add(rel);
+      const t = await readFile(path.join(SRC, rel), 'utf8');
+      // 已包裹 IIFE 的模块作用域独立，不会污染全局
+      const head = t.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').trim();
+      if (/^\(function\s*\(/.test(head)) continue;
+      // 顶层 var/function 声明（允许缩进：拆分自内联脚本的文件整体带缩进）
+      for (const m of t.matchAll(/^[ \t]*(?:var|function)\s+([A-Za-z_$][\w$]*)/gm)) {
+        const name = m[1];
+        if (coreGlobals.has(name) && !GLOBAL_COVER_EXEMPT.has(name)) {
+          bad.push(rel + ' 顶层声明 "' + name + '" 覆盖 core 同名全局（会导致 window.' + name + ' is not a function）');
+        }
+      }
+    }
   }
   return bad;
 }

@@ -102,13 +102,13 @@ async function render(){
   // 六宫格导航（仅看自己时）
   var navHtml = '';
   if (isSelf) {
-    var isAdmin = window.isAdmin(currentUser);
+    var isAdminFlag = window.isAdmin(currentUser);
     navHtml = '<div class="nav-grid">' +
       '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=messages\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H5.17L4 17.17V4z"/></svg></div><div class="tx">消息中心</div></div>' +
       '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=feedback\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="tx">反馈 Bug</div></div>' +
       '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=about\'"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><div class="tx">关于我们</div></div>' +
-      (isAdmin ? '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=adminfeedback\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 3h18v14H5l-2 2V3z"/><path d="M8 8h8M8 12h5"/></svg></div><div class="tx">反馈管理</div></div>' : '') +
-      (isAdmin ? '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=sites\'"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="tx">网站管理</div></div>' : '') +
+      (isAdminFlag ? '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=adminfeedback\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 3h18v14H5l-2 2V3z"/><path d="M8 8h8M8 12h5"/></svg></div><div class="tx">反馈管理</div></div>' : '') +
+      (isAdminFlag ? '<div class="nav-cell" onclick="location.href=\'/liuyanban/profile.html?view=sites\'"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="tx">网站管理</div></div>' : '') +
       '</div>';
   }
   // 帖子列表

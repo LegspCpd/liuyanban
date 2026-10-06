@@ -51,9 +51,9 @@
                 switchView('messagesView'); loadNotifications();
             } else if (view === 'feedback') {
                 switchView('feedbackView'); initFeedbackView();
-            } else if (view === 'adminfeedback' && isAdmin) {
+            } else if (view === 'adminfeedback' && isAdminFlag) {
                 switchView('adminFeedbackView'); loadAdminFeedback();
-            } else if (view === 'sites' && isAdmin) {
+            } else if (view === 'sites' && isAdminFlag) {
                 switchView('manageSitesView'); loadAdminSites();
             } else if (view === 'about') {
                 switchView('aboutView');

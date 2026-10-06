@@ -5,7 +5,7 @@
 
 var currentUser=getSessionUser();
 if(!currentUser||!currentUser.id)window.location.href='/liuyanban/index.html';
-var isAdmin=window.isAdmin(currentUser);
+var isAdminFlag=window.isAdmin(currentUser);
 var isAuthorMode=false;
 
 /* ============================================================
@@ -224,7 +224,7 @@ async function revokeChat(id,author,revoker,isSelf){
   if(r.error)throw r.error;
 }
 async function clearAllChats(){
-  if(!isAdmin){showToast('权限不足');return}
+  if(!isAdminFlag){showToast('权限不足');return}
   showConfirm('清空聊天','确定要删除所有聊天消息吗？此操作不可恢复！',async function(){
     try{var r=await window.sb.from('chats').delete().not('id','is',null);if(r.error)throw r.error;showToast('所有聊天消息已清空');await loadAllChats()}catch(e){showToast('清空失败：'+e.message)}
   });
@@ -292,7 +292,7 @@ function showChatCtxMenu(x,y,id,author,isSelf,contentText){
   menu.style.left=Math.min(x,window.innerWidth-160)+'px';
   menu.style.top=Math.min(y,window.innerHeight-140)+'px';
   var html='';
-  if(isAdmin||isSelf)html+='<div class="chat-ctx-item danger" data-action="revoke">'+svgIcon('undo',16)+' 撤回</div>';
+  if(isAdminFlag||isSelf)html+='<div class="chat-ctx-item danger" data-action="revoke">'+svgIcon('undo',16)+' 撤回</div>';
   if(!isSelf)html+='<div class="chat-ctx-item" data-action="report">'+svgIcon('flag',16)+' 举报</div>';
   menu.innerHTML=html;
   document.body.appendChild(menu);
@@ -300,7 +300,7 @@ function showChatCtxMenu(x,y,id,author,isSelf,contentText){
     item.onclick=function(){
       var a=this.dataset.action;menu.remove();
       if(a==='revoke'){
-        if(!isAdmin&&!isSelf){showToast('您只能撤回自己的消息');return}
+        if(!isAdminFlag&&!isSelf){showToast('您只能撤回自己的消息');return}
         showConfirm('撤回消息','确定撤回此消息吗？',function(){
           revokeChat(id,author,currentUser.nickname,isSelf)
             .then(function(){showToast('消息已撤回');return loadAllChats()})
@@ -364,7 +364,7 @@ window.addEventListener('DOMContentLoaded',function(){
   if(typeof renderFooter==='function')renderFooter('chats');
   else console.error('renderFooter 未定义，检查 common.js');
 
-  if(isAdmin)document.getElementById('clearChatBtn').style.display='inline-block';
+  if(isAdminFlag)document.getElementById('clearChatBtn').style.display='inline-block';
 
   updateBannedBanner();
   loadAllChats();

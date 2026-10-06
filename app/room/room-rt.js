@@ -16,7 +16,7 @@ function renderMessages(){
   c.scrollTop=c.scrollHeight;
 }
 async function clearRoomMessages(){
-  if(!isAdmin){showToast('只有管理员能清空');return}
+  if(!isAdminFlag){showToast('只有管理员能清空');return}
   showConfirm('清空房间消息','确定要清空本房间的所有聊天消息吗？此操作不可恢复！',async function(){
     try{
       var res=await window.sb.from('room_messages').delete().eq('room_id',state.room.id);
@@ -27,7 +27,7 @@ async function clearRoomMessages(){
 }
 window.clearRoomMessages=clearRoomMessages;
 async function disbandRoom(){
-  if(!isAdmin){showToast('只有管理员能解散房间');return}
+  if(!isAdminFlag){showToast('只有管理员能解散房间');return}
   if(!state.room)return;
   showConfirm('解散房间','确定要解散「'+state.room.name+'」吗？房间及所有消息将被永久删除！',async function(){
     try{
@@ -44,7 +44,7 @@ async function disbandRoom(){
 }
 window.disbandRoom=disbandRoom;
 async function clearCurrentGame(){
-  if(!isAdmin){showToast("只有管理员能清空游戏");return}
+  if(!isAdminFlag){showToast("只有管理员能清空游戏");return}
   if(!state.room)return;
   showConfirm("清空游戏","确定要结束当前游戏吗？","", async function(){
     try{ await window.sb.from("rooms").update({current_game:null}).eq("id",state.room.id); state.room.current_game=null; renderMic(); renderGame(); showToast("游戏已清空"); }catch(e){showToast("操作失败："+e.message)}
@@ -52,13 +52,13 @@ async function clearCurrentGame(){
 }
 window.clearCurrentGame=clearCurrentGame;
 async function toggleMuteAll(on){
-  if(!isAdmin){showToast("只有管理员能操作");return}
+  if(!isAdminFlag){showToast("只有管理员能操作");return}
   if(!state.room)return;
   try{ await window.sb.from("rooms").update({mute_all:on}).eq("id",state.room.id); state.room.mute_all=on; showToast(on?"已开启全员禁言":"已关闭全员禁言"); }catch(e){ if(/mute_all|column|schema cache/i.test(e.message||"")){ state.room.mute_all=on; showToast("已切换（本地生效，数据库需跑 compat 补丁持久化）"); } else showToast("操作失败："+e.message) }
 }
 window.toggleMuteAll=toggleMuteAll;
 async function setRoomHost(uid){
-  if(!isAdmin){showToast("只有管理员能更换房主");return}
+  if(!isAdminFlag){showToast("只有管理员能更换房主");return}
   if(!state.room)return;
   var u=(state.room.current_game&&state.room.current_game.players||[]).find(function(p){return p.user_id===uid;});
   showConfirm("更改房主","确定把房主转让给该用户吗？","", async function(){
@@ -74,8 +74,8 @@ async function setRoomHost(uid){
 window.setRoomHost=setRoomHost;
 async function sendMsg(){
   if(!state.room)return;if(isUserBanned()){showToast('账号已被封禁');return}
-  var r=state.room,muted=r.muted_user_ids||[];if(!isAdmin&&muted.indexOf(currentUser.id)>=0){showToast('你已被禁言');return}
-  if(!isAdmin&&r.mute_all){showToast('全员禁言中，暂时无法发言');return}
+  var r=state.room,muted=r.muted_user_ids||[];if(!isAdminFlag&&muted.indexOf(currentUser.id)>=0){showToast('你已被禁言');return}
+  if(!isAdminFlag&&r.mute_all){showToast('全员禁言中，暂时无法发言');return}
   var input=document.getElementById('roomInput'),text=input.value.trim();if(!text){showToast('请输入内容');return}input.value='';
   try{var res=await window.sb.from('room_messages').insert([{room_id:state.room.id,user_id:currentUser.id,author:currentUser.nickname,avatar_url:currentUser.avatar_url||'',content:text}]);if(res.error)throw res.error}catch(e){showToast('发送失败：'+e.message);input.value=text}
 }
@@ -113,7 +113,7 @@ function subscribe(){
 ============================================================ */
 async function fetchAllUsers(){var r=await window.sb.from('users').select('id, nickname, avatar_url, phone');return r.data||[]}
 async function openRoomEditor(){
-  if(!isAdmin||!state.room)return;
+  if(!isAdminFlag||!state.room)return;
   var room=await freshRoom();var users=await fetchAllUsers();
   var coIds=room.co_admin_ids||[],permsMap=room.co_admin_permissions||{},mutedIds=room.muted_user_ids||[];
   var old=document.getElementById('roomEditorOverlay');if(old)old.remove();

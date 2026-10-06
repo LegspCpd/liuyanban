@@ -3,7 +3,7 @@
         // ============ 会话 ============
         var currentUser = getSessionUser();
         if (!currentUser || !currentUser.id) window.location.href = '/liuyanban/index.html';
-        var isAdmin = window.isAdmin(currentUser);
+        var isAdminFlag = window.isAdmin(currentUser);
 
 
 
@@ -68,7 +68,7 @@
         }
         window.goBack = goBack;
 
-        if (isAdmin) {
+        if (isAdminFlag) {
             document.getElementById('goToAdminFeedback').style.display = 'flex';
             document.getElementById('goToManageSites').style.display = 'flex';
         }
