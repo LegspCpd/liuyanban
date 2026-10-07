@@ -114,6 +114,16 @@ async function main() {
 
   if (!candidates.length) {
     warn('[' + provider + '] 未配置凭据，跳过建表（部署继续，不阻塞）。');
+    // GitHub Actions 注解：即使 job 有 continue-on-error、退出码为 0，
+    // 这一条也会在工作流页面显示为黄色警告，避免「看似成功、实际没落库」。
+    // 真实事故：2026-10-06 之前 schema 变更一直这样空转，reports.admin_note
+    // 等列从未进过真实库，前端却早已在读它们。
+    const how = provider === 'supabase'
+      ? '配置 Secrets DATABASE_URL（或 SUPABASE_ACCESS_TOKEN + Variables SUPABASE_PROJECT_REF）'
+      : provider === 'neon'
+        ? '配置 Secrets NEON_DATABASE_URL（或 NEON_API_KEY + Variables NEON_PROJECT_ID）'
+        : '配置 Secrets DATABASE_URL';
+    console.warn('::warning title=数据库 Schema 未应用（凭据缺失）::[' + provider + "] 未配置任何可用通道，本次 schema 变更**没有**落到真实数据库。修复方式：" + how);
     warn('可用的配置方式：');
     if (provider === 'supabase') {
       warn('   Secrets: SUPABASE_ACCESS_TOKEN + Variables: SUPABASE_PROJECT_REF   （推荐）');

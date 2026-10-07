@@ -96,6 +96,39 @@ begin
     end if;
 end $$;
 
+-- ---------------------------------------------------------------------------
+-- 6. 其余表缺列补齐（2026-10-06 线上体检发现）
+--    体检方法：把 db/schema.core.sql 声明的 130 列逐列用 PostgREST 探测
+--    （select 该列时，不存在的列会返回 400），与真实库比对，130 列中缺这 3 个。
+--    之所以一直缺：CI 的 database job 没配 Supabase 凭据，一直「安全跳过」，
+--    本节从未真正落过库（mute_all / reviewed_by 查得到，是作者老库本来就有）。
+-- ---------------------------------------------------------------------------
+-- poll_options.poll_id：schema 声明但老库无；建投票、关联选项时会缺列
+alter table public.poll_options
+    add column if not exists poll_id bigint;
+
+-- user_roles.created_at：schema 声明但老库无；前端不写该列，补上仅为结构完整
+alter table public.user_roles
+    add column if not exists created_at timestamptz not null default now();
+
+-- 索引加固：线上量最大的三张表是 room_messages(234)/chats(154)/messages(30)，
+-- 前端大量使用 .order(created_at) 与 .eq(外键) 查询，老库大概率没建索引，
+-- PostgREST 会退化成全表扫，数据继续增长后房间页/聊天页会明显变慢。
+-- 全部 if not exists，可重复执行。
+create index if not exists idx_posts_created_at on public.posts (created_at desc);
+create index if not exists idx_posts_category_id on public.posts (category_id);
+create index if not exists idx_posts_user_id on public.posts (user_id);
+create index if not exists idx_post_comments_post_id on public.post_comments (post_id);
+create index if not exists idx_room_messages_room_id on public.room_messages (room_id);
+create index if not exists idx_room_messages_created_at on public.room_messages (created_at);
+create index if not exists idx_chats_user_id on public.chats (user_id);
+create index if not exists idx_chats_created_at on public.chats (created_at);
+create index if not exists idx_messages_created_at on public.messages (created_at);
+create index if not exists idx_notifications_user_id on public.notifications (user_id);
+create index if not exists idx_users_phone on public.users (phone);
+create index if not exists idx_follows_follower on public.follows (follower_id);
+create index if not exists idx_feedback_site_id on public.feedback (site_id);
+
 -- ===========================================================================
 --  执行结果回执
 -- ===========================================================================
