@@ -20,6 +20,30 @@
 -- 1. 辅助函数（SECURITY DEFINER，避免策略内递归触发 RLS）
 --    A档暂不需要 auth.uid()，但预建函数供 B档直接使用。
 -- ---------------------------------------------------------------------------
+-- auth.uid() 是 Supabase 专属函数，标准 Postgres / Neon 上不存在，
+-- 直接建函数会报 `schema "auth" does not exist` 而整份 rls-auto.sql 回滚。
+-- 故先探测 auth schema 是否存在：不存在时建一个返回 NULL 的等价桩函数，
+-- 保证本文件在 Supabase 与 Neon 上都能完整执行。
+-- 注：外层用 $blk$ 而非 $$，因为内部 execute 的字符串里含 $body$，
+-- 两者若与外层同名会让解析器提前闭合块。
+do $blk$
+begin
+    if not exists (select 1 from pg_namespace where nspname = 'auth') then
+        create schema if not exists auth;
+        raise notice '未检测到 Supabase auth schema，创建空壳以兼容（current_user_id 将返回 NULL）';
+    end if;
+end
+$blk$;
+
+do $blk$
+begin
+    if to_regprocedure('auth.uid()') is null then
+        execute $body$create or replace function auth.uid() returns uuid language sql stable as ' select null::uuid '$body$;
+        raise notice 'auth.uid() 不存在，已安装返回 NULL 的兼容桩函数';
+    end if;
+end
+$blk$;
+
 create or replace function public.current_user_id()
 returns bigint
 language sql stable security definer set search_path = public
