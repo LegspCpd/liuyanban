@@ -11,3 +11,9 @@ npm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+# 迁移用源数据快照（含真实用户手机号/密码哈希，禁止入库）
+.migrate-src/
+.migrate-err.log
+.m.log
+.chk.txt
