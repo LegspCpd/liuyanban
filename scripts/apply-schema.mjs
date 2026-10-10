@@ -48,9 +48,10 @@ const bad = (m) => console.error('[schema]  ✗ ' + m);
 const PLAN = {
   // compat 永远垫后：新库跑它无影响（全是 if not exists），老库靠它补齐错位
   // rls-auto 收尾：公开表 RLS enable + using(true)，行为透明，可安全自动执行
-  supabase: ['schema.core.sql', 'schema.supabase.sql', 'schema.compat.sql', 'rls-auto.sql'],
-  neon: ['schema.core.sql', 'schema.neon.sql', 'schema.compat.sql', 'rls-auto.sql'],
-  postgres: ['schema.core.sql', 'schema.compat.sql', 'rls-auto.sql']
+  // skin-shop 是商城功能（气泡皮肤/小七币），全表 if not exists + 动态类型，幂等安全
+  supabase: ['schema.core.sql', 'schema.supabase.sql', 'schema.compat.sql', 'skin-shop.sql', 'rls-auto.sql'],
+  neon: ['schema.core.sql', 'schema.neon.sql', 'schema.compat.sql', 'skin-shop.sql', 'rls-auto.sql'],
+  postgres: ['schema.core.sql', 'schema.compat.sql', 'skin-shop.sql', 'rls-auto.sql']
 };
 
 async function main() {

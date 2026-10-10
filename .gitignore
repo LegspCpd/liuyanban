@@ -12,8 +12,11 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-# 迁移用源数据快照（含真实用户手机号/密码哈希，禁止入库）
+# 迁锟斤拷锟斤拷源锟斤拷锟捷匡拷锟秸ｏ拷锟斤拷锟斤拷实锟矫伙拷锟街伙拷锟斤拷/锟斤拷锟斤拷锟较ｏ拷锟斤拷锟街癸拷锟解）
 .migrate-src/
 .migrate-err.log
 .m.log
 .chk.txt
+
+# 涓婃父瀵煎嚭涓存椂鐩綍
+.upstream/
