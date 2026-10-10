@@ -34,7 +34,9 @@ const OUT = path.join(ROOT, 'dist');
 /** 构建产物必须包含的页面文件，缺一即构建失败 */
 const REQUIRED = [
   'index.html', 'posts.html', 'profile.html', 'room.html', 'messages.html',
-  'new-post.html', 'user.html', 'chats.html'
+  'new-post.html', 'user.html', 'chats.html',
+  // 皮肤商城三页（移植自上游 SevenSeven712/liuyanban）
+  'shop.html', 'assets.html', 'activity.html'
 ];
 
 /**
@@ -94,8 +96,15 @@ const PAGE_BUNDLES = {
   'messages.html': ['messages/messages.js'],
   'chats.html': ['chats/chats.js'],
   'new-post.html': ['new-post/new-post.js'],
-  'user.html': ['user/user.js']
+  'user.html': ['user/user.js'],
+  // 皮肤商城三页（移植自上游）
+  'shop.html': ['shop/shop.js'],
+  'assets.html': ['assets/assets.js'],
+  'activity.html': ['activity/activity.js']
 };
+
+/** 需要原样拷贝到 dist 根的静态资源（页面用 <link> 直接引用） */
+const STATIC_ASSETS = ['bubbles.css'];
 const CORE_RELS = CORE_MODULES.map((n) => 'core/' + n);
 
 /**
@@ -197,6 +206,19 @@ async function main() {
     await writeFile(path.join(OUT, name), out, 'utf8');
     stats.pathHits += pathHits;
     stats.bytes += Buffer.byteLength(out, 'utf8');
+  }
+
+  // 4c2. 页面引用的静态资源原样拷贝到 dist 根（如气泡皮肤样式 bubbles.css）
+  for (const asset of STATIC_ASSETS) {
+    try {
+      const buf = await readFile(path.join(SRC, asset));
+      await writeFile(path.join(OUT, asset), buf);
+      stats.bytes += buf.length;
+      log('静态资源输出: dist/' + asset + '（' + (buf.length / 1024).toFixed(1) + ' KB）');
+    } catch {
+      console.error('[build] 缺少静态资源: app/' + asset);
+      process.exit(1);
+    }
   }
 
   // 4d. 逐页产出 bundle：core + 页面模块按依赖序拼接（含路径改写与凭据注入）
